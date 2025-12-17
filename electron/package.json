@@ -1,0 +1,10 @@
+{
+  "name": "tabledadrian-electron",
+  "version": "1.0.0",
+  "description": "Table d'Adrian Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  }
+}
+

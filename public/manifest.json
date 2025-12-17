@@ -1,0 +1,51 @@
+{
+  "name": "Table d'Adrian | Longevity & DeSci",
+  "short_name": "Table d'Adrian",
+  "description": "Quantify your healthspan with advanced biomarker tracking, AI-driven longevity protocols, and $tabledadrian rewards through decentralized science.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2dd4bf",
+  "orientation": "portrait-primary",
+  "categories": ["health", "fitness", "lifestyle", "medical", "science"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/logo.ico",
+      "sizes": "64x64 32x32 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Health Assessment",
+      "short_name": "Assessment",
+      "description": "Complete your biometric evaluation",
+      "url": "/health-assessment",
+      "icons": [{"src": "/logo.svg", "sizes": "any"}]
+    },
+    {
+      "name": "AI Health Intelligence",
+      "short_name": "AI Coach",
+      "description": "Get personalized longevity insights",
+      "url": "/coach",
+      "icons": [{"src": "/logo.svg", "sizes": "any"}]
+    },
+    {
+      "name": "Vitality Score",
+      "short_name": "Score",
+      "description": "View your comprehensive health metrics",
+      "url": "/health-score",
+      "icons": [{"src": "/logo.svg", "sizes": "any"}]
+    }
+  ]
+}

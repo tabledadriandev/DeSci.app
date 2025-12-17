@@ -1,0 +1,315 @@
+// Extended Schema for Health Data Pipeline
+// This extends the existing schema with medical and food data tables
+
+model Food {
+  id                String   @id @default(cuid())
+  name              String
+  brand             String?
+  barcode           String?  @unique
+  category          String   // fruit, vegetable, protein, grain, etc.
+  
+  // Nutritional Data (per 100g)
+  calories          Float
+  protein           Float    // grams
+  carbs             Float    // grams
+  fats              Float    // grams
+  fiber             Float?   // grams
+  sugar             Float?   // grams
+  
+  // Micronutrients
+  vitamins          Json?    // {vitaminA, vitaminC, vitaminD, etc.}
+  minerals          Json?    // {calcium, iron, magnesium, etc.}
+  
+  // Additional Data
+  allergenInfo      String[] // dairy, gluten, nuts, etc.
+  glycemicIndex     Int?
+  servingSize       Float?   // grams
+  servingUnit       String?  // cup, piece, etc.
+  
+  // Source Tracking
+  source            String   // USDA, Nutritionix, etc.
+  sourceUrl         String?
+  lastUpdated       DateTime @default(now()) @updatedAt
+  verified          Boolean  @default(false)
+  
+  // Relations
+  mealLogItems      MealLogItem[]
+  
+  @@index([name])
+  @@index([category])
+  @@index([barcode])
+}
+
+model Recipe {
+  id                String   @id @default(cuid())
+  name              String
+  description       String
+  source            String?  // AllRecipes, Epicurious, etc.
+  sourceUrl         String?
+  image             String?
+  
+  // Preparation
+  prepTime          Int?     // minutes
+  cookTime          Int?     // minutes
+  servings          Int?
+  difficulty        String?  // easy, medium, hard
+  
+  // Ingredients (structured)
+  ingredients       Json     // Array of {foodId, amount, unit}
+  instructions      String[]
+  
+  // Nutritional Data (per serving)
+  calories          Float?
+  protein           Float?
+  carbs             Float?
+  fats              Float?
+  
+  // Tags
+  tags              String[]
+  cuisine           String?
+  mealType          String?  // breakfast, lunch, dinner, snack
+  
+  // User Data
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  isPublic          Boolean  @default(false)
+  likes             Int      @default(0)
+  views             Int      @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  posts             Post[]
+  
+  @@index([name])
+  @@index([tags])
+  @@index([isPublic])
+}
+
+model MedicalCondition {
+  id                String   @id @default(cuid())
+  name              String   @unique // diabetes, heart_disease, celiac, etc.
+  description       String
+  category          String   // metabolic, cardiovascular, autoimmune, etc.
+  
+  // Dietary Guidelines
+  dietaryGuidelines Json     // Restrictions, recommendations, etc.
+  allowedFoods      String[]
+  restrictedFoods   String[]
+  
+  // Source
+  source            String   // NIH, Mayo Clinic, etc.
+  sourceUrl         String?
+  lastUpdated       DateTime @default(now()) @updatedAt
+  
+  // Relations
+  userProfiles      UserProfile[]
+  
+  @@index([name])
+  @@index([category])
+}
+
+model DietaryGuideline {
+  id                String   @id @default(cuid())
+  conditionId       String
+  condition         MedicalCondition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  
+  guideline         String
+  description       String
+  priority          Int      // 1 = critical, 2 = important, 3 = recommended
+  
+  source            String
+  sourceUrl         String?
+  lastUpdated       DateTime @default(now()) @updatedAt
+  
+  @@index([conditionId])
+}
+
+model Nutrient {
+  id                String   @id @default(cuid())
+  name              String   @unique // Vitamin A, Calcium, etc.
+  category          String   // vitamin, mineral, amino_acid, etc.
+  unit              String   // mg, mcg, IU, etc.
+  
+  // Daily Values
+  rda               Float?   // Recommended Daily Allowance
+  ul                Float?   // Upper Limit
+  
+  description       String?
+  sources           String[] // foods rich in this nutrient
+  deficiencySymptoms String[]
+  
+  source            String
+  lastUpdated       DateTime @default(now()) @updatedAt
+  
+  @@index([name])
+  @@index([category])
+}
+
+model MealLog {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  dateTime          DateTime @default(now())
+  mealType          String   // breakfast, lunch, dinner, snack
+  
+  // Food Items
+  items             MealLogItem[]
+  
+  // Totals
+  totalCalories     Float
+  totalProtein      Float
+  totalCarbs        Float
+  totalFats         Float
+  nutritionalScore  Float?   // 0-100 based on nutritional quality
+  
+  notes             String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([userId, dateTime])
+}
+
+model MealLogItem {
+  id                String   @id @default(cuid())
+  mealLogId         String
+  mealLog           MealLog  @relation(fields: [mealLogId], references: [id], onDelete: Cascade)
+  
+  foodId            String?
+  food              Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  
+  // Custom food entry
+  foodName          String?
+  amount            Float
+  unit              String   // grams, cups, pieces, etc.
+  
+  // Nutritional breakdown
+  calories          Float
+  protein           Float
+  carbs             Float
+  fats              Float
+  
+  @@index([mealLogId])
+}
+
+model UserProgress {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  dailyStreak       Int      @default(0)
+  totalMealsLogged  Int      @default(0)
+  workoutsCompleted Int      @default(0)
+  
+  healthGoals       Json     // {weightTarget, fitnessLevel, dietaryPreferences}
+  achievementBadges Json     // Array of badge IDs
+  xpLevel           Int      @default(1)
+  xpPoints          Int      @default(0)
+  
+  lastUpdated       DateTime @default(now()) @updatedAt
+  
+  @@index([userId])
+}
+
+model HealthMetrics {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  date              DateTime @default(now())
+  
+  // Physical Metrics
+  weight            Float?   // kg
+  height            Float?   // cm
+  bodyFatPercentage Float?
+  
+  // Vital Signs
+  bloodPressure     String?  // "120/80"
+  heartRate         Int?     // bpm
+  sleepHours        Float?   // hours
+  
+  // Activity
+  steps             Int?
+  caloriesBurned    Int?
+  
+  // Subjective
+  moodScore         Int?     // 1-10
+  energyLevel       Int?     // 1-10
+  
+  source            String?  // manual, apple_watch, fitbit, oura
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userId, date])
+}
+
+model UserSession {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  sessionToken      String   @unique // Encrypted JWT
+  refreshToken      String?  @unique
+  walletAddress     String?
+  
+  loginTimestamp    DateTime @default(now())
+  expiryTimestamp   DateTime
+  lastActivity      DateTime @default(now())
+  
+  deviceInfo        Json?    // {browser, os, ip, etc.}
+  ipAddress         String?
+  userAgent         String?
+  
+  isActive          Boolean  @default(true)
+  
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([refreshToken])
+  @@index([expiryTimestamp])
+}
+
+model DataScrapeLog {
+  id                String   @id @default(cuid())
+  source            String   // USDA, PubMed, etc.
+  sourceUrl         String
+  scrapeType        String   // food, recipe, medical_condition
+  
+  status            String   // success, failed, partial
+  itemsScraped      Int      @default(0)
+  itemsUpdated      Int      @default(0)
+  errors            Json?
+  
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  duration          Int?     // seconds
+  
+  @@index([source])
+  @@index([scrapeType])
+  @@index([startedAt])
+}
+
+model DataValidation {
+  id                String   @id @default(cuid())
+  entityType        String   // food, recipe, medical_condition
+  entityId          String
+  field             String
+  
+  validationType    String   // accuracy, consistency, completeness
+  status            String   // passed, failed, warning
+  message           String?
+  sourceComparison  Json?    // Comparison with other sources
+  
+  validatedAt       DateTime @default(now())
+  validator         String?  // system, admin
+  
+  @@index([entityType, entityId])
+  @@index([status])
+}
+
+// Update existing User model to include new relations
+// (This would be added to the main schema.prisma)
+

@@ -1,0 +1,680 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Crimson+Pro:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* REFINED CLINICAL DESIGN SYSTEM - PALE COLORS */
+    --bg-primary: #fafbfc;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f4f6f8;
+    --bg-overlay: rgba(30, 41, 59, 0.92);
+    
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+    --text-disabled: #cbd5e1;
+    --text-inverse: #ffffff;
+    
+    /* ==========================================
+       NUANCED PALE BLUE PALETTE
+       Each shade has a specific use case
+       ========================================== */
+    
+    /* Pale Blue - Background Tints (very subtle) */
+    --blue-ice: #f0f9ff;        /* Page backgrounds, subtle fills */
+    --blue-frost: #e0f2fe;      /* Card hover backgrounds, highlights */
+    --blue-mist: #dbeafe;       /* Input backgrounds, soft containers */
+    
+    /* Pale Blue - UI Elements (medium presence) */
+    --blue-powder: #bae6fd;     /* Borders on focus, light badges */
+    --blue-sky: #7dd3fc;        /* PRIMARY - main buttons, active states */
+    --blue-cloud: #93c5fd;      /* Information badges, secondary accents */
+    
+    /* Pale Blue - Interactive States (stronger) */
+    --blue-azure: #38bdf8;      /* Hover states, emphasis elements */
+    --blue-ocean: #0ea5e9;      /* Active/pressed states, links */
+    --blue-steel: #0284c7;      /* Dark mode primary, strong CTA */
+    
+    /* Primary accent now uses the sky blue */
+    --accent-primary: var(--blue-sky);
+    --accent-secondary: #c4b5fd; /* pale lavender */
+    --accent-tertiary: #fda4af; /* pale rose */
+
+    /* Solid colors - no gradients */
+    --bio-gradient: var(--blue-sky);
+    --crypto-gradient: #c4b5fd; /* pale lavender */
+
+    /* Muted semantic colors for charts/graphics */
+    --semantic-success: #86efac; /* pale green */
+    --semantic-warning: #fcd34d; /* pale amber/orange */
+    --semantic-error: #fca5a5; /* pale red */
+    --semantic-info: var(--blue-cloud); /* pale blue */
+    
+    /* Chart colors - all pale/muted */
+    --chart-blue: var(--blue-cloud);
+    --chart-green: #86efac;
+    --chart-red: #fca5a5;
+    --chart-orange: #fdba74;
+    --chart-pink: #f9a8d4;
+    --chart-purple: #d8b4fe;
+    --chart-teal: #99f6e4;
+    --chart-yellow: #fde047;
+    
+    --border-light: rgba(30, 41, 59, 0.08);
+    --border-medium: rgba(30, 41, 59, 0.15);
+    --border-blue: rgba(125, 211, 252, 0.3);
+    
+    --font-display: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    
+    /* Animation easing */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+    
+    /* Soft Shadows */
+    --shadow-sm: 0 1px 2px rgba(30, 41, 59, 0.04);
+    --shadow-md: 0 4px 12px rgba(30, 41, 59, 0.06);
+    --shadow-lg: 0 8px 24px rgba(30, 41, 59, 0.08);
+    --shadow-xl: 0 16px 48px rgba(30, 41, 59, 0.1);
+    --shadow-glow: 0 0 20px rgba(125, 211, 252, 0.15);
+    --shadow-blue: 0 4px 14px rgba(56, 189, 248, 0.15);
+  }
+
+  [data-theme='dark'] {
+    --bg-primary: #0f172a;
+    --bg-surface: #1e293b;
+    --bg-elevated: #334155;
+    --bg-overlay: rgba(15, 23, 42, 0.95);
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #64748b;
+    --text-disabled: #475569;
+    --text-inverse: #0f172a;
+
+    /* ==========================================
+       NUANCED PALE BLUE PALETTE - DARK MODE
+       Adjusted for dark backgrounds
+       ========================================== */
+    
+    /* Pale Blue - Background Tints (subtle on dark) */
+    --blue-ice: rgba(14, 165, 233, 0.05);      /* Subtle bg tint */
+    --blue-frost: rgba(14, 165, 233, 0.08);    /* Card hover bg */
+    --blue-mist: rgba(14, 165, 233, 0.1);      /* Input backgrounds */
+    
+    /* Pale Blue - UI Elements (visible on dark) */
+    --blue-powder: rgba(125, 211, 252, 0.25);  /* Borders, subtle */
+    --blue-sky: #7dd3fc;                        /* PRIMARY */
+    --blue-cloud: #93c5fd;                      /* Info badges */
+    
+    /* Pale Blue - Interactive States */
+    --blue-azure: #38bdf8;                      /* Hover */
+    --blue-ocean: #0ea5e9;                      /* Active */
+    --blue-steel: #0284c7;                      /* Pressed */
+
+    --accent-primary: var(--blue-sky);
+    --accent-secondary: #c4b5fd; /* pale lavender */
+    
+    /* Chart colors stay consistent */
+    --chart-blue: var(--blue-sky);
+    --chart-green: #6ee7b7;
+    --chart-red: #fca5a5;
+    --chart-orange: #fdba74;
+    --chart-pink: #f9a8d4;
+    --chart-purple: #d8b4fe;
+    
+    --border-light: rgba(248, 250, 252, 0.1);
+    --border-medium: rgba(248, 250, 252, 0.2);
+    --border-blue: rgba(125, 211, 252, 0.2);
+    
+    --shadow-glow: 0 0 20px rgba(125, 211, 252, 0.1);
+    --shadow-blue: 0 4px 14px rgba(56, 189, 248, 0.1);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    width: 100%;
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* ==========================================
+     GRID PATTERN BACKGROUND
+     Very subtle grid with radial fade from top
+     ========================================== */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: 
+      linear-gradient(to right, rgba(186, 206, 224, 0.18) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(186, 206, 224, 0.18) 1px, transparent 1px);
+    background-size: 16px 20px;
+    -webkit-mask-image: radial-gradient(
+      ellipse 70% 60% at 50% 0%,
+      #000 40%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 70% 60% at 50% 0%,
+      #000 40%,
+      transparent 100%
+    );
+  }
+
+  /* Soft blue glow at top */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 500px;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 80% 45% at 50% 0%,
+      rgba(186, 230, 253, 0.12) 0%,
+      rgba(224, 242, 254, 0.05) 40%,
+      transparent 70%
+    );
+  }
+
+  [data-theme='dark'] body::before {
+    background-image: 
+      linear-gradient(to right, rgba(125, 211, 252, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(125, 211, 252, 0.05) 1px, transparent 1px);
+    -webkit-mask-image: radial-gradient(
+      ellipse 70% 60% at 50% 0%,
+      #000 35%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 70% 60% at 50% 0%,
+      #000 35%,
+      transparent 100%
+    );
+  }
+
+  [data-theme='dark'] body::after {
+    background: radial-gradient(
+      ellipse 80% 45% at 50% 0%,
+      rgba(56, 189, 248, 0.06) 0%,
+      rgba(14, 165, 233, 0.02) 40%,
+      transparent 70%
+    );
+  }
+
+  /* Modern Aesthetic Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: all 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background: #64748b;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  [data-theme='dark'] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #475569 0%, #334155 100%);
+    background-clip: padding-box;
+  }
+
+  [data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+    background-clip: padding-box;
+  }
+
+  [data-theme='dark'] * {
+    scrollbar-color: #475569 transparent;
+  }
+
+  /* Hide scrollbar on hover containers, show on hover */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-auto::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 10px;
+  }
+
+  .scrollbar-auto:hover::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.7);
+  }
+  
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  #__next {
+    min-height: 100vh;
+    width: 100%;
+    isolation: isolate; /* Create stacking context for z-index on body::before */
+  }
+}
+
+/* All other @layer component styles remain the same, but will now use the new CSS variables */
+@layer components {
+  /* ==========================================
+     STANDARDIZED DESIGN SYSTEM COMPONENTS
+     ========================================== */
+
+  /* Skeleton shimmer animation */
+  @keyframes ta-skeleton-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(148, 163, 184, 0.25);
+  }
+
+  [data-theme='dark'] .skeleton {
+    background-color: rgba(100, 116, 139, 0.25);
+  }
+
+  .skeleton::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: -150%;
+    width: 50%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: ta-skeleton-shimmer 1.5s infinite;
+  }
+
+  [data-theme='dark'] .skeleton::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  }
+
+  /* ==========================================
+     STANDARD CARD STYLES
+     Always use .glass-card for all cards
+     ========================================== */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  [data-theme='dark'] .glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .glass-card-hover {
+    @apply glass-card;
+    transition: all 0.3s var(--ease-smooth);
+  }
+  
+  .glass-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 12px 28px rgba(0, 0, 0, 0.08);
+    border-color: var(--border-medium);
+  }
+
+  [data-theme='dark'] .glass-card-hover:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 12px 28px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* ==========================================
+     STANDARD LAYOUT CONTAINERS
+     ========================================== */
+  .page-container {
+    @apply px-4 py-6 sm:px-6 lg:px-8 max-w-6xl mx-auto;
+  }
+
+  .cozy-container {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* ==========================================
+     STANDARD PAGE HEADER
+     Use these classes for consistent headers
+     ========================================== */
+  .page-header {
+    @apply mb-6;
+  }
+
+  .page-title {
+    @apply text-2xl sm:text-3xl font-semibold text-text-primary mb-1;
+  }
+
+  .page-subtitle {
+    @apply text-sm sm:text-base text-text-secondary;
+  }
+
+  /* ==========================================
+     STANDARD SECTION STYLES
+     ========================================== */
+  .section-card {
+    @apply glass-card p-5 sm:p-6;
+  }
+  
+  .section-title {
+    @apply text-lg font-semibold text-text-primary mb-1;
+  }
+  
+  .section-subtitle {
+    @apply text-sm text-text-secondary mb-4;
+  }
+
+  /* ==========================================
+     STANDARD ICON BOX
+     Using pale accent colors
+     ========================================== */
+  .icon-box {
+    @apply w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0;
+    background: rgba(125, 211, 252, 0.15);
+  }
+
+  .icon-box-sm {
+    @apply w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0;
+    background: rgba(125, 211, 252, 0.15);
+  }
+
+  .icon-box-lg {
+    @apply w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0;
+    background: rgba(125, 211, 252, 0.15);
+  }
+
+  [data-theme='dark'] .icon-box,
+  [data-theme='dark'] .icon-box-sm,
+  [data-theme='dark'] .icon-box-lg {
+    background: rgba(125, 211, 252, 0.12);
+  }
+
+  .icon-box-secondary {
+    background: rgba(196, 181, 253, 0.15);
+  }
+
+  .icon-box-success {
+    background: rgba(134, 239, 172, 0.15);
+  }
+
+  .icon-box-warning {
+    background: rgba(252, 211, 77, 0.15);
+  }
+
+  .icon-box-error {
+    background: rgba(252, 165, 165, 0.15);
+  }
+
+  /* ==========================================
+     STANDARD STAT CARD
+     For displaying metrics consistently
+     ========================================== */
+  .stat-card {
+    @apply glass-card p-4 flex items-center gap-3;
+  }
+
+  .stat-value {
+    @apply text-xl sm:text-2xl font-semibold text-text-primary leading-tight;
+  }
+
+  .stat-label {
+    @apply text-xs text-text-tertiary;
+  }
+
+  /* ==========================================
+     STANDARD FORM INPUTS
+     ========================================== */
+  .form-input {
+    @apply w-full px-4 py-2.5 bg-bg-surface border border-border-light rounded-lg 
+    text-sm text-text-primary placeholder:text-text-tertiary 
+    focus:outline-none transition-all duration-200;
+  }
+  
+  .form-input:focus {
+    border-color: rgba(125, 211, 252, 0.6);
+    box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.1);
+  }
+  
+  [data-theme='dark'] .form-input:focus {
+    border-color: rgba(125, 211, 252, 0.5);
+    box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.08);
+  }
+
+  .form-select {
+    @apply form-input appearance-none cursor-pointer;
+  }
+
+  .form-textarea {
+    @apply form-input min-h-[100px] resize-y;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-text-secondary mb-2;
+  }
+
+  /* ==========================================
+     STANDARD BUTTONS
+     ========================================== */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center px-5 py-2.5 
+    font-sans text-sm font-semibold text-white
+    rounded-lg transition-all duration-200 cursor-pointer;
+    background: var(--accent-primary);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow);
+    opacity: 0.9;
+  }
+
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    @apply relative inline-flex items-center justify-center px-5 py-2.5 
+    font-sans text-sm font-semibold text-text-primary
+    bg-bg-surface border border-border-light rounded-lg 
+    transition-all duration-200 cursor-pointer;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-bg-elevated border-border-medium;
+  }
+
+  .btn-ghost {
+    @apply relative inline-flex items-center justify-center px-5 py-2.5 
+    font-sans text-sm font-semibold text-text-secondary
+    bg-transparent rounded-lg transition-all duration-200 cursor-pointer;
+  }
+
+  .btn-ghost:hover {
+    @apply bg-bg-elevated text-text-primary;
+  }
+
+  /* ==========================================
+     STANDARD BADGE/TAG
+     ========================================== */
+  .badge {
+    @apply px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-accent-primary/10 text-accent-primary;
+  }
+
+  .badge-secondary {
+    @apply badge bg-accent-secondary/10 text-accent-secondary;
+  }
+
+  .badge-success {
+    @apply badge bg-semantic-success/10 text-semantic-success;
+  }
+
+  .badge-warning {
+    @apply badge bg-semantic-warning/10 text-semantic-warning;
+  }
+
+  .badge-error {
+    @apply badge bg-semantic-error/10 text-semantic-error;
+  }
+
+  .badge-info {
+    @apply badge bg-semantic-info/10 text-semantic-info;
+  }
+
+  /* ==========================================
+     STANDARD PROGRESS BAR
+     ========================================== */
+  .progress-bar-container {
+    @apply w-full bg-bg-elevated rounded-full h-2 overflow-hidden;
+  }
+
+  .progress-bar {
+    @apply h-full rounded-full transition-all duration-500 ease-out;
+    background: var(--accent-primary);
+  }
+
+  /* ==========================================
+     STANDARD INFO BANNER
+     ========================================== */
+  .info-banner {
+    @apply p-4 rounded-lg flex items-start gap-3;
+    background: rgba(125, 211, 252, 0.08);
+    border: 1px solid rgba(125, 211, 252, 0.2);
+  }
+
+  .info-banner-warning {
+    background: rgba(252, 211, 77, 0.08);
+    border: 1px solid rgba(252, 211, 77, 0.2);
+  }
+
+  .info-banner-error {
+    background: rgba(252, 165, 165, 0.08);
+    border: 1px solid rgba(252, 165, 165, 0.2);
+  }
+
+  .info-banner-success {
+    background: rgba(134, 239, 172, 0.08);
+    border: 1px solid rgba(134, 239, 172, 0.2);
+  }
+
+  /* ==========================================
+     RIPPLE EFFECT
+     ========================================== */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple 600ms linear;
+    background-color: rgba(255, 255, 255, 0.7);
+  }
+
+  @keyframes ripple {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  /* ==========================================
+     EMPTY STATE
+     ========================================== */
+  .empty-state {
+    @apply glass-card p-8 sm:p-12 text-center;
+  }
+
+  .empty-state-icon {
+    @apply w-16 h-16 text-text-tertiary mx-auto mb-4;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-semibold text-text-primary mb-2;
+  }
+
+  .empty-state-description {
+    @apply text-sm text-text-secondary max-w-md mx-auto;
+  }
+}
