@@ -10,7 +10,7 @@
     "build": "prisma generate && next build --webpack",
     "start": "next start",
     "start:custom": "node --max-old-space-size=4096 server.js",
-    "lint": "next lint",
+    "lint": "eslint .",
     "kill:port": "node scripts/kill-port.js",
     "electron": "npm run kill:port && electron ./electron/main.js",
     "electron:dev": "npm run kill:port && concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron ./electron/main.js\"",

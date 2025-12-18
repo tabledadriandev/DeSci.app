@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from '@/hooks/useAccount';
 import { useSafeBalance } from '@/hooks/useSafeBalance';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import SafeConnectButton from '@/components/ui/SafeConnectButton';
 import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import PageTransition from '@/components/ui/PageTransition';
@@ -166,7 +166,7 @@ export default function GovernancePage() {
             <p className="text-base text-text-secondary mb-8">
               Your voting power is determined by your $tabledadrian token holdings.
             </p>
-            <ConnectButton />
+            <SafeConnectButton />
           </motion.div>
         )}
 

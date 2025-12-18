@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useAccount } from '@/hooks/useAccount';
 import { motion } from 'framer-motion';
 import PageTransition from '@/components/ui/PageTransition';

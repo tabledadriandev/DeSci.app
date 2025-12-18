@@ -7,7 +7,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { Pill, Target, Sun, Brain, Leaf, Zap, ShoppingCart } from 'lucide-react';
+import { Pill, Target, Sun, Brain, Leaf, Zap, ShoppingCart, Filter } from 'lucide-react';
 import Image from 'next/image';
 
 type SupplementItem = {

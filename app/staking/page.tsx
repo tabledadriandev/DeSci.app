@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from '@/hooks/useAccount';
 import { useSafeBalance } from '@/hooks/useSafeBalance';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import SafeConnectButton from '@/components/ui/SafeConnectButton';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import { Lock, Unlock, TrendingUp, Zap, Wallet, Clock, Shield, Coins, ArrowUpRight, Info } from 'lucide-react';
 
@@ -77,7 +77,7 @@ export default function StakingPage() {
             Connect your wallet to stake $tabledadrian tokens
           </p>
           <div className="flex justify-center">
-            <ConnectButton />
+            <SafeConnectButton />
           </div>
         </motion.div>
       </div>

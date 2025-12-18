@@ -1,18 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import dynamic from 'next/dynamic';
+import { useEffect, useRef, useState } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import WalletProviders from './components/WalletProviders';
 import { AuthProvider } from '@/contexts/AuthContext';
-
-// Dynamically import wallet components to avoid SSR issues with MetaMask SDK
-const WalletProviders = dynamic(
-  () => import('./components/WalletProviders'),
-  { 
-    ssr: false,
-    loading: () => null
-  }
-);
+import { TutorialProvider } from '@/components/tutorial/TutorialProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -21,14 +13,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (hasSetup.current) return;
     hasSetup.current = true;
-    
+
     setMounted(true);
-    
+
     if (typeof window !== 'undefined') {
-      // FORCE SET TITLE
       document.title = "Table d'Adrian | Longevity & DeSci";
-      
-      // Auto-reload on chunk errors only
+
       const handleError = (e: ErrorEvent) => {
         if (e.message?.includes('chunk') || e.message?.includes('ChunkLoadError')) {
           e.preventDefault();
@@ -36,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           setTimeout(() => window.location.reload(), 2000);
         }
       };
-      
+
       const handleRejection = (e: PromiseRejectionEvent) => {
         if (e.reason?.message?.includes('chunk') || e.reason?.message?.includes('ChunkLoadError')) {
           e.preventDefault();
@@ -44,10 +34,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           setTimeout(() => window.location.reload(), 2000);
         }
       };
-      
+
       window.addEventListener('error', handleError);
       window.addEventListener('unhandledrejection', handleRejection);
-      
+
       return () => {
         window.removeEventListener('error', handleError);
         window.removeEventListener('unhandledrejection', handleRejection);
@@ -58,12 +48,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        {mounted ? (
-          <WalletProviders>{children}</WalletProviders>
-        ) : (
-          <>{children}</>
-        )}
+        <WalletProviders>
+          <TutorialProvider>
+            {mounted ? children : children}
+          </TutorialProvider>
+        </WalletProviders>
       </AuthProvider>
     </ErrorBoundary>
   );
 }
+
