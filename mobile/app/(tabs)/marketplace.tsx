@@ -34,7 +34,7 @@ export default function MarketplaceScreen() {
       <View style={styles.header}>
         <Text style={styles.kicker}>MARKET</Text>
         <Text style={styles.title}>Wellness Marketplace</Text>
-        <Text style={styles.subtitle}>Products and services paid with $TA.</Text>
+        <Text style={styles.subtitle}>Products and services paid with $tabledadrian.</Text>
       </View>
 
       {loading && (

@@ -4,27 +4,12 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
-  // Add empty turbopack config to silence Next.js 16 warnings
-  turbopack: {},
-  
-  // Transpile problematic packages
-  transpilePackages: ['@metamask/sdk', '@metamask/sdk-install-modal-web', 'lucide-react'],
-  
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
-    unoptimized: process.env.NODE_ENV === 'development',
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.unsplash.com',
-      },
-    ],
   },
   
   // Use webpack instead of Turbopack for better compatibility
@@ -33,38 +18,19 @@ const nextConfig = {
     config.module.exprContextCritical = false;
     config.module.unknownContextCritical = false;
     
-    // Externalize problematic modules on server side
-    if (isServer) {
-      config.externals = config.externals || [];
-      config.externals.push({
-        '@metamask/sdk': 'commonjs @metamask/sdk',
-      });
-    }
-    
-    // Fix for MetaMask SDK dynamic imports
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-      crypto: false,
-    };
-    
     // Ignore warnings from problematic packages
     config.ignoreWarnings = [
       { module: /node_modules\/thread-stream/ },
       { file: /node_modules\/thread-stream/ },
-      { module: /node_modules\/@metamask/ },
-      { module: /node_modules\/@walletconnect/ },
       /Failed to parse source map/,
       /Can't resolve/,
-      /Critical dependency/,
-      /the request of a dependency is an expression/,
-      /Module not found/,
     ];
 
     // Production optimizations
     if (!dev && !isServer) {
+      // Tree shaking
+      config.optimization.usedExports = true;
+      
       // Optimize bundle size
       config.optimization = {
         ...config.optimization,
@@ -81,6 +47,13 @@ const nextConfig = {
               chunks: 'all',
               test: /node_modules/,
               priority: 20,
+            },
+            // Recharts chunk (large library)
+            recharts: {
+              test: /[\\/]node_modules[\\/]recharts[\\/]/,
+              name: 'recharts',
+              chunks: 'all',
+              priority: 30,
             },
             // Common chunk
             common: {
@@ -107,11 +80,12 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    optimizeCss: true,
   },
   
-  // TypeScript configuration - ignore errors for now to get app running
+  // TypeScript configuration
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   
   // Headers for performance

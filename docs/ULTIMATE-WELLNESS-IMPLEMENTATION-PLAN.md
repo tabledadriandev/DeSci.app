@@ -44,7 +44,7 @@
 
 #### 1.2 Dual Payment Infrastructure
 **Status:** Crypto Only - Stripe Missing
-- [x] Crypto payments ($TA, USDC, ETH on Base)
+- [x] Crypto payments ($tabledadrian, USDC, ETH on Base)
 - [x] Wallet balance checking
 - [x] Transaction history
 - [ ] **Stripe Integration**
@@ -438,9 +438,9 @@
 
 ### 6.4 Chef Earnings System
 - [ ] **Crypto Path:**
-  - [ ] 5 $TA per verified meal logged
-  - [ ] 100-500 $TA bonus for biomarker improvements >20%
-  - [ ] 100 $TA per client referral
+  - [ ] 5 $tabledadrian per verified meal logged
+  - [ ] 100-500 $tabledadrian bonus for biomarker improvements >20%
+  - [ ] 100 $tabledadrian per client referral
   - [ ] Staking rewards integration
 - [ ] **Fiat Path:**
   - [ ] 15% platform commission on bookings
@@ -647,7 +647,7 @@
 ### 10.5 Rewards System
 - [x] Basic token rewards
 - [ ] **Enhanced rewards:**
-  - [ ] Crypto users: Earn $TA tokens
+  - [ ] Crypto users: Earn $tabledadrian tokens
   - [ ] Fiat users: Platform credits redeemable for:
     - [ ] Discounts on subscriptions
     - [ ] Free biomarker tests
@@ -775,7 +775,7 @@
 - `app/settings/data-licensing/page.tsx`
 
 ### 13.2 Revenue Sharing
-- [ ] **Crypto Users:** 40% of licensing revenue → $TA token holder dividends
+- [ ] **Crypto Users:** 40% of licensing revenue → $tabledadrian token holder dividends
 - [ ] **Fiat Users:** 40% of revenue → platform credits (quarterly distribution)
 - [ ] Dividend distribution system
 
@@ -791,7 +791,7 @@
 ### 14.1 Enhanced Proposal System
 - [x] Basic proposal structure
 - [ ] **Enhanced features:**
-  - [ ] Minimum 100 $TA to create proposal
+  - [ ] Minimum 100 $tabledadrian to create proposal
   - [ ] Proposal types (features, partnerships, treasury, policy)
   - [ ] Rich text editor for proposals
   - [ ] Proposal categories and tags

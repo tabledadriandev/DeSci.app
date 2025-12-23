@@ -1,14 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion } from 'framer-motion';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { Award, ShieldCheck, Zap } from 'lucide-react';
-import Image from 'next/image';
+import { useAccount } from 'wagmi';
 
 export default function NFTsPage() {
   const { address } = useAccount();
@@ -17,118 +10,189 @@ export default function NFTsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data for now
-    setNfts([
-      { id: '1', name: 'Longevity Pioneer', description: 'Awarded for being one of the first 1000 users.', image: 'https://images.unsplash.com/photo-1517048676732-d65bc9c5542e?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', type: 'collectible', tokenId: '101', mintedAt: new Date().toISOString() },
-      { id: '2', name: 'Metabolic Master', description: 'Achieved optimal metabolic health for 3 consecutive months.', image: 'https://images.unsplash.com/photo-1532150868-b3d5b2c7b5b0?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', type: 'achievement', tokenId: '202', mintedAt: new Date().toISOString() },
-    ]);
-    setAchievements([
-      { id: 'ach1', name: '30-Day Streak', description: 'Maintain a 30-day streak of daily habit tracking.', icon: '🏆', earnedAt: new Date().toISOString(), nftMinted: true },
-      { id: 'ach2', name: 'Perfect Sleep Week', description: 'Achieve a perfect sleep score for 7 days in a row.', icon: '😴', earnedAt: new Date().toISOString(), nftMinted: false },
-    ]);
-    setLoading(false);
+    if (address) {
+      loadNFTs();
+      loadAchievements();
+    }
   }, [address]);
+
+  const loadNFTs = async () => {
+    try {
+      const response = await fetch(`/api/nfts?address=${address}`);
+      const data = await response.json();
+      setNfts(data);
+    } catch (error) {
+      console.error('Error loading NFTs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAchievements = async () => {
+    try {
+      const response = await fetch(`/api/achievements?address=${address}`);
+      const data = await response.json();
+      setAchievements(data);
+    } catch (error) {
+      console.error('Error loading achievements:', error);
+    }
+  };
 
   const mintAchievementNFT = async (achievementId: string) => {
     if (!address) return;
-    alert(`Minting NFT for achievement ${achievementId}... (Mock)`);
+
+    try {
+      const response = await fetch('/api/nfts/mint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          achievementId,
+        }),
+      });
+
+      if (response.ok) {
+        await loadNFTs();
+        await loadAchievements();
+        alert('NFT minted successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Minting failed');
+      }
+    } catch (error) {
+      console.error('Error minting NFT:', error);
+      alert('Minting failed');
+    }
   };
 
   return (
-    <PageTransition>
-      <div className="page-container">
-        <motion.div initial="initial" animate="animate" variants={fadeInUp} className="page-header">
-          <h1 className="page-title">My NFT Gallery</h1>
-          <p className="page-subtitle max-w-2xl">
-            Your collection of unique, on-chain rewards earned through your wellness journey.
-          </p>
-        </motion.div>
+    <div className="min-h-screen  p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-display text-accent-primary mb-8">
+          NFTs & Achievements
+        </h1>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-96">
-            <LoadingSpinner text="Loading your NFT collection..." />
-          </div>
-        ) : (
-          <>
-            {/* My NFTs */}
-            <motion.div className="mb-8" variants={staggerContainer} initial="hidden" animate="visible">
-              <h2 className="text-2xl font-bold text-text-primary mb-4">My NFTs</h2>
-              {nfts.length === 0 ? (
-                <div className="glass-card p-8 text-center">
-                  <p className="text-text-secondary">Your NFT gallery is empty. Complete achievements to mint your first NFT!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {nfts.map((nft) => (
-                    <motion.div key={nft.id} variants={fadeInUp} className="glass-card-hover overflow-hidden">
-                      {nft.image && (
-                        <div className="relative w-full h-64">
-                          <Image
-                            src={nft.image}
-                            alt={nft.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-xl font-bold text-text-primary">{nft.name}</h3>
-                          <span className="px-2 py-1 bg-accent-primary/10 text-accent-primary rounded-full text-xs font-semibold">
-                            {nft.type}
-                          </span>
-                        </div>
-                        <p className="text-text-secondary text-sm mb-4">{nft.description}</p>
-                        <div className="text-xs text-text-tertiary">
-                          <p>Token ID: {nft.tokenId}</p>
-                          <p>Minted: {new Date(nft.mintedAt).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-
-            {/* Achievements to Mint */}
-            <motion.div variants={staggerContainer} initial="hidden" animate="visible">
-              <h2 className="text-2xl font-bold text-text-primary mb-4">Achievements to Mint</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {achievements.map((achievement) => (
-                  <motion.div key={achievement.id} variants={fadeInUp} className="glass-card-hover p-6">
-                    <div className="text-4xl mb-4">{achievement.icon || '🏆'}</div>
-                    <h3 className="text-xl font-bold text-text-primary mb-2">
-                      {achievement.name}
-                    </h3>
-                    <p className="text-text-secondary text-sm mb-4">
-                      {achievement.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-text-tertiary">
-                        Earned: {new Date(achievement.earnedAt).toLocaleDateString()}
-                      </p>
-                      {!achievement.nftMinted ? (
-                        <AnimatedButton
-                          size="sm"
-                          onClick={() => mintAchievementNFT(achievement.id)}
-                          icon={<Zap className="w-4 h-4" />}
-                        >
-                          Mint NFT
-                        </AnimatedButton>
-                      ) : (
-                        <p className="text-sm text-semantic-success flex items-center gap-1">
-                          <ShieldCheck className="w-4 h-4" /> NFT Minted
-                        </p>
-                      )}
+        {/* My NFTs */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-display mb-4">My NFTs</h2>
+          {loading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : nfts.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-md p-8 text-center">
+              <div className="text-6xl mb-4">🎨</div>
+              <h3 className="text-xl font-display mb-2">No NFTs Yet</h3>
+              <p className="text-text-secondary">
+                Complete achievements to earn NFTs!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {nfts.map((nft) => (
+                <div key={nft.id} className="bg-white rounded-xl shadow-md overflow-hidden">
+                  {nft.image && (
+                    <img
+                      src={nft.image}
+                      alt={nft.name}
+                      className="w-full h-64 object-cover"
+                    />
+                  )}
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-display text-text-primary">
+                        {nft.name}
+                      </h3>
+                      <span className="px-2 py-1 bg-accent-primary/10 text-accent-primary rounded text-xs">
+                        {nft.type}
+                      </span>
                     </div>
-                  </motion.div>
-                ))}
+                    <p className="text-text-secondary text-sm mb-4">
+                      {nft.description}
+                    </p>
+                    <div className="text-sm text-text-secondary">
+                      Token ID: {nft.tokenId}
+                    </div>
+                    <div className="text-sm text-text-secondary">
+                      Minted: {new Date(nft.mintedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Achievements */}
+        <div>
+          <h2 className="text-2xl font-display mb-4">Achievements</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {achievements.map((achievement) => (
+              <div
+                key={achievement.id}
+                className="bg-white rounded-xl shadow-md p-6"
+              >
+                <div className="text-4xl mb-4">{achievement.icon || '🏆'}</div>
+                <h3 className="text-xl font-display text-text-primary mb-2">
+                  {achievement.name}
+                </h3>
+                <p className="text-text-secondary text-sm mb-4">
+                  {achievement.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-text-secondary">
+                    Earned: {new Date(achievement.earnedAt).toLocaleDateString()}
+                  </div>
+                  {!achievement.nftMinted ? (
+                    <button
+                      onClick={() => mintAchievementNFT(achievement.id)}
+                      className="bg-accent-primary text-white px-4 py-2 rounded-lg hover:bg-accent-primary/90 transition-colors text-sm"
+                    >
+                      Mint NFT
+                    </button>
+                  ) : (
+                    <span className="text-green-600 text-sm">✓ NFT Minted</span>
+                  )}
+                </div>
               </div>
-            </motion.div>
-          </>
-        )}
+            ))}
+          </div>
+        </div>
+
+        {/* NFT Types Info */}
+        <div className="mt-8 bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-2xl font-display mb-4">NFT Types</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="text-3xl mb-2">🏆</div>
+              <div className="font-semibold mb-1">Achievement NFTs</div>
+              <div className="text-sm text-text-secondary">
+                Earned by completing challenges and milestones
+              </div>
+            </div>
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="text-3xl mb-2">👨‍🍳</div>
+              <div className="font-semibold mb-1">Recipe NFTs</div>
+              <div className="text-sm text-text-secondary">
+                Exclusive recipes from top chefs
+              </div>
+            </div>
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="text-3xl mb-2">⭐</div>
+              <div className="font-semibold mb-1">VIP Access</div>
+              <div className="text-sm text-text-secondary">
+                Access to exclusive events and experiences
+              </div>
+            </div>
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <div className="text-3xl mb-2">🎁</div>
+              <div className="font-semibold mb-1">Special Rewards</div>
+              <div className="text-sm text-text-secondary">
+                Limited edition collectibles
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

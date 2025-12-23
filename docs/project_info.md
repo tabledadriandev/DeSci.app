@@ -1,4 +1,4 @@
-﻿# Table d'Adrian Wellness App - Complete Project Information
+# Table d'Adrian Wellness App - Complete Project Information
 
 ## Project Overview
 
@@ -8,7 +8,7 @@
 **Last Updated:** January 2025
 
 ### Core Concept
-A comprehensive wellness and longevity platform built on Web3 technology, token-gated with $TA tokens on the Base network. The app combines health tracking, AI-powered coaching, gamification, social features, and decentralized governance into a unified wellness ecosystem.
+A comprehensive wellness and longevity platform built on Web3 technology, token-gated with $tabledadrian tokens on the Base network. The app combines health tracking, AI-powered coaching, gamification, social features, and decentralized governance into a unified wellness ecosystem.
 
 ---
 
@@ -29,7 +29,7 @@ A comprehensive wellness and longevity platform built on Web3 technology, token-
 - **wagmi** - React hooks for Ethereum
 - **RainbowKit** - Wallet connection UI
 - **Base Network** (Chain ID: 8453) - Primary blockchain
-- **$TA Token Contract:** `0x9Cb5254319f824A2393ECbF6aDCf608867AA1b07`
+- **$tabledadrian Token Contract:** `0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07`
 - **Wallet Support:** MetaMask, Rainbow Wallet, Coinbase Wallet
 
 ### AI & External Services
@@ -103,17 +103,17 @@ A comprehensive wellness and longevity platform built on Web3 technology, token-
 ### 3. Web3 & Tokenomics
 
 #### Token Gating
-- **Minimum Requirement:** $5 worth of $TA tokens
+- **Minimum Requirement:** $5 worth of $tabledadrian tokens
 - **Network:** Base (Chain ID: 8453)
-- **Contract Address:** `0x9Cb5254319f824A2393ECbF6aDCf608867AA1b07`
+- **Contract Address:** `0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07`
 
 #### Token Rewards System
-Users earn $TA tokens for various actions:
-- Health tracking: **1 $TA**
-- Meal plan creation: **5 $TA**
-- Post sharing: **2 $TA**
-- Recipe sharing: **10 $TA**
-- Wearable sync: **5 $TA**
+Users earn $tabledadrian tokens for various actions:
+- Health tracking: **1 $tabledadrian**
+- Meal plan creation: **5 $tabledadrian**
+- Post sharing: **2 $tabledadrian**
+- Recipe sharing: **10 $tabledadrian**
+- Wearable sync: **5 $tabledadrian**
 
 #### Staking System
 - **APY:** 12% annual percentage yield
@@ -125,10 +125,10 @@ Users earn $TA tokens for various actions:
 - Service offerings (chef services, consultations)
 - Subscription management
 - Stock tracking
-- Purchase flow with $TA tokens
+- Purchase flow with $tabledadrian tokens
 
 #### Governance (DAO)
-- **Proposal Creation** - Minimum 100 $TA to create proposal
+- **Proposal Creation** - Minimum 100 $tabledadrian to create proposal
 - **Voting System** - Weighted voting (1 token = 1 vote)
 - **Proposal Types:**
  - Features
@@ -157,7 +157,7 @@ Users earn $TA tokens for various actions:
 
 ### 5. Additional Features
 
-- **Chef Services** - Book chef services with $TA
+- **Chef Services** - Book chef services with $tabledadrian
 - **Exclusive Events** - Token-gated events and experiences
 - **Fasting Tracker** - Intermittent fasting tracking
 - **Subscriptions** - Subscription management
@@ -346,7 +346,7 @@ wellness-app/
 1. **Wallet Connect (Primary)**
  - MetaMask, Rainbow, Coinbase Wallet support
  - Encrypted wallet address storage (AES-256)
- - $5 minimum $TA verification
+ - $5 minimum $tabledadrian verification
  - Auto-reconnect on page refresh
  - 30-day session persistence
 
@@ -381,7 +381,7 @@ NEXT_PUBLIC_BASE_URL="https://your-domain.com"
 NEXT_PUBLIC_BASE_RPC_URL="https://mainnet.base.org"
 
 # Web3
-NEXT_PUBLIC_TA_CONTRACT_ADDRESS="0x9Cb5254319f824A2393ECbF6aDCf608867AA1b07"
+NEXT_PUBLIC_TA_CONTRACT_ADDRESS="0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07"
 NEXT_PUBLIC_BASE_CHAIN_ID=8453
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID="your-walletconnect-project-id"
 BACKEND_WALLET_PRIVATE_KEY="your-backend-wallet-private-key"
@@ -619,7 +619,7 @@ REDIS_URL="redis://localhost:6379"
 
 - API keys stored in environment variables (never committed)
 - .env files gitignored
-- Token gating ($5 minimum $TA)
+- Token gating ($5 minimum $tabledadrian)
 - Wallet-based authentication
 - Encrypted wallet address storage
 - JWT tokens with httpOnly cookies
@@ -731,7 +731,7 @@ REDIS_URL="redis://localhost:6379"
 
 ### Blockchain
 - **Base Network** - Primary blockchain
-- **$TA Token** - Native token
+- **$tabledadrian Token** - Native token
 - **Smart Contracts** - Staking, NFTs, governance
 
 ### External APIs

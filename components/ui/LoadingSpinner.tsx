@@ -15,35 +15,43 @@ export default function LoadingSpinner({
   className = '',
 }: LoadingSpinnerProps) {
   const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-10 h-10',
-    lg: 'w-16 h-16',
+    sm: 'w-4 h-4',
+    md: 'w-8 h-8',
+    lg: 'w-12 h-12',
   };
 
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-4', className)}>
-      <motion.div
-        className={cn('relative', sizeClasses[size])}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-      >
-        <motion.div
-          className="absolute inset-0 border-4 border-accent-primary/20 rounded-full"
-          initial={{ scale: 1, opacity: 0.5 }}
-          animate={{ scale: 1.2, opacity: 0 }}
-          transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+    <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
+      <div className="relative">
+        <div
+          className={cn(
+            'border-4 border-accent-primary/20 rounded-full',
+            sizeClasses[size]
+          )}
         />
-        <div className={cn('border-4 border-transparent border-t-accent-primary rounded-full absolute inset-0', sizeClasses[size])} />
-      </motion.div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        >
+          <div
+            className={cn(
+              'border-4 border-transparent border-t-accent-primary rounded-full absolute inset-0',
+              sizeClasses[size]
+            )}
+          />
+        </motion.div>
+      </div>
       {text && (
-        <motion.p 
-          className="text-sm text-text-secondary"
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
         >
-          {text}
-        </motion.p>
+          <p className="text-sm text-text-secondary">{text}</p>
+        </motion.div>
       )}
     </div>
   );

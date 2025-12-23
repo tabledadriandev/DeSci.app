@@ -1,14 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from '@/hooks/useAccount';
+import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
-import { FileText, Download, Calendar, TrendingUp, AlertCircle, Sparkles, CheckCircle, Brain } from 'lucide-react';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import ProgressBar from '@/components/ui/ProgressBar';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
+import { FileText, Download, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 
 export default function HealthReportsPage() {
   const { address } = useAccount();
@@ -17,141 +12,168 @@ export default function HealthReportsPage() {
   const [reportType, setReportType] = useState('comprehensive');
 
   useEffect(() => {
-    // Mock data for reports
-    setReports([
-      { id: '1', reportType: 'comprehensive', reportDate: new Date(Date.now() - 86400000 * 30).toISOString(), healthScore: 78, keyFindings: ["Elevated LDL cholesterol", "Vitamin D deficiency"], recommendations: ["Increase fiber intake", "Sun exposure"] },
-      { id: '2', reportType: 'monthly', reportDate: new Date(Date.now() - 86400000 * 60).toISOString(), healthScore: 75, keyFindings: ["Improved sleep scores"], recommendations: ["Continue consistent sleep schedule"] },
-    ]);
+    if (address) {
+      loadReports();
+    }
   }, [address]);
+
+  const loadReports = async () => {
+    try {
+      const response = await fetch(`/api/health/reports?userId=${address}`);
+      const data = await response.json();
+      setReports(data);
+    } catch (error) {
+      console.error('Error loading reports:', error);
+    }
+  };
 
   const generateReport = async () => {
     if (!address) return;
     setGenerating(true);
 
-    // Mock report generation
-    setTimeout(() => {
-      const newReport = {
-        id: String(reports.length + 1),
-        reportType,
-        reportDate: new Date().toISOString(),
-        healthScore: 60 + Math.random() * 30, // Random score
-        keyFindings: ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit"],
-        recommendations: ["Sed do eiusmod tempor", "Incididunt ut labore et dolore"],
-        pdfUrl: '#', // Placeholder for actual PDF
-      };
-      setReports((prev) => [newReport, ...prev]);
+    try {
+      const response = await fetch('/api/health/reports/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: address,
+          reportType,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await loadReports();
+        // Auto-download the PDF
+        if (data.report.pdfUrl) {
+          window.open(data.report.pdfUrl, '_blank');
+        } else if (data.report.pdfData) {
+          // Download base64 PDF
+          const link = document.createElement('a');
+          link.href = `data:application/pdf;base64,${data.report.pdfData}`;
+          link.download = `health-report-${new Date().toISOString().split('T')[0]}.pdf`;
+          link.click();
+        }
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+    } finally {
       setGenerating(false);
-      alert('Report generated! (Mock)');
-    }, 2000);
+    }
   };
 
   const downloadReport = (report: any) => {
-    alert(`Downloading report for ${report.reportType} dated ${new Date(report.reportDate).toLocaleDateString()}`);
-    // Simulate download
+    if (report.pdfUrl) {
+      window.open(report.pdfUrl, '_blank');
+    } else if (report.pdfData) {
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${report.pdfData}`;
+      link.download = `health-report-${new Date(report.reportDate).toISOString().split('T')[0]}.pdf`;
+      link.click();
+    }
   };
 
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text mb-2">
-              Health Reports
-            </h1>
-            <p className="text-base text-text-secondary max-w-2xl">
-              Generate and review detailed insights into your health and wellness journey.
-            </p>
-          </div>
+    <div className="min-h-screen  p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-display text-accent-primary">
+            Health Reports
+          </h1>
           <div className="flex items-center gap-4">
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              className="px-4 py-3 bg-bg-surface border border-border-medium rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
+              className="px-4 py-2 border border-gray-300 rounded-lg"
             >
               <option value="comprehensive">Comprehensive</option>
               <option value="monthly">Monthly</option>
               <option value="custom">Custom</option>
             </select>
-            <AnimatedButton
+            <button
               onClick={generateReport}
               disabled={generating}
-              icon={<FileText className="w-5 h-5" />}
+              className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 disabled:opacity-50 flex items-center gap-2"
             >
+              <FileText className="w-5 h-5" />
               {generating ? 'Generating...' : 'Generate Report'}
-            </AnimatedButton>
+            </button>
           </div>
-        </motion.div>
+        </div>
 
+        {/* Report Preview Cards */}
         {reports.length === 0 ? (
-          <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="glass-card p-12 text-center my-8">
-            <Brain className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-text-primary mb-2">No Reports Yet</h2>
+          <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-display mb-2">No Reports Yet</h2>
             <p className="text-text-secondary mb-6">
               Generate your first comprehensive health report to see detailed insights about your health.
             </p>
-            <AnimatedButton
+            <button
               onClick={generateReport}
               disabled={generating}
+              className="px-8 py-4 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 disabled:opacity-50"
             >
               {generating ? 'Generating...' : 'Generate First Report'}
-            </AnimatedButton>
-          </motion.div>
+            </button>
+          </div>
         ) : (
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {reports.map((report) => (
-              <motion.div key={report.id} variants={fadeInUp} className="glass-card-hover p-6">
+              <div
+                key={report.id}
+                className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow"
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-text-primary mb-1">
+                    <h3 className="text-xl font-display text-accent-primary mb-1">
                       {report.reportType.charAt(0).toUpperCase() + report.reportType.slice(1)} Report
                     </h3>
-                    <p className="flex items-center gap-2 text-sm text-text-tertiary">
-                      <Calendar className="w-4 h-4" /> {new Date(report.reportDate).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(report.reportDate).toLocaleDateString()}
+                    </div>
                   </div>
-                  <AnimatedButton
+                  <button
                     onClick={() => downloadReport(report)}
-                    variant="ghost"
-                    size="sm"
-                    icon={<Download className="w-5 h-5" />}
-                  />
+                    className="p-2 hover:bg-gray-100 rounded-lg transition"
+                  >
+                    <Download className="w-5 h-5 text-accent-primary" />
+                  </button>
                 </div>
 
                 {/* Health Score */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-text-secondary">Health Score</p>
-                    <p className={`text-2xl font-bold ${
-                      report.healthScore >= 80 ? 'text-semantic-success' :
-                      report.healthScore >= 60 ? 'text-semantic-warning' : 'text-semantic-error'
+                    <span className="text-sm font-medium">Health Score</span>
+                    <span className={`text-2xl font-bold ${
+                      report.healthScore >= 80 ? 'text-green-600' :
+                      report.healthScore >= 60 ? 'text-yellow-600' : 'text-red-600'
                     }`}>
                       {Math.round(report.healthScore)}
-                    </p>
+                    </span>
                   </div>
-                  <ProgressBar
-                    value={report.healthScore}
-                    max={100}
-                    color={report.healthScore >= 80 ? 'success' : report.healthScore >= 60 ? 'warning' : 'error'}
-                    size="md"
-                    animated
-                    showValue={false}
-                  />
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${
+                        report.healthScore >= 80 ? 'bg-green-500' :
+                        report.healthScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${Math.min(100, report.healthScore)}%` }}
+                    />
+                  </div>
                 </div>
 
                 {/* Key Findings */}
                 {report.keyFindings && report.keyFindings.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-base font-semibold text-text-primary mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-semantic-warning" /> Key Findings
+                    <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Key Findings
                     </h4>
-                    <ul className="space-y-1 text-sm text-text-secondary">
+                    <ul className="space-y-1">
                       {report.keyFindings.slice(0, 3).map((finding: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2">
+                        <li key={idx} className="text-sm text-text-secondary flex items-start gap-2">
                           <span className="text-accent-primary mt-1">•</span>
                           <span>{finding}</span>
                         </li>
@@ -163,13 +185,14 @@ export default function HealthReportsPage() {
                 {/* Recommendations */}
                 {report.recommendations && report.recommendations.length > 0 && (
                   <div>
-                    <h4 className="text-base font-semibold text-text-primary mb-2 flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-semantic-success" /> Recommendations
+                    <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Recommendations
                     </h4>
-                    <ul className="space-y-1 text-sm text-text-secondary">
+                    <ul className="space-y-1">
                       {report.recommendations.slice(0, 3).map((rec: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-semantic-success mt-1">✓</span>
+                        <li key={idx} className="text-sm text-text-secondary flex items-start gap-2">
+                          <span className="text-green-600 mt-1">✓</span>
                           <span>{rec}</span>
                         </li>
                       ))}
@@ -179,21 +202,19 @@ export default function HealthReportsPage() {
 
                 {/* Progress Comparison */}
                 {report.progressComparison && (
-                  <div className="mt-4 pt-4 border-t border-border-medium">
-                    <h4 className="text-base font-semibold text-text-primary mb-2 flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-accent-secondary" /> Progress Comparison
-                    </h4>
-                    <p className="text-sm text-text-secondary">
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold mb-2">Progress</h4>
+                    <div className="text-xs text-text-secondary">
                       {report.progressComparison.summary || 'Compare with previous reports'}
-                    </p>
+                    </div>
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

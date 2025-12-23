@@ -2,13 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion } from 'framer-motion';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { Users, Plus, MessageCircle, Lock, Globe } from 'lucide-react';
+import { useAccount } from 'wagmi';
 
 type Group = {
   id: string;
@@ -36,78 +30,102 @@ export default function GroupsPage() {
   });
 
   useEffect(() => {
-    // Mock data for now
-    setGroups([
-      { id: '1', name: 'Keto Longevity', description: 'Discussion for ketogenic diet and lifespan extension.', type: 'topic', isPrivate: false, _count: { members: 250, posts: 1200 } },
-      { id: '2', name: 'PCOS Support', description: 'Support group for individuals managing PCOS.', type: 'condition', isPrivate: true, _count: { members: 80, posts: 500 } },
-      { id: '3', name: 'Bay Area Biohackers', description: 'Local group for biohackers in the San Francisco Bay Area.', type: 'region', isPrivate: false, _count: { members: 150, posts: 700 } },
-    ]);
-    setLoading(false);
+    void loadGroups();
   }, []);
+
+  const loadGroups = async () => {
+    try {
+      const res = await fetch('/api/groups/create');
+      if (!res.ok) return;
+      const data = await res.json();
+      setGroups(data);
+    } catch (err) {
+      console.error('Error loading groups', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!address || !formData.name.trim()) return;
     setCreating(true);
-    // Mock API call
-    setTimeout(() => {
-      const newGroup: Group = {
-        id: (Math.random() * 1000).toFixed(0),
-        name: formData.name,
-        description: formData.description,
-        type: formData.type,
-        isPrivate: formData.isPrivate,
-        _count: { members: 1, posts: 0 },
-      };
-      setGroups((prev) => [...prev, newGroup]);
-      setFormData({ name: '', description: '', type: 'topic', isPrivate: false });
-      setFormOpen(false);
+    try {
+      const res = await fetch('/api/groups/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          ...formData,
+        }),
+      });
+      if (res.ok) {
+        setFormData({ name: '', description: '', type: 'topic', isPrivate: false });
+        setFormOpen(false);
+        await loadGroups();
+      }
+    } catch (err) {
+      console.error('Error creating group', err);
+    } finally {
       setCreating(false);
-    }, 1000);
+    }
   };
 
   const handleJoin = async (groupId: string) => {
     if (!address) return;
-    console.log(`Joining group ${groupId}`);
-    // Simulate API call
+    try {
+      await fetch('/api/groups/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, groupId }),
+      });
+      // We keep UI simple; in a later phase we can show membership state.
+    } catch (err) {
+      console.error('Error joining group', err);
+    }
   };
 
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div className="min-h-screen  p-8">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text">
+            <h1 className="text-3xl sm:text-4xl font-display text-accent-primary">
               Community Groups
             </h1>
             <p className="text-sm sm:text-base text-text-secondary mt-1 max-w-xl">
-              Join topic-based and condition-specific groups to share recipes, progress, and support.
+              Join topic-based and condition-specific groups to share recipes, progress,
+              and support with others on similar wellness journeys.
             </p>
           </div>
           {address && (
-            <AnimatedButton size="sm" onClick={() => setFormOpen((v) => !v)} icon={<Plus className="w-4 h-4" />}>
+            <button
+              type="button"
+              onClick={() => setFormOpen((v) => !v)}
+              className="self-start bg-accent-primary text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-primary/90 transition-colors"
+            >
               {formOpen ? 'Cancel' : 'Create Group'}
-            </AnimatedButton>
+            </button>
           )}
-        </motion.div>
+        </div>
 
         {formOpen && address && (
-          <motion.div className="glass-card p-6 mb-8" variants={fadeInUp}>
-            <h2 className="text-xl font-bold text-text-primary mb-4">Create a New Group</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-xl font-display mb-3">Create a new group</h2>
+            <form onSubmit={handleCreate} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Group name (e.g., Keto Longevity, PCOS Support)"
-                  className="w-full px-4 py-3 bg-bg-surface border border-border-medium rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
+                  placeholder="Group name (e.g. Keto Longevity, PCOS Support)"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   required
                 />
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-4 py-3 bg-bg-surface border border-border-medium rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
                   <option value="topic">Topic (keto, vegan, fasting)</option>
                   <option value="condition">Condition (PCOS, diabetes)</option>
@@ -116,84 +134,101 @@ export default function GroupsPage() {
               </div>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Short description of who this group is for and what you discuss."
                 rows={3}
-                className="w-full px-4 py-3 bg-bg-surface border border-border-medium rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
-              <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
+              <label className="inline-flex items-center gap-2 text-xs sm:text-sm text-text-secondary">
                 <input
                   type="checkbox"
                   checked={formData.isPrivate}
-                  onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
-                  className="rounded text-accent-primary focus:ring-accent-primary"
+                  onChange={(e) =>
+                    setFormData({ ...formData, isPrivate: e.target.checked })
+                  }
+                  className="rounded border-gray-300"
                 />
                 Make this a private support group (requires invite)
               </label>
-              <AnimatedButton type="submit" disabled={creating}>
+              <button
+                type="submit"
+                disabled={creating}
+                className="bg-accent-primary text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-primary/90 transition-colors disabled:opacity-60"
+              >
                 {creating ? 'Creating...' : 'Create Group'}
-              </AnimatedButton>
+              </button>
             </form>
-          </motion.div>
+          </div>
         )}
 
-        <motion.div className="glass-card p-6" variants={fadeInUp}>
-          <h2 className="text-xl font-bold text-text-primary mb-4">Available Groups</h2>
+        <div className="bg-white rounded-xl shadow-md p-6">
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <LoadingSpinner text="Loading groups..." />
+            <div className="text-center py-6 text-text-secondary text-sm">
+              Loading groups…
             </div>
           ) : groups.length === 0 ? (
-            <p className="text-text-secondary">No groups yet. Be the first to start a conversation in this group.</p>
+            <div className="text-center py-8 text-text-secondary text-sm">
+              No groups yet. Be the first to start a topic-focused or condition-specific
+              group.
+            </div>
           ) : (
-            <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-4" variants={staggerContainer} initial="hidden" animate="visible">
-              {groups.map((group) => {
-                const TypeIcon = group.isPrivate ? Lock : Globe;
-                return (
-                  <motion.div key={group.id} variants={fadeInUp}>
-                    <Link
-                      href={`/community/groups/${group.id}`}
-                      className="glass-card-hover p-4 flex flex-col justify-between h-full"
-                    >
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <TypeIcon className="w-5 h-5 text-accent-primary" />
-                          <h3 className="text-lg font-bold text-text-primary">{group.name}</h3>
-                        </div>
-                        <p className="text-sm text-text-secondary line-clamp-3 mb-3">
-                          {group.description || 'No description provided.'}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-text-tertiary">
-                        <div className="flex gap-3">
-                          <span className="flex items-center gap-1">
-                            <Users className="w-4 h-4" /> {group._count?.members ?? 0} members
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageCircle className="w-4 h-4" /> {group._count?.posts ?? 0} threads
-                          </span>
-                        </div>
-                        {address && (
-                          <AnimatedButton
-                            size="sm"
-                            variant="secondary"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleJoin(group.id);
-                            }}
-                          >
-                            Join
-                          </AnimatedButton>
-                        )}
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {groups.map((group) => (
+                <Link
+                  key={group.id}
+                  href={`/community/groups/${group.id}`}
+                  className="border border-border-light rounded-lg p-4 flex flex-col gap-2 hover:border-accent-primary/60 hover:bg-white/80 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-semibold text-text-primary">
+                        {group.name}
+                      </h3>
+                      <p className="text-[11px] uppercase tracking-wide text-text-secondary">
+                        {group.type === 'condition'
+                          ? 'Condition group'
+                          : group.type === 'region'
+                          ? 'Local / region group'
+                          : 'Topic group'}
+                        {group.isPrivate ? ' • Private' : ' • Public'}
+                      </p>
+                    </div>
+                  </div>
+                  {group.description && (
+                    <p className="text-xs sm:text-sm text-text-secondary line-clamp-3">
+                      {group.description}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-text-secondary mt-1">
+                    <div className="flex gap-3">
+                      <span>
+                        👥 {group._count?.members ?? 0} members
+                      </span>
+                      <span>💬 {group._count?.posts ?? 0} threads</span>
+                    </div>
+                    {address && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          void handleJoin(group.id);
+                        }}
+                        className="text-accent-primary hover:underline"
+                      >
+                        Join
+                      </button>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
           )}
-        </motion.div>
+        </div>
       </div>
-    </PageTransition>
+    </div>
   );
 }
+
+

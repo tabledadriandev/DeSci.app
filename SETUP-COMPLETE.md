@@ -51,7 +51,7 @@ All components have been integrated and the app is now functional and ready for 
 
 1. **Environment Variables** - `.env.example` created with all required variables:
    - Database (PostgreSQL)
-   - Web3 (Base network, $TA contract)
+   - Web3 (Base network, $tabledadrian contract)
    - Authentication (JWT secrets)
    - OpenAI API key
    - Google OAuth credentials

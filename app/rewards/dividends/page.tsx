@@ -1,12 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion } from 'framer-motion';
-import PageTransition from '@/components/ui/PageTransition';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { Coins, TrendingUp, Clock, CheckCircle, Wallet, Gift } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { Coins, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import Skeleton from '@/components/ui/Skeleton';
 
 export default function DividendsPage() {
   const { address } = useAccount();
@@ -16,143 +13,185 @@ export default function DividendsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data for now
-    setDividends([
-      { id: '1', amount: 50.75, currency: '$TA', status: 'completed', distributionDate: new Date(Date.now() - 86400000 * 30).toISOString(), sourceType: 'data_licensing', usdValue: 12.68, txHash: '0xabc...' },
-      { id: '2', amount: 120.50, currency: '$TA', status: 'completed', distributionDate: new Date(Date.now() - 86400000 * 60).toISOString(), sourceType: 'data_licensing', usdValue: 28.92, txHash: '0xdef...' },
-      { id: '3', amount: 75.00, currency: '$TA', status: 'pending', distributionDate: new Date(Date.now() + 86400000 * 10).toISOString(), sourceType: 'data_licensing', usdValue: 18.75 },
-    ]);
-    setTotalEarned(171.25);
-    setPendingCount(1);
-    setLoading(false);
+    if (address) {
+      loadDividends();
+    }
   }, [address]);
 
+  const loadDividends = async () => {
+    if (!address) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/data-licensing/dividends/list?address=${address}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setDividends(data.dividends || []);
+        setTotalEarned(data.totalEarned || 0);
+        setPendingCount(data.pendingCount || 0);
+      }
+    } catch (error) {
+      console.error('Error loading dividends:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text mb-2">
+    <div className="min-h-screen  p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl sm:text-4xl font-display text-accent-primary mb-2">
             Data Licensing Dividends
           </h1>
-          <p className="text-base text-text-secondary max-w-2xl">
-            Earn 40% of all data licensing revenue by opting in to share your anonymized health data for research.
+          <p className="text-sm sm:text-base text-text-secondary">
+            Earn 40% of all data licensing revenue by opting in to share your anonymized health
+            data for research.
           </p>
-        </motion.div>
+        </div>
 
-        {!address ? (
-          <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="glass-card text-center py-12">
-            <Wallet className="w-16 h-16 text-accent-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-text-primary mb-2">Connect Your Wallet</h2>
-            <p className="text-text-secondary">Please connect your wallet to view your dividend earnings.</p>
-          </motion.div>
-        ) : (
+        {!address && (
+          <div className="bg-white rounded-xl shadow-md p-8 text-center">
+            <Coins className="w-16 h-16 mx-auto mb-4 text-text-secondary" />
+            <h2 className="text-2xl font-display text-text-primary mb-2">
+              Connect Your Wallet
+            </h2>
+            <p className="text-text-secondary text-sm sm:text-base">
+              Please connect your wallet to view your dividend earnings.
+            </p>
+          </div>
+        )}
+
+        {address && (
           <>
-            {loading ? (
-              <div className="flex justify-center items-center h-96">
-                <LoadingSpinner text="Loading your dividend data..." />
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-text-secondary">Total Earned</span>
+                  <TrendingUp className="w-5 h-5 text-accent-primary" />
+                </div>
+                {loading ? (
+                  <Skeleton className="h-7 w-24 mt-1" />
+                ) : (
+                  <div className="text-2xl font-display text-accent-primary">
+                    {totalEarned.toFixed(2)} $tabledadrian
+                  </div>
+                )}
               </div>
-            ) : (
-              <>
-                {/* Summary Cards */}
-                <motion.div
-                  className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-                  variants={staggerContainer}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <motion.div variants={fadeInUp} className="glass-card-hover p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm text-text-secondary">Total Earned</p>
-                      <TrendingUp className="w-5 h-5 text-accent-primary" />
-                    </div>
-                    <p className="text-4xl font-bold text-accent-primary">{totalEarned.toFixed(2)} $TA</p>
-                  </motion.div>
-                  <motion.div variants={fadeInUp} className="glass-card-hover p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm text-text-secondary">Pending Payouts</p>
-                      <Clock className="w-5 h-5 text-semantic-warning" />
-                    </div>
-                    <p className="text-4xl font-bold text-semantic-warning">{pendingCount}</p>
-                  </motion.div>
-                  <motion.div variants={fadeInUp} className="glass-card-hover p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm text-text-secondary">Total Payments</p>
-                      <Coins className="w-5 h-5 text-text-tertiary" />
-                    </div>
-                    <p className="text-4xl font-bold text-text-primary">{dividends.length}</p>
-                  </motion.div>
-                </motion.div>
 
-                {/* Dividends List */}
-                <motion.div className="glass-card p-6" variants={fadeInUp}>
-                  <h2 className="text-2xl font-bold text-text-primary mb-4 flex items-center gap-2">
-                    <Gift className="w-6 h-6 text-accent-primary" /> Payment History
-                  </h2>
-                  {dividends.length === 0 ? (
-                    <div className="text-center py-12 text-text-secondary">
-                      <Coins className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <h3 className="text-lg font-bold text-text-primary mb-2">No Dividends Yet</h3>
-                      <p className="text-sm max-w-md mx-auto">
-                        Opt in to data sharing in Settings to start earning dividends from research data licensing revenue.
-                      </p>
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-text-secondary">Pending</span>
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                </div>
+                {loading ? (
+                  <Skeleton className="h-7 w-10 mt-1" />
+                ) : (
+                  <div className="text-2xl font-display text-yellow-600">{pendingCount}</div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-text-secondary">Total Payments</span>
+                  <Coins className="w-5 h-5 text-text-secondary" />
+                </div>
+                {loading ? (
+                  <Skeleton className="h-7 w-10 mt-1" />
+                ) : (
+                  <div className="text-2xl font-display text-text-primary">{dividends.length}</div>
+                )}
+              </div>
+            </div>
+
+            {/* Dividends List */}
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h2 className="text-xl font-display text-text-primary mb-4">Payment History</h2>
+
+              {loading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-4 border border-border-light rounded-lg"
+                    >
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-40" />
+                      </div>
+                      <Skeleton className="h-6 w-16 ml-4" />
                     </div>
-                  ) : (
-                    <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-                      {dividends.map((dividend) => (
-                        <motion.div
-                          key={dividend.id}
-                          variants={fadeInUp}
-                          className="glass-card-hover p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  ))}
+                </div>
+              ) : dividends.length === 0 ? (
+                <div className="text-center py-12">
+                  <Coins className="w-12 h-12 mx-auto mb-4 text-text-secondary opacity-50" />
+                  <h3 className="text-lg font-display text-text-primary mb-2">No Dividends Yet</h3>
+                  <p className="text-sm text-text-secondary max-w-md mx-auto">
+                    Opt in to data sharing in Settings to start earning dividends from research data
+                    licensing revenue.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {dividends.map((dividend) => (
+                    <div
+                      key={dividend.id}
+                      className="flex items-center justify-between p-4 border border-border-light rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-text-primary">
+                            {dividend.amount.toFixed(4)} {dividend.currency}
+                          </span>
+                          {dividend.status === 'completed' ? (
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Clock className="w-4 h-4 text-yellow-600" />
+                          )}
+                        </div>
+                        <div className="text-xs text-text-secondary">
+                          {new Date(dividend.distributionDate).toLocaleDateString()} •{' '}
+                          {dividend.sourceType === 'data_licensing'
+                            ? 'Data Licensing'
+                            : dividend.sourceType}
+                          {dividend.usdValue && ` • ~$${dividend.usdValue.toFixed(2)} USD`}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            dividend.status === 'completed'
+                              ? 'bg-green-100 text-green-800'
+                              : dividend.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <p className="font-bold text-lg text-text-primary">
-                                {dividend.amount.toFixed(4)} {dividend.currency}
-                              </p>
-                              {dividend.status === 'completed' ? (
-                                <CheckCircle className="w-5 h-5 text-semantic-success" />
-                              ) : (
-                                <Clock className="w-5 h-5 text-semantic-warning" />
-                              )}
-                            </div>
-                            <div className="text-xs text-text-tertiary">
-                              {new Date(dividend.distributionDate).toLocaleDateString()} •{' '}
-                              {dividend.sourceType === 'data_licensing' ? 'Data Licensing' : dividend.sourceType}
-                              {dividend.usdValue && ` • ~$${dividend.usdValue.toFixed(2)} USD`}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                                dividend.status === 'completed'
-                                  ? 'bg-semantic-success/10 text-semantic-success border-semantic-success/20'
-                                  : 'bg-semantic-warning/10 text-semantic-warning border-semantic-warning/20'
-                              }`}
-                            >
-                              {dividend.status}
-                            </span>
-                            {dividend.txHash && (
-                              <a
-                                href={`https://basescan.org/tx/${dividend.txHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-accent-primary hover:underline"
-                              >
-                                View on BaseScan
-                              </a>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </motion.div>
-              </>
-            )}
+                          {dividend.status}
+                        </span>
+                        {dividend.txHash && (
+                          <a
+                            href={`https://basescan.org/tx/${dividend.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-xs text-accent-primary mt-1 hover:underline"
+                          >
+                            View on BaseScan
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

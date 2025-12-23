@@ -98,7 +98,7 @@ export class FarcasterClient {
     rewards: string;
     link: string;
   }): Promise<any> {
-    const text = `🏆 New Challenge: ${challenge.name}\n\n${challenge.description}\n\nRewards: ${challenge.rewards}\n\nJoin now: ${challenge.link}\n\n#Challenge #Wellness #$TA`;
+    const text = `🏆 New Challenge: ${challenge.name}\n\n${challenge.description}\n\nRewards: ${challenge.rewards}\n\nJoin now: ${challenge.link}\n\n#Challenge #Wellness #$tabledadrian`;
     return this.createCast({ text, embeds: [{ url: challenge.link }] });
   }
 
@@ -111,7 +111,7 @@ export class FarcasterClient {
     benefits: string;
     link?: string;
   }): Promise<any> {
-    const text = `🤝 Partnership Announcement\n\nWe're excited to partner with ${partnership.partnerName}!\n\n${partnership.description}\n\nBenefits: ${partnership.benefits}${partnership.link ? `\n\nLearn more: ${partnership.link}` : ''}\n\n#Partnership #Wellness #$TA`;
+    const text = `🤝 Partnership Announcement\n\nWe're excited to partner with ${partnership.partnerName}!\n\n${partnership.description}\n\nBenefits: ${partnership.benefits}${partnership.link ? `\n\nLearn more: ${partnership.link}` : ''}\n\n#Partnership #Wellness #$tabledadrian`;
     
     const embeds = partnership.link ? [{ url: partnership.link }] : [];
     return this.createCast({ text, embeds });
@@ -125,7 +125,7 @@ export class FarcasterClient {
     achievement: string;
     description: string;
   }): Promise<any> {
-    const text = `🎉 Congratulations @${achievement.username}!\n\nYou've earned: ${achievement.achievement}\n\n${achievement.description}\n\n#Achievement #Wellness #$TA`;
+    const text = `🎉 Congratulations @${achievement.username}!\n\nYou've earned: ${achievement.achievement}\n\n${achievement.description}\n\n#Achievement #Wellness #$tabledadrian`;
     return this.createCast({ text });
   }
 

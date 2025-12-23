@@ -20,31 +20,29 @@ npm install
 
 ### 2. Set Up Environment Variables
 
-Create a `.env.local` file in the root directory with the following variables:
+For **development**, create a `.env.local` file in the root directory.
 
-```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/tabledadrian"
+For **production**, see the `.env.production.example` template file for all required environment variables. Copy it to `.env.production` and fill in your actual values.
 
-# Next.js
-NEXT_PUBLIC_BASE_URL="https://your-domain.com"
-NEXT_PUBLIC_BASE_RPC_URL="https://mainnet.base.org"
+**Required Environment Variables**:
+- `DATABASE_URL`: PostgreSQL connection string
+- `NEXT_PUBLIC_APP_URL`: Your production domain
+- `NEXT_PUBLIC_BASE_RPC_URL`: Base network RPC URL
+- `NEXT_PUBLIC_TA_CONTRACT_ADDRESS`: Token contract address (0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07)
+- `OPENAI_API_KEY`: For AI food vision
+- `ANTHROPIC_API_KEY`: For AI longevity plans
+- `OURA_CLIENT_ID` / `OURA_CLIENT_SECRET`: Oura Ring OAuth
+- `GOOGLE_FIT_CLIENT_ID` / `GOOGLE_FIT_CLIENT_SECRET`: Google Fit OAuth
+- `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
+- `NEXTAUTH_URL`: Your production domain
 
-# Web3
-NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID="your-walletconnect-project-id"
-BACKEND_WALLET_PRIVATE_KEY="your-backend-wallet-private-key"
+**Optional but Recommended**:
+- `REDIS_URL`: For caching
+- `NEXT_PUBLIC_SENTRY_DSN`: For error tracking
+- `NEXT_PUBLIC_GA_ID`: For analytics
+- `BACKEND_WALLET_PRIVATE_KEY`: For on-chain token operations
 
-# Email (EmailJS)
-NEXT_PUBLIC_EMAILJS_SERVICE_ID="your-service-id"
-NEXT_PUBLIC_EMAILJS_TEMPLATE_ID="your-template-id"
-NEXT_PUBLIC_EMAILJS_PUBLIC_KEY="your-public-key"
-
-# OpenAI (for AI Coach)
-OPENAI_API_KEY="your-openai-api-key"
-
-# Redis (optional, for caching)
-REDIS_URL="redis://localhost:6379"
-```
+See `.env.production.example` for the complete list with descriptions.
 
 ### 3. Set Up Database
 
@@ -168,6 +166,47 @@ Vercel is already configured with `vercel.json`.
    pm2 startup
    ```
 
+## Production Deployment Scripts
+
+### Database Migration
+
+Use the production migration script to safely migrate the database:
+
+```bash
+# Set DATABASE_URL environment variable
+export DATABASE_URL="postgresql://user:password@host:5432/database"
+
+# Run migration script
+./scripts/migrate-production.sh
+```
+
+This script will:
+- Create a database backup
+- Run Prisma migrations
+- Verify data integrity
+- Provide rollback instructions if migration fails
+
+### Production Deployment
+
+Use the deployment script for automated production deployments:
+
+```bash
+# Set required environment variables
+export DATABASE_URL="..."
+export NEXT_PUBLIC_TA_CONTRACT_ADDRESS="0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07"
+
+# Run deployment script
+./scripts/deploy-production.sh
+```
+
+This script will:
+- Run pre-deployment checks (tests, security scans)
+- Deploy to Vercel (blue-green deployment)
+- Run smoke tests
+- Provide rollback instructions
+
+**Note**: These scripts require bash. On Windows, use Git Bash or WSL.
+
 ## Post-Deployment Checklist
 
 ### 1. Smart Contract Authorization
@@ -183,21 +222,31 @@ authorizeEventService(backendWalletAddress, "Backend event service");
 
 ### 2. Database Setup
 
-- Ensure all migrations are applied
+- Ensure all migrations are applied (use `./scripts/migrate-production.sh`)
 - Verify database connection
 - Test API endpoints
+- Verify health check endpoint: `curl https://your-domain.com/api/health`
 
 ### 3. Environment Verification
 
-- Check all environment variables are set
+- Check all environment variables are set in Vercel dashboard
 - Verify API keys are working
 - Test wallet connections
+- Test OAuth flows (Oura, Google Fit)
 
 ### 4. Performance Optimization
 
-- Enable CDN for static assets
-- Set up caching headers
+- Enable CDN for static assets (automatic with Vercel)
+- Set up caching headers (configured in `vercel.json`)
 - Monitor Core Web Vitals
+- Check Redis cache is working
+
+### 5. Monitoring Setup
+
+- Verify Sentry error tracking is working
+- Set up Google Analytics
+- Configure health check monitoring
+- Set up alerts (see [MONITORING.md](./MONITORING.md))
 
 ## Build Output
 
@@ -240,14 +289,46 @@ After running `npm run build`, you'll get:
 2. **Optimize images**: Use Next.js Image component
 3. **Bundle size**: Check with `npm run build -- --analyze`
 
+## Rollback Procedure
+
+If a deployment causes issues:
+
+1. **Vercel Rollback**:
+   ```bash
+   # List recent deployments
+   vercel ls
+   
+   # Rollback to previous deployment
+   vercel rollback [deployment-url]
+   ```
+
+2. **Database Rollback**:
+   ```bash
+   # Restore from backup created by migrate-production.sh
+   psql $DATABASE_URL < backup-YYYYMMDD-HHMMSS.sql
+   ```
+
+3. **Environment Variables**:
+   - Revert environment variable changes in Vercel dashboard
+   - Or use Vercel CLI: `vercel env pull .env.production`
+
 ## Monitoring
 
 ### Recommended Tools
 
 - **Vercel Analytics**: Built-in with Vercel
-- **Sentry**: Error tracking
+- **Sentry**: Error tracking (see [MONITORING.md](./MONITORING.md))
 - **Google Analytics**: User analytics
 - **Lighthouse**: Performance monitoring
+- **Health Check**: `/api/health` endpoint
+
+See [MONITORING.md](./MONITORING.md) for detailed monitoring setup and alert configuration.
+
+## Related Documentation
+
+- **[TESTING.md](./TESTING.md)**: How to run tests, test coverage goals, writing tests
+- **[SECURITY.md](./SECURITY.md)**: Security practices, incident response, vulnerability disclosure
+- **[MONITORING.md](./MONITORING.md)**: Health checks, alerts, observability, troubleshooting
 
 ## Support
 
@@ -255,6 +336,7 @@ For issues or questions:
 - Check the README.md
 - Review COMPLETE-FEATURES.md
 - Check GitHub issues
+- Review documentation in `docs/` directory
 
 ---
 

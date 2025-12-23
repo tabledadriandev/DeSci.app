@@ -1,6 +1,6 @@
 /**
  * Wearable Device Integration
- * Apple Watch, Fitbit, Oura Ring APIs
+ * Apple Watch, Fitbit, Oura Ring, WHOOP, Strava, Google Fit APIs
  */
 
 export interface WearableData {
@@ -9,14 +9,24 @@ export interface WearableData {
     duration: number; // hours
     quality: number; // 1-10
     deepSleep: number; // hours
+    remSleep?: number; // hours
+    lightSleep?: number; // hours
+    efficiency?: number; // percentage
   };
   heartRate?: {
     resting: number;
     average: number;
     max: number;
   };
+  hrv?: {
+    value: number; // ms
+    rmssd?: number; // ms
+  };
   calories?: number;
   activeMinutes?: number;
+  readiness?: number; // 0-100
+  strain?: number; // 0-21 (WHOOP)
+  recovery?: number; // 0-100
 }
 
 export class WearableIntegration {

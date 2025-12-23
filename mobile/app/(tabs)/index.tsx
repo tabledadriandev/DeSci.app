@@ -62,7 +62,7 @@ export default function DashboardScreen() {
       <Text style={styles.kicker}>TABLE D'ADRIAN</Text>
       <Text style={styles.title}>Wellness Dashboard</Text>
       <Text style={styles.subtitle}>
-        Quickly glance your health score, streak, and latest $TA rewards.
+        Quickly glance your health score, streak, and latest $tabledadrian rewards.
       </Text>
 
       {loading && (
@@ -90,7 +90,7 @@ export default function DashboardScreen() {
               <Text style={styles.cardValue}>0</Text>
             </View>
             <View style={styles.cardSmall}>
-              <Text style={styles.cardLabel}>$TA Earned</Text>
+              <Text style={styles.cardLabel}>$tabledadrian Earned</Text>
               <Text style={styles.cardValue}>0.00</Text>
             </View>
           </View>

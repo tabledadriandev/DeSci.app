@@ -6,7 +6,7 @@
 - ✅ Next.js 15 with TypeScript
 - ✅ Prisma + PostgreSQL database
 - ✅ Web3 integration (wagmi, RainbowKit, Base network)
-- ✅ Token gating system ($5 minimum $TA)
+- ✅ Token gating system ($5 minimum $tabledadrian)
 - ✅ API routes structure
 - ✅ Environment variable management
 
@@ -32,16 +32,16 @@
 
 ### 💰 Web3 & Tokenomics
 - ✅ Wallet connection (MetaMask, Rainbow, Coinbase Wallet)
-- ✅ $TA token balance checking
+- ✅ $tabledadrian token balance checking
 - ✅ Token gating ($5 minimum)
 - ✅ Staking system (12% APY)
 - ✅ Token rewards for actions:
-  - Health tracking: 1 $TA
-  - Meal plan creation: 5 $TA
-  - Post sharing: 2 $TA
-  - Recipe sharing: 10 $TA
-  - Wearable sync: 5 $TA
-- ✅ Marketplace ($TA payments)
+  - Health tracking: 1 $tabledadrian
+  - Meal plan creation: 5 $tabledadrian
+  - Post sharing: 2 $tabledadrian
+  - Recipe sharing: 10 $tabledadrian
+  - Wearable sync: 5 $tabledadrian
+- ✅ Marketplace ($tabledadrian payments)
 - ✅ Transaction history
 
 ### 🛒 Marketplace
@@ -49,7 +49,7 @@
 - ✅ Service offerings
 - ✅ Subscription management
 - ✅ Stock tracking
-- ✅ Purchase flow with $TA
+- ✅ Purchase flow with $tabledadrian
 
 ### 👥 Social Features
 - ✅ Community feed
@@ -61,7 +61,7 @@
 
 ### 🗳️ Governance
 - ✅ DAO voting system
-- ✅ Proposal creation (100 $TA minimum)
+- ✅ Proposal creation (100 $tabledadrian minimum)
 - ✅ Weighted voting (1 token = 1 vote)
 - ✅ Proposal types: features, partnerships, treasury, policy
 - ✅ Vote tracking and results

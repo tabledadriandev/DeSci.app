@@ -82,7 +82,7 @@ export default function CommunityScreen() {
       setNewPostContent('');
       setShowCreateForm(false);
       await loadPosts();
-      Alert.alert('Success', 'Post shared! You earned 2 $TA tokens.');
+      Alert.alert('Success', 'Post shared! You earned 2 $tabledadrian tokens.');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to create post');
     } finally {

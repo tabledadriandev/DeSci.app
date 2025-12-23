@@ -49,7 +49,7 @@ Complete data pipeline and user system for accurate nutrition and medical inform
 1. **Wallet Connect**
    - MetaMask, Rainbow, Coinbase Wallet
    - Encrypted wallet storage
-   - $5 minimum $TA verification
+   - $5 minimum $tabledadrian verification
    - Auto-reconnect on refresh
 
 2. **Traditional Auth**

@@ -2,7 +2,7 @@
 
 ## 🚀 Overview
 
-A comprehensive Web3-powered longevity and wellness platform built on Base network, token-gated with $TA tokens.
+A comprehensive Web3-powered longevity and wellness platform built on Base network, token-gated with $tabledadrian tokens.
 
 ## 🔑 API Keys & Secrets
 
@@ -50,16 +50,16 @@ The app uses Prisma with PostgreSQL. Key models:
 - **MealPlan**: Personalized meal plans
 - **Recipe**: Community recipe sharing
 - **Challenge**: Gamified challenges with rewards
-- **Reward**: $TA token rewards system
+- **Reward**: $tabledadrian token rewards system
 - **NFT**: Achievement NFTs
 - **Partnership**: Partnership tracking
-- **MarketplaceItem**: Products/services for $TA
+- **MarketplaceItem**: Products/services for $tabledadrian
 - **GovernanceProposal**: DAO governance
 
 ## 🔐 Token Gating
 
-Users need minimum **$5 worth of $TA tokens** to access the app:
-- Contract: `0x9Cb5254319f824A2393ECbF6aDCf608867AA1b07`
+Users need minimum **$5 worth of $tabledadrian tokens** to access the app:
+- Contract: `0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07`
 - Network: Base (Chain ID: 8453)
 - Minimum: 5 TA tokens (assuming $1 per token)
 
@@ -74,7 +74,7 @@ Create `.env` file:
 DATABASE_URL="postgresql://user:password@localhost:5432/tabledadrian"
 
 # Web3
-NEXT_PUBLIC_TA_CONTRACT_ADDRESS="0x9Cb5254319f824A2393ECbF6aDCf608867AA1b07"
+NEXT_PUBLIC_TA_CONTRACT_ADDRESS="0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07"
 NEXT_PUBLIC_BASE_CHAIN_ID=8453
 NEXT_PUBLIC_BASE_RPC_URL="https://mainnet.base.org"
 
@@ -165,9 +165,9 @@ Scrapes:
 
 ### Web3 Features
 - 🔐 Token gating ($5 minimum)
-- 💰 $TA rewards for actions
+- 💰 $tabledadrian rewards for actions
 - 💎 Staking for premium features
-- 🛒 Marketplace ($TA payments)
+- 🛒 Marketplace ($tabledadrian payments)
 - 🗳️ DAO governance
 
 ### Social

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       </head>
       <body>
         <h1>Table d'Adrian Wellness Frame</h1>
-        <p>Track your health, join challenges, and earn $TA rewards!</p>
+        <p>Track your health, join challenges, and earn $tabledadrian rewards!</p>
       </body>
     </html>
   `;

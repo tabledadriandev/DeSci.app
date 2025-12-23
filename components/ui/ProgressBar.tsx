@@ -27,16 +27,16 @@ export default function ProgressBar({
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
   const colorClasses = {
-    primary: 'bg-bio-gradient',
+    primary: 'bg-accent-primary',
     success: 'bg-semantic-success',
     warning: 'bg-semantic-warning',
     error: 'bg-semantic-error',
   };
 
   const sizeClasses = {
-    sm: 'h-1.5',
-    md: 'h-2.5',
-    lg: 'h-4',
+    sm: 'h-1',
+    md: 'h-2',
+    lg: 'h-3',
   };
 
   return (
@@ -53,7 +53,7 @@ export default function ProgressBar({
       )}
       <div
         className={cn(
-          'w-full rounded-full overflow-hidden bg-bg-elevated', // Use bg-bg-elevated for the track
+          'w-full rounded-full overflow-hidden bg-gray-200',
           sizeClasses[size]
         )}
       >

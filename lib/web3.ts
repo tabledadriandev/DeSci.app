@@ -6,7 +6,7 @@
 import { createPublicClient, http, formatUnits, parseUnits, encodeFunctionData } from 'viem';
 import { base } from 'viem/chains';
 
-const TA_CONTRACT = '0x9Cb5254319f824A2393ECbF6aDCf608867AA1b07' as `0x${string}`;
+const TA_CONTRACT = '0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07' as `0x${string}`;
 // Token gating removed - all users can access the app
 // Wallet connection is optional but enables rewards and premium features
 

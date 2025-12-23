@@ -1,13 +1,13 @@
 /**
  * Chef Earnings and Rewards Calculation
- * Handles both crypto ($TA tokens) and fiat (USD) earnings
+ * Handles both crypto ($tabledadrian tokens) and fiat (USD) earnings
  */
 
 import { prisma } from '@/lib/prisma';
 
 export interface EarningsSummary {
   totalEarnings: {
-    crypto: number; // $TA tokens
+    crypto: number; // $tabledadrian tokens
     fiat: number; // USD
   };
   byType: {
@@ -101,7 +101,7 @@ export class ChefEarningsCalculator {
 
   /**
    * Calculate biomarker improvement bonus
-   * 100-500 $TA bonus for biomarker improvements >20%
+   * 100-500 $tabledadrian bonus for biomarker improvements >20%
    */
   async calculateBiomarkerBonus(
     chefId: string,
@@ -113,11 +113,11 @@ export class ChefEarningsCalculator {
     }
 
     // Bonus tiers:
-    // 20-30%: 100 $TA
-    // 30-40%: 200 $TA
-    // 40-50%: 300 $TA
-    // 50-60%: 400 $TA
-    // 60%+: 500 $TA
+    // 20-30%: 100 $tabledadrian
+    // 30-40%: 200 $tabledadrian
+    // 40-50%: 300 $tabledadrian
+    // 50-60%: 400 $tabledadrian
+    // 60%+: 500 $tabledadrian
 
     let bonusAmount = 0;
     if (improvementPercentage >= 60) {
@@ -171,7 +171,7 @@ export class ChefEarningsCalculator {
 
   /**
    * Calculate referral bonus
-   * 100 $TA per client referral (crypto) or $50 USD (fiat)
+   * 100 $tabledadrian per client referral (crypto) or $50 USD (fiat)
    */
   async calculateReferralBonus(
     chefId: string,

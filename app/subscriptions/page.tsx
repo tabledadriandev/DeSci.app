@@ -1,29 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion } from 'framer-motion';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { CheckCircle, Zap, Crown, Rocket } from 'lucide-react';
+import { useAccount } from 'wagmi';
 
 export default function SubscriptionsPage() {
   const { address } = useAccount();
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
 
   const tiers = [
     {
       id: 'free',
-      name: 'Explorer',
+      name: 'Free',
       price: 0,
       features: [
         '5 meals/week tracking',
         '50 basic recipes',
         'Community (view only)',
-        '1x $TA earning rate',
+        '1x $tabledadrian earning rate',
       ],
-      icon: Rocket
     },
     {
       id: 'premium',
@@ -35,11 +29,10 @@ export default function SubscriptionsPage() {
         '2,000+ recipes with videos',
         'AI nutrition coach',
         'Disease-specific plans',
-        '2x $TA rewards',
+        '2x $tabledadrian rewards',
         'Priority support',
         'Monthly NFT drop',
       ],
-      icon: Zap
     },
     {
       id: 'elite',
@@ -53,10 +46,27 @@ export default function SubscriptionsPage() {
         'Private event invitations',
         'Quarterly cookbook delivery',
         'VIP NFT collection',
-        '5x $TA rewards',
+        '5x $tabledadrian rewards',
         'Concierge support',
       ],
-      icon: Crown
+    },
+    {
+      id: 'mastermind',
+      name: 'Mastermind',
+      price: 299,
+      priceYearly: 2999,
+      features: [
+        'Everything in Elite',
+        'Weekly 1-on-1 sessions',
+        'Personalized culinary training',
+        '20% discount on chef services',
+        'Annual exclusive retreat',
+        'Custom longevity protocol',
+        'Lifetime exclusive NFTs',
+        '10x $tabledadrian rewards',
+        'Direct messaging with Chef Adrian',
+        '10% commission on referrals',
+      ],
     },
   ];
 
@@ -65,108 +75,107 @@ export default function SubscriptionsPage() {
       alert('Please connect your wallet');
       return;
     }
-    // Mock subscription logic
-    alert(`Subscribing to ${tierId} (${billing})... (Mock)`);
+
+    const tier = tiers.find((t) => t.id === tierId);
+    if (!tier) return;
+
+    const price = billing === 'yearly' ? tier.priceYearly : tier.price;
+
+    try {
+      const response = await fetch('/api/subscriptions/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          tierId,
+          billing,
+          price,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Subscription successful!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Subscription failed');
+      }
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      alert('Subscription failed');
+    }
   };
 
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto">
-          <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold bg-crypto-gradient text-transparent bg-clip-text mb-4">
-              Choose Your Plan
-            </h1>
-            <p className="text-lg text-text-secondary">
-              Unlock the full potential of your wellness journey.
-            </p>
-            <div className="mt-6 flex justify-center">
-              <div className="glass-card p-1 flex gap-2 rounded-lg">
-                <AnimatedButton
-                  size="sm"
-                  variant={billingCycle === 'monthly' ? 'primary' : 'ghost'}
-                  onClick={() => setBillingCycle('monthly')}
-                >
-                  Monthly
-                </AnimatedButton>
-                <AnimatedButton
-                  size="sm"
-                  variant={billingCycle === 'yearly' ? 'primary' : 'ghost'}
-                  onClick={() => setBillingCycle('yearly')}
-                >
-                  Yearly (Save 20%)
-                </AnimatedButton>
-              </div>
-            </div>
-          </motion.div>
+    <div className="min-h-screen  p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-display text-accent-primary mb-8 text-center">
+          Choose Your Plan
+        </h1>
 
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {tiers.map((tier) => {
-              const Icon = tier.icon;
-              return (
-                <motion.div
-                  key={tier.id}
-                  variants={fadeInUp}
-                  className={`glass-card-hover p-6 flex flex-col ${tier.id === 'premium' ? 'ring-2 ring-accent-primary shadow-glow' : ''}`}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <Icon className="w-8 h-8 text-accent-primary" />
-                    <h3 className="text-2xl font-bold text-text-primary">
-                      {tier.name}
-                    </h3>
-                  </div>
-                  <div className="mb-6">
-                    {tier.price > 0 ? (
-                      <>
-                        <p className="text-4xl font-bold text-text-primary">
-                          ${billingCycle === 'yearly' ? (tier.priceYearly ? tier.priceYearly / 12 : tier.price).toFixed(0) : tier.price}
-                          <span className="text-lg text-text-secondary">/mo</span>
-                        </p>
-                        {tier.priceYearly && (
-                          <p className="text-xs text-text-secondary mt-1">
-                            Billed as ${tier.priceYearly}/year
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-4xl font-bold text-text-primary">Free</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {tiers.map((tier) => (
+            <div
+              key={tier.id}
+              className={`bg-white rounded-xl shadow-md p-6 ${
+                tier.id === 'premium' ? 'ring-2 ring-accent-primary' : ''
+              }`}
+            >
+              <h3 className="text-2xl font-display text-text-primary mb-2">
+                {tier.name}
+              </h3>
+              <div className="mb-4">
+                {tier.price > 0 ? (
+                  <>
+                    <div className="text-3xl font-display text-accent-primary">
+                      ${tier.price}
+                      <span className="text-lg text-text-secondary">/mo</span>
+                    </div>
+                    {tier.priceYearly && (
+                      <div className="text-sm text-text-secondary mt-1">
+                        or ${tier.priceYearly}/year (save{' '}
+                        {Math.round(((tier.price * 12 - tier.priceYearly) / (tier.price * 12)) * 100)}%)
+                      </div>
                     )}
+                  </>
+                ) : (
+                  <div className="text-3xl font-display text-accent-primary">
+                    Free
                   </div>
+                )}
+              </div>
 
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {tier.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start text-sm">
-                        <CheckCircle className="w-5 h-5 text-semantic-success mr-2 flex-shrink-0" />
-                        <span className="text-text-secondary">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+              <ul className="space-y-2 mb-6">
+                {tier.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start text-sm">
+                    <span className="text-green-600 mr-2">✓</span>
+                    <span className="text-text-secondary">{feature}</span>
+                  </li>
+                ))}
+              </ul>
 
-                  {tier.price > 0 ? (
-                    <AnimatedButton
-                      onClick={() => subscribe(tier.id, billingCycle)}
-                      variant={tier.id === 'premium' ? 'primary' : 'secondary'}
-                      className="w-full mt-auto"
+              {tier.price > 0 && (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => subscribe(tier.id, 'monthly')}
+                    className="w-full bg-accent-primary text-white px-4 py-2 rounded-lg hover:bg-accent-primary/90 transition-colors"
+                  >
+                    Subscribe Monthly
+                  </button>
+                  {tier.priceYearly && (
+                    <button
+                      onClick={() => subscribe(tier.id, 'yearly')}
+                      className="w-full border-2 border-accent-primary text-accent-primary px-4 py-2 rounded-lg hover:bg-accent-primary/10 transition-colors"
                     >
-                      Subscribe
-                    </AnimatedButton>
-                  ) : (
-                    <AnimatedButton variant="secondary" className="w-full mt-auto" disabled>
-                      Current Plan
-                    </AnimatedButton>
+                      Subscribe Yearly
+                    </button>
                   )}
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

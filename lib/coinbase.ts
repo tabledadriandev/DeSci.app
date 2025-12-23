@@ -112,7 +112,7 @@ export class CoinbaseClient {
    */
   async createPayment(amount: number, currency: string = 'TA'): Promise<any> {
     // Coinbase Commerce API integration for payments
-    // This would integrate with Coinbase Commerce for $TA payments
+    // This would integrate with Coinbase Commerce for $tabledadrian payments
     return {
       amount,
       currency,

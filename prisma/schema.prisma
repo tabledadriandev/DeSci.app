@@ -10,1734 +10,323 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// USER & AUTHENTICATION
+// ==========================================
+
 model User {
-  id                     String   @id @default(cuid())
-  walletAddress          String   @unique
-  email                  String?  @unique
-  username               String?
-  emailVerified          Boolean  @default(false)
-  emailVerificationToken String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  email                 String?   @unique
+  walletAddress         String?   @unique
+  name                  String?
+  avatar                String?
+  biologicalAge         Float?
+  stakedTokens          Float     @default(0)
+  totalTokensEarned     Float     @default(0)
+  preferences           Json?     // Food preferences, dietary restrictions, etc.
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  // Authentication
-  auth           UserAuth?
-  sessions       UserSession[]
-  socialAccounts SocialAccount[]
+  // Relations
+  auth                  UserAuth?
+  sessions              UserSession[]
+  wearableConnections   WearableConnection[]
+  biomarkerReadings     BiomarkerReading[]
+  biologicalAges        BiologicalAge[]
+  protocolExperiments   ProtocolExperiment[]
+  desciContributions    DeSciContribution[]
+  advancedMetrics       AdvancedMetric[]
+  mealLogs              MealLog[]
+  medicalResults        MedicalResult[]
+  longevityPlans        LongevityPlan[]
+  achievements          Achievement[]
+  stakings              Staking[]
+  leaderboardEntries    Leaderboard[]
 
-  // Profile
-  profile UserProfile?
-
-  // Health & Wellness
-  healthData   HealthData[]
-  mealPlans    MealPlan[]
-  recipes      Recipe[]
-  challenges   ChallengeProgress[]
-  achievements Achievement[]
-
-  // Comprehensive Health Features (Neko Health inspired)
-  healthAssessments HealthAssessment[]
-  biomarkers        Biomarker[]
-  symptomLogs       SymptomLog[]
-  healthScores      HealthScore[]
-  cameraAnalyses    CameraAnalysis[]
-  moleTrackings     MoleTracking[]
-  wellnessPlans     WellnessPlan[]
-  mealLogs          MealLog[]
-  dailyHabits       DailyHabits[]
-  healthReports     HealthReport[]
-  microbiomeResults MicrobiomeResult[]
-
-  // Social
-  posts            Post[]
-  comments         Comment[]
-  followers        Follow[]  @relation("UserFollowers")
-  following        Follow[]  @relation("UserFollowing")
-  messages         Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  recipeFavorites  RecipeFavorite[]
-  recipeRatings    RecipeRating[]
-  groupsCreated    Group[]
-  groupMemberships GroupMember[]
-  forumPosts       ForumPost[]
-
-  // Token & Rewards
-  tokenBalance Float         @default(0)
-  stakedAmount Float         @default(0)
-  rewards      Reward[]
-  transactions Transaction[]
-  stakes       Stake[]
-
-  // Payments & Subscriptions
-  paymentMethods PaymentMethod[]
-  subscriptions  Subscription[]
-  payments       Payment[]
-
-  // Chef Services
-  chefProfiles  ChefProfile?
-  chefBookings  ChefBooking[]
-  chefMealPlans ChefMealPlan[]
-  chefReviews   ChefReview[]   @relation("ClientReviews")
-
-  // Test Kits & Diagnostics
-  testOrders  TestOrder[]
-  testResults TestResult[]
-
-  // Telemedicine
-  healthcareProviders HealthcareProvider[]
-  appointments        Appointment[]
-  medicalRecords      MedicalRecord[]
-
-  // Gamification
-  xp          Int       @default(0)
-  level       Int       @default(1)
-  streak      Int       @default(0)
-  lastCheckIn DateTime?
-
-  // NFT
-  nfts NFT[]
-
-  // Data Licensing & Research
-  dataSharingOptIn Boolean @default(false)
-  dataLicenseOptIns DataLicenseOptIn[]
-  dividendPayments DividendPayment[]
-
-  @@index([email])
   @@index([walletAddress])
-}
-
-model SocialAccount {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  provider   String   // google, apple, twitter, farcaster, etc.
-  providerId String   // sub / id from provider
-
-  email       String?
-  displayName String?
-  avatarUrl   String?
-  metadata    Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([provider, providerId])
-  @@index([userId])
+  @@index([email])
 }
 
 model UserAuth {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  passwordHash         String // bcrypt hashed password
-  passwordResetToken   String?
-  passwordResetExpires DateTime?
-
-  twoFactorEnabled     Boolean  @default(false)
-  twoFactorSecret      String?
-  twoFactorBackupCodes String[] // Encrypted backup codes
-
-  loginAttempts Int       @default(0)
-  lockUntil     DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash          String
+  passwordResetToken    String?
+  passwordResetExpires  DateTime?
+  twoFactorEnabled      Boolean   @default(false)
+  twoFactorSecret       String?
+  twoFactorBackupCodes  String[]
+  loginAttempts         Int       @default(0)
+  lockUntil             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 }
 
 model UserSession {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  sessionToken  String  @unique
-  refreshToken  String? @unique
-  walletAddress String?
-
-  loginTimestamp  DateTime @default(now())
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken    String    @unique
+  refreshToken    String?   @unique
+  walletAddress   String?
+  loginTimestamp  DateTime  @default(now())
   expiryTimestamp DateTime
-  lastActivity    DateTime @default(now())
-
-  deviceInfo Json? // {browser, os, ip, etc.}
-  ipAddress  String?
-  userAgent  String?
-
-  isActive Boolean @default(true)
+  lastActivity    DateTime  @default(now())
+  deviceInfo      Json?
+  ipAddress       String?
+  userAgent       String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([userId])
   @@index([sessionToken])
-  @@index([refreshToken])
-  @@index([expiryTimestamp])
 }
 
-model UserProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  firstName           String?
-  lastName            String?
-  bio                 String?
-  avatar              String?
-  age                 Int?
-  gender              String?
-  height              Float? // cm
-  weight              Float? // kg
-  activityLevel       String? // sedentary, light, moderate, active, very_active
-  healthGoals         String[] // weight_loss, muscle_gain, longevity, diabetes, heart_health, etc.
-  allergies           String[]
-  dietaryRestrictions String[] // vegan, vegetarian, keto, paleo, etc.
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model HealthData {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type       String // steps, sleep, heart_rate, blood_pressure, glucose, mood, weight, etc.
-  value      Float
-  unit       String?
-  notes      String?
-  source     String? // manual, apple_watch, fitbit, oura, etc.
-  recordedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-}
-
-model MealPlan {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name        String
-  description String?
-  startDate   DateTime
-  endDate     DateTime?
-  meals       Meal[]
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Meal {
-  id         String   @id @default(cuid())
-  mealPlanId String
-  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
-
-  type         String // breakfast, lunch, dinner, snack
-  name         String
-  description  String?
-  calories     Int?
-  protein      Float?
-  carbs        Float?
-  fat          Float?
-  fiber        Float?
-  ingredients  String[]
-  instructions String?
-  image        String?
-  date         DateTime
-  completed    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-}
-
-model Recipe {
-  id     String  @id @default(cuid())
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  name         String
-  description  String
-  image        String?
-  prepTime     Int? // minutes
-  cookTime     Int? // minutes
-  servings     Int?
-  calories     Int?
-  protein      Float?
-  carbs        Float?
-  fat          Float?
-  // Simple community nutrition meta so we can show auto-calculated summaries
-  nutritionMeta Json? // { perServing: { calories, protein, carbs, fat }, source: string }
-  ingredients  Json // Array of {name, amount, unit}
-  instructions String[]
-  tags         String[]
-  isPublic     Boolean  @default(false)
-  likes        Int      @default(0)
-  views        Int      @default(0)
-  posts        Post[]
-  favorites    RecipeFavorite[]
-  ratings      RecipeRating[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model RecipeFavorite {
-  id       String @id @default(cuid())
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recipeId String
-  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([userId, recipeId])
-}
-
-model RecipeRating {
-  id       String @id @default(cuid())
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recipeId String
-  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-
-  rating   Int
-  review   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, recipeId])
-}
-
-model Group {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  slug        String   @unique
-  type        String   // topic, condition, region, etc.
-  isPrivate   Boolean  @default(false)
-
-  creatorId String
-  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-
-  members GroupMember[]
-  posts   ForumPost[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([type])
-}
-
-model GroupMember {
-  id       String @id @default(cuid())
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  groupId  String
-  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  role String @default("member") // member, admin, moderator
-
-  createdAt DateTime @default(now())
-
-  @@unique([userId, groupId])
-}
-
-model ForumPost {
-  id       String @id @default(cuid())
-  groupId  String
-  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  title     String
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Challenge {
-  id           String              @id @default(cuid())
-  name         String
-  description  String
-  type         String // daily, weekly, seasonal, event
-  startDate    DateTime
-  endDate      DateTime?
-  requirements Json // Challenge requirements
-  rewards      Json // Reward structure
-  isActive     Boolean             @default(true)
-  participants ChallengeProgress[]
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-}
-
-model ChallengeProgress {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  challengeId String
-  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-
-  progress    Json // Progress data
-  completed   Boolean   @default(false)
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@unique([userId, challengeId])
-}
-
-model Achievement {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type        String // streak, level, challenge, milestone, etc.
-  name        String
-  description String
-  icon        String?
-  nftMinted   Boolean  @default(false)
-  nftTokenId  String?
-  earnedAt    DateTime @default(now())
-}
-
-model Post {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  content   String
-  images    String[]
-  recipeId  String?
-  recipe    Recipe?   @relation(fields: [recipeId], references: [id], onDelete: SetNull)
-  likes     Int       @default(0)
-  comments  Comment[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model Comment {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postId String
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  content   String
-  likes     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Follow {
-  id          String @id @default(cuid())
-  followerId  String
-  follower    User   @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
-  followingId String
-  following   User   @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([followerId, followingId])
-}
-
-model Message {
-  id          String @id @default(cuid())
-  senderId    String
-  sender      User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  recipientId String
-  recipient   User   @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
-
-  content   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-}
-
-model Reward {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type        String // checkin, meal_tracked, recipe_shared, challenge_completed, referral, etc.
-  amount      Float
-  description String
-  claimed     Boolean   @default(false)
-  claimedAt   DateTime?
-  createdAt   DateTime  @default(now())
-}
-
-model Transaction {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type        String // reward, purchase, stake, unstake, transfer, payment
-  amount      Float
-  description String
-  txHash      String?
-  status      String   @default("pending") // pending, completed, failed
-  createdAt   DateTime @default(now())
-}
-
-// ========== PAYMENT & SUBSCRIPTION MODELS ==========
-
-model PaymentMethod {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type     String // crypto, stripe_card, stripe_apple_pay, stripe_google_pay, stripe_sepa, stripe_ach
-  provider String // stripe, wallet_connect, etc.
-
-  // Stripe-specific fields
-  stripeCustomerId      String? @unique
-  stripePaymentMethodId String? // Stripe PaymentMethod ID
-  stripeSetupIntentId   String? // For SEPA/ACH setup
-
-  // Payment method details
-  cardLast4        String? // Last 4 digits of card
-  cardBrand        String? // visa, mastercard, amex, etc.
-  cardExpMonth     Int?
-  cardExpYear      Int?
-  bankAccountLast4 String? // For SEPA/ACH
-  bankAccountType  String? // checking, savings
-
-  // Wallet info (for crypto)
-  walletAddress String? // For crypto payment methods
-
-  isDefault Boolean @default(false)
-  isActive  Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([stripeCustomerId])
-}
-
-model Subscription {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  tier         String // basic, premium, concierge
-  billingCycle String // monthly, yearly
-
-  // Pricing
-  price         Float // In USD/EUR/GBP (fiat) or TA tokens (crypto)
-  currency      String // USD, EUR, GBP, TA
-  paymentMethod String // crypto, fiat
-
-  // Stripe subscription
-  stripeSubscriptionId String? @unique
-  stripeCustomerId     String?
-  stripePriceId        String?
-
-  // Subscription status
-  status             String // active, canceled, past_due, unpaid, trialing
-  currentPeriodStart DateTime?
-  currentPeriodEnd   DateTime?
-  cancelAtPeriodEnd  Boolean   @default(false)
-  canceledAt         DateTime?
-
-  // Trial
-  trialStart DateTime?
-  trialEnd   DateTime?
-
-  // Payment method
-  paymentMethodId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([stripeSubscriptionId])
-  @@index([status])
-}
-
-model Payment {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Payment details
-  amount          Float // In the currency used
-  currency        String // USD, EUR, GBP, TA
-  paymentMethod   String // crypto, stripe_card, stripe_apple_pay, etc.
-  paymentMethodId String? // Reference to PaymentMethod
-
-  // What was purchased
-  type           String // subscription, one_time, refund, credit
-  description    String
-  subscriptionId String? // If this is a subscription payment
-
-  // Stripe payment
-  stripePaymentIntentId String? @unique
-  stripeChargeId        String? @unique
-  stripeInvoiceId       String?
-
-  // Crypto payment
-  txHash      String? // Blockchain transaction hash
-  blockNumber Int?
-
-  // Status
-  status        String // pending, succeeded, failed, refunded, partially_refunded
-  failureReason String?
-
-  // Metadata
-  metadata Json? // Additional payment data
-
-  // Invoice
-  invoiceUrl    String? // PDF invoice URL
-  invoiceNumber String? // Invoice number
-
-  // Refund
-  refundAmount Float?    @default(0)
-  refundedAt   DateTime?
-  refundReason String?
-
-  // Timestamps
-  paidAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([userId])
-  @@index([stripePaymentIntentId])
-  @@index([stripeChargeId])
-  @@index([status])
-  @@index([createdAt])
-}
-
-model NFT {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  tokenId     String   @unique
-  type        String // achievement, recipe, chef_experience, vip_access
-  name        String
-  description String
-  image       String
-  metadata    Json?
-  mintedAt    DateTime @default(now())
-}
-
-model Partnership {
-  id           String    @id @default(cuid())
-  companyName  String
-  contactEmail String
-  contactName  String?
-  website      String?
-  type         String // wellness_brand, supplement, clinic, influencer, supplier
-  status       String    @default("pending") // pending, contacted, responded, partnership, rejected
-  notes        String?
-  outreachSent DateTime?
-  lastContact  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-}
-
-model MarketplaceItem {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  type        String // product, service, subscription, treatment
-  price       Float // in TA tokens
-  image       String?
-  category    String
-  stock       Int?
-  isActive    Boolean  @default(true)
-  sales       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model GovernanceProposal {
-  id           String   @id @default(cuid())
-  title        String
-  description  String
-  type         String // feature, partnership, treasury, policy
-  proposer     String // wallet address
-  votesFor     Float    @default(0) // Changed to Float for weighted votes
-  votesAgainst Float    @default(0) // Changed to Float for weighted votes
-  status       String   @default("active") // active, passed, rejected, executed
-  startDate    DateTime @default(now())
-  endDate      DateTime
-  category     String?  // Optional category for filtering
-  metadata     Json?    // Additional proposal data
-  votes        Vote[]
-  treasuryTransactions TreasuryTransaction[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([type])
-  @@index([status])
-  @@index([category])
-}
-
-model Vote {
-  id            String             @id @default(cuid())
-  proposalId    String
-  proposal      GovernanceProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-  voter         String // wallet address
-  vote          String // for, against
-  weight        Float // based on token holdings + lock-up multiplier
-  baseWeight    Float // base token balance
-  multiplier    Float @default(1.0) // lock-up multiplier (1.0 to 5.0)
-  lockUpPeriod  Int? // days locked (30, 90, 180, 365)
-  txHash        String?
-  createdAt     DateTime           @default(now())
-
-  @@unique([proposalId, voter])
-  @@index([voter])
-}
-
-model Stake {
+// ==========================================
+// WEARABLES & BIOMETRICS
+// ==========================================
+
+model WearableConnection {
   id            String   @id @default(cuid())
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount        Float
-  lockUpPeriod  Int // days: 30, 90, 180, 365
-  multiplier    Float // 1.0, 1.5, 2.0, 3.0, 5.0 based on lock period
-  lockedUntil   DateTime
-  status        String   @default("active") // active, unlocked, withdrawn
-  txHash        String?
+  provider      String   // "oura", "apple", "google", "whoop", "strava", "fitbit"
+  accessToken   String   @db.Text
+  refreshToken  String?  @db.Text
+  expiresAt     DateTime?
+  lastSyncAt    DateTime?
+  isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
-  unlockedAt   DateTime?
-  withdrawnAt   DateTime?
+  updatedAt     DateTime @updatedAt
 
-  @@index([userId])
-  @@index([status])
-  @@index([lockedUntil])
+  @@index([userId, provider])
 }
 
-model TreasuryTransaction {
+model BiomarkerReading {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metric        String   // "hrv", "sleep_score", "readiness", "strain", etc.
+  value         Float
+  unit          String   // "ms", "%", "score"
+  source        String   // "oura", "apple", "google", "whoop", "strava", "fitbit"
+  date          DateTime
+  metadata      Json?    // Additional data (sleep phases, HR zones, etc.)
+  createdAt     DateTime @default(now())
+  
+  @@index([userId, metric, date])
+}
+
+model BiologicalAge {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chronologicalAge  Int
+  biologicalAge     Float
+  cardiacAge        Float?   // HRV-based
+  sleepAge          Float?   // Sleep quality-based
+  activityAge       Float?   // Movement-based
+  recoveryAge       Float?   // Recovery-based
+  calculatedAt      DateTime @default(now())
+  factors           Json?    // What's driving the score
+
+  @@index([userId, calculatedAt])
+}
+
+model AdvancedMetric {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metricType    String   // "hrv_coherence", "sleep_debt", "parasympathetic_tone", etc.
+  value         Float
+  date          DateTime
+  calculatedAt  DateTime @default(now())
+
+  @@index([userId, metricType, date])
+}
+
+// ==========================================
+// PROTOCOLS & EXPERIMENTS
+// ==========================================
+
+model ProtocolExperiment {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String   // "cold_plunge", "meditation", "fasting", etc.
+  startDate         DateTime
+  endDate           DateTime?
+  status            String   // "active", "completed", "paused"
+  notes             String?  @db.Text
+  correlatedMetrics Json?    // { "hrv": 8, "sleep": 12 }
+  adherence         Float?   // 0-100%
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId, status])
+}
+
+// ==========================================
+// FOOD & NUTRITION
+// ==========================================
+
+model MealLog {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photoUrl        String?  // Food photo
+  aiIdentified    Json?    // AI food identification results
+  foods           Json     // Array of foods with portions
+  calories        Float
+  protein         Float
+  carbs           Float
+  fat             Float
+  micronutrients  Json?    // Omega-3, polyphenols, NAD+ boosters, etc.
+  mealType        String   // "breakfast", "lunch", "dinner", "snack"
+  date            DateTime
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, date])
+}
+
+// ==========================================
+// MEDICAL RESULTS
+// ==========================================
+
+model MedicalResult {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pdfUrl          String?  // Uploaded PDF/image
+  extractedData   Json     // AI-extracted biomarkers
+  biomarkers      Json     // Structured biomarker data
+  testDate        DateTime
+  testType        String   // "blood", "hormone", "metabolic", etc.
+  labName         String?
+  doctorNotes     String?  @db.Text
+  flags           Json?    // Red/yellow/green flags
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId, testDate])
+}
+
+// ==========================================
+// AI LONGEVITY PLANS
+// ==========================================
+
+model LongevityPlan {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planType        String   // "nutrition", "exercise", "sleep", "supplements", "stress", "combined"
+  recommendations Json     // Structured recommendations
+  mealPlan        Json?    // 30-day meal plan
+  exercisePlan    Json?    // Workout schedule
+  supplementStack Json?   // Supplement recommendations
+  expectedResults Json?    // Expected improvements
+  startDate       DateTime
+  endDate         DateTime?
+  status          String   // "active", "completed", "paused"
+  adherence       Float?   // 0-100%
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, status])
+}
+
+// ==========================================
+// DESCI & TOKEN REWARDS
+// ==========================================
+
+model DeSciContribution {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dataPoints    Int
+  tokenReward   Float    // $TA tokens earned
+  researchStudy String?
+  transactionHash String? // Blockchain transaction
+  date          DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+// ==========================================
+// GAMIFICATION
+// ==========================================
+
+model Achievement {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String   // "sleep_optimizer", "hrv_master", "protocol_warrior", etc.
+  unlockedAt      DateTime @default(now())
+  tokenReward     Float    // $TA tokens earned
+  badgeUrl        String?
+
+  @@index([userId, type])
+}
+
+model Staking {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Float    // $TA tokens staked
+  apy             Float    // Current APY (8-12%)
+  rewardsEarned   Float    // Total rewards earned
+  startDate       DateTime
+  unlockDate      DateTime? // For locked staking
+  status          String   // "active", "withdrawn"
+  createdAt       DateTime @default(now())
+
+  @@index([userId, status])
+}
+
+model Leaderboard {
+  id              String   @id @default(cuid())
+  competitionId   String
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metric          String   // "biological_age", "hrv", "sleep", etc.
+  value           Float
+  rank            Int
+  period          String   // "daily", "weekly", "monthly"
+  date            DateTime
+  createdAt       DateTime @default(now())
+  
+  @@index([competitionId, rank])
+}
+
+// ==========================================
+// LEGACY MODELS (for backward compatibility)
+// ==========================================
+
+model HealthData {
   id          String   @id @default(cuid())
-  type        String // revenue, expense, dividend, proposal_execution
-  category    String? // marketplace, subscriptions, data_licensing, operations, etc.
-  amount      Float
-  currency    String   @default("TA") // TA, USD, ETH
-  description String
-  proposalId  String? // Link to governance proposal if applicable
-  proposal    GovernanceProposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
-  txHash      String?
-  metadata    Json? // Additional transaction data
-  createdAt   DateTime @default(now())
-
-  @@index([type])
-  @@index([category])
-  @@index([createdAt])
-}
-
-model TreasuryBalance {
-  id        String   @id @default(cuid())
-  currency  String   @unique // TA, USD, ETH
-  balance   Float    @default(0)
-  updatedAt DateTime @updatedAt
-}
-
-// ========== TELEMEDICINE & PROFESSIONAL SUPPORT ==========
-
-model HealthcareProvider {
-  id     String @id @default(cuid())
-  userId String? // optional link to existing User
-  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  fullName     String
-  type         String   // doctor, nutritionist, therapist, coach, trainer
-  specialties  String[] // e.g. ["cardiology", "longevity"]
-  languages    String[]
-  bio          String?
-  yearsExperience Int?
-
-  licenseNumber String?
-  licenseCountry String?
-  licenseVerified Boolean @default(false)
-
-  consultationPrice Float? // base price per session (in fiat or credits)
-  timezone          String?
-
-  availability Json? // { day: string, slots: string[] }[]
-
-  rating        Float?  // 0-5
-  totalReviews  Int     @default(0)
-  telemedicine  Boolean @default(true)
-
-  appointments Appointment[]
-  medicalRecords MedicalRecord[] @relation("ProviderMedicalRecords")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model Appointment {
-  id        String @id @default(cuid())
-  userId    String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  providerId String
-  provider   HealthcareProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-
-  startTime   DateTime
-  endTime     DateTime?
-  status      String   @default("pending") // pending, confirmed, completed, cancelled
-  reason      String?
-  notes       String?
-  meetingUrl  String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model MedicalRecord {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  providerId   String?
-  provider     HealthcareProvider? @relation("ProviderMedicalRecords", fields: [providerId], references: [id], onDelete: SetNull)
-
-  title       String
-  description String?
-  fileUrl     String?
-
-  // Sharing & access control (simple version)
-  sharedWithProviderIds String[] // list of HealthcareProvider IDs
-
-  createdAt DateTime @default(now())
-}
-
-model HealthAssessment {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Personal Health History
-  chronicConditions  String[]
-  pastSurgeries      String[]
-  currentMedications String[]
-
-  // Family Medical History
-  familyHistory Json // { condition: string, relation: string }[]
-
-  // Lifestyle Assessment
-  sleepHours        Float?
-  stressLevel       Int? // 1-10
-  exerciseFrequency String? // daily, weekly, rarely, never
-  exerciseType      String[]
-
-  // Dietary Habits
-  mealFrequency       String? // 3x, 4x, 5x+ per day
-  foodGroups          String[] // fruits, vegetables, grains, protein, dairy
-  dietaryRestrictions String[]
-  waterIntake         Float? // liters per day
-
-  // Mental Health
-  anxietyLevel         Int? // 1-10
-  depressionIndicators String[]
-  moodStability        String? // stable, variable, unstable
-
-  // Current Symptoms
-  currentSymptoms String[]
-  symptomSeverity Json // { symptom: string, severity: number }[]
-  concerns        String[]
-
-  // Risk Scores
-  heartDiseaseRisk      Float?
-  diabetesRisk          Float?
-  hypertensionRisk      Float?
-  strokeRisk            Float?
-  metabolicSyndromeRisk Float?
-  overallRiskScore      Float?
-
-  // Health Profile
-  healthProfile   Json // Comprehensive profile object
-  recommendations String[]
-
-  completedAt DateTime @default(now())
+  userId      String
+  type        String
+  value       Float
+  unit        String?
+  notes       String?  @db.Text
+  source      String?
+  recordedAt  DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
 
-model Biomarker {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Vital Signs
-  bloodPressureSystolic  Int?
-  bloodPressureDiastolic Int?
-  heartRate              Int?
-  temperature            Float?
-  breathingRate          Int?
-
-  // Body Composition
-  weight            Float?
-  bmi               Float?
-  bodyFatPercentage Float?
-  muscleMass        Float?
-
-  // Blood Work
-  bloodGlucose     Float?
-  cholesterolTotal Float?
-  cholesterolLDL   Float?
-  cholesterolHDL   Float?
-  triglycerides    Float?
-
-  // Vitamins
-  vitaminD   Float?
-  vitaminB12 Float?
-  iron       Float?
-  ferritin   Float?
-
-  // Hormones
-  testosterone Float?
-  cortisol     Float?
-  tsh          Float? // Thyroid Stimulating Hormone
-  t3           Float?
-  t4           Float?
-
-  // Custom Lab Values
-  customValues Json // { name: string, value: number, unit: string }[]
-
-  // Metadata
-  labDate DateTime?
-  notes   String?
-  source  String? // manual, lab, camera
-
-  recordedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-}
-
-model MicrobiomeResult {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Test Source
-  source     String // 'viome', 'ombre', 'tiny_health', 'thorne', 'manual'
-  sourceId   String? // External test ID
-  testDate   DateTime @default(now())
-  uploadedAt DateTime @default(now())
-
-  // Diversity Metrics
-  shannonIndex    Float? // Diversity score (target: >4.0)
-  simpsonIndex    Float? // Dominance index
-  speciesRichness Int? // Number of unique species
-
-  // Species Composition (Major Phyla)
-  firmicutesPercentage      Float?
-  bacteroidetesPercentage   Float?
-  actinobacteriaPercentage  Float?
-  proteobacteriaPercentage  Float?
-  verrucomicrobiaPercentage Float?
-  otherPercentage           Float?
-
-  // Key Beneficial Bacteria
-  akkermansiaMuciniphila      Float? // Percentage
-  bifidobacterium             Float? // Percentage
-  lactobacillus               Float? // Percentage
-  faecalibacteriumPrausnitzii Float? // Percentage
-
-  // Pathogen Detection
-  pathogens Json? // { name: string, presence: boolean, level: 'low' | 'medium' | 'high' }[]
-
-  // SCFA-Producing Bacteria
-  scfaProducers Json? // { species: string, abundance: number, scfaType: 'butyrate' | 'propionate' | 'acetate' }[]
-
-  // Detailed Species Breakdown
-  speciesComposition Json? // { species: string, abundance: number, phylum: string }[]
-
-  // Health Indicators
-  inflammationRisk    Float? // 0-10 scale
-  gutPermeabilityRisk Float? // 0-10 scale
-  digestionScore      Float? // 0-100
-
-  // Raw Data
-  rawData Json? // Full test results JSON
-  pdfUrl  String? // Link to original test PDF
-
-  // Metadata
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([userId, testDate])
-  @@index([source])
-}
-
-model SymptomLog {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  date DateTime @default(now())
-
-  // Daily Metrics
-  energyLevel  Int? // 1-10
-  mood         String? // happy, anxious, depressed, neutral, stressed
-  sleepQuality Int? // 1-10
-  sleepHours   Float?
-
-  // Symptoms
-  painLocations   String[]
-  painIntensity   Json // { location: string, intensity: number }[]
-  headaches       Boolean  @default(false)
-  migraine        Boolean  @default(false)
-  digestiveIssues String[]
-  customSymptoms  String[]
-
-  // Context
-  activities String[]
-  meals      String[]
-  notes      String?
-
-  createdAt DateTime @default(now())
+  @@index([userId, recordedAt])
 }
 
 model HealthScore {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String
+  score       Float
+  factors     Json?
+  calculatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  date DateTime @default(now())
-
-  // Overall Score
-  overallScore Float // 0-100
-
-  // Category Scores
-  cardiovascularScore  Float
-  metabolicScore       Float
-  mentalWellnessScore  Float
-  physicalFitnessScore Float
-  nutritionScore       Float
-  sleepScore           Float
-
-  // Breakdown
-  breakdown Json // Detailed breakdown object
-
-  createdAt DateTime @default(now())
+  @@index([userId, calculatedAt])
 }
-
-model CameraAnalysis {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type      String // facial, body_composition, vital_signs, posture, eye_health, food_recognition
-  imageUrl  String
-  imageData String? // Base64 or file path
-
-  // Facial Analysis (Enhanced)
-  skinHealth     Json? // { redness: number, spots: number, texture: string, hydration: number, uvDamage: number, pigmentation: number, wrinkles: number }
-  eyeAnalysis    Json? // { redness: number, darkCircles: boolean, fatigue: number, retinalScanUrl: string, diabeticRetinopathyRisk: number, amdRisk: number }
-  facialSymmetry Float?
-  stressLevel    Int? // 1-10
-  estimatedAge   Int? // Biological age
-  actualAge      Int? // Chronological age
-
-  // Vital Signs from Facial Analysis
-  heartRateEstimate     Int? // PPG via camera
-  respiratoryRate       Int? // Chest movement detection
-  bloodOxygenEstimate   Float? // SpO2 via camera
-  bloodPressureEstimate Json? // { systolic: number, diastolic: number } - requires calibration
-
-  // Body Composition (Enhanced)
-  measurements    Json? // { height: number, waist: number, hip: number, chest: number, shoulder: number, thigh: number }
-  bodyFatEstimate Float?
-  leanMuscleMass  Float?
-  muscleSymmetry  Json? // { left: number, right: number, difference: number }
-  postureAnalysis Json? // { front: object, side: object, back: object, spinalAlignment: string, shoulderSymmetry: string, gaitAnalysis: string }
-  bodyModel3D     Json? // 3D body modeling data
-
-  // Vital Signs (Enhanced)
-  heartRate        Int? // PPG via fingertip
-  breathingRate    Int? // Chest movement
-  bloodOxygen      Float? // SpO2
-  temperature      Float? // Thermal imaging (if available)
-  stressIndicators Json? // { hrv: number, microExpressions: string[], facialTension: number }
-
-  // Eye Health Screening
-  visualAcuityScore Json? // { distance: number, near: number } - Snellen chart equivalent
-  retinalImageUrl   String?
-  eyeHealthRisks    Json? // { diabeticRetinopathy: number, amd: number, glaucoma: number }
-
-  // Food Recognition (linked to MealLog)
-  mealLogId         String? // Link to MealLog if this is food recognition
-  foodsIdentified   Json? // { food: string, confidence: number, portionSize: { estimated: number, unit: string } }[]
-  nutritionAnalysis Json? // Complete nutrition breakdown from food recognition
-
-  // Progress Comparison
-  comparisonId    String? // Reference to previous analysis
-  progress        Json? // Comparison data
-  recommendations String[] // AI-generated recommendations based on analysis
-
-  analyzedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([userId, type])
-  @@index([userId, analyzedAt])
-}
-
-model MoleTracking {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Mole Identification
-  moleId String  @unique // Unique identifier for this mole
-  name   String? // User-assigned name
-
-  // Location
-  bodyLocation        String // front_torso, back_torso, left_arm, right_arm, left_leg, right_leg, head, neck, etc.
-  locationCoordinates Json? // { x: number, y: number, z: number } - 3D coordinates on body map
-
-  // Images
-  primaryImageUrl  String
-  comparisonImages String[] // Array of image URLs for timeline
-
-  // ABCDE Assessment
-  asymmetry String? // symmetric, asymmetric
-  border    String? // regular, irregular, jagged
-  color     String[] // brown, black, tan, red, blue, white, multi
-  diameter  Float? // in mm
-  evolution Json? // { hasChanged: boolean, changes: string[], timeSinceLastCheck: number }
-
-  // AI Risk Assessment
-  melanomaRisk Float? // 0-100 risk score
-  riskLevel    String? // low, medium, high, critical
-  aiAnalysis   Json? // Detailed AI analysis results
-
-  // Medical Referral
-  referredToDermatologist Boolean   @default(false)
-  referralDate            DateTime?
-  dermatologistNotes      String?
-
-  // Tracking
-  firstObserved  DateTime @default(now())
-  lastChecked    DateTime @default(now())
-  checkFrequency Int? // days between recommended checks
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([userId, bodyLocation])
-  @@index([melanomaRisk])
-}
-
-model WellnessPlan {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name        String
-  description String?
-
-  // Goals
-  goals      String[]
-  targetDate DateTime?
-
-  // Nutrition
-  calorieTarget   Int?
-  proteinTarget   Float?
-  carbTarget      Float?
-  fatTarget       Float?
-  mealSuggestions Json? // Array of meal objects
-
-  // Exercise
-  exercisePlan Json? // { frequency: string, type: string[], duration: number }
-
-  // Lifestyle
-  sleepTarget           Float?
-  stressManagement      String[]
-  supplementSuggestions String[] // Informational only
-
-  // Weekly Plan
-  weeklyTasks Json // Array of daily task objects
-
-  isActive  Boolean   @default(true)
-  startDate DateTime  @default(now())
-  endDate   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model MealLog {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  date     DateTime @default(now())
-  mealType String // breakfast, lunch, dinner, snack
-
-  // Photo-based (Enhanced)
-  imageUrl         String?
-  cameraAnalysisId String? // Link to CameraAnalysis if photo was analyzed
-  foodsIdentified  Json? // { food: string, confidence: number, fdcId: string, portionSize: { estimated: number, unit: string } }[]
-  portionSizes     Json? // { food: string, size: string, weight: number, unit: string }[]
-
-  // Nutrition (Enhanced)
-  calories Int?
-  protein  Float?
-  carbs    Float?
-  fats     Float?
-  fiber    Float?
-
-  // Advanced Nutrition (from food recognition)
-  polyphenols     Json? // { quercetin: number, anthocyanins: number, ferulicAcid: number, resveratrol: number, total: number } - in mg
-  resistantStarch Json? // { type1: number, type2: number, type3: number, total: number, fermentationPotential: string } - in g
-  glycemicLoad    Float?
-  glycemicIndex   Float?
-
-  // Micronutrients (Enhanced)
-  vitamins     Json? // { vitaminD: number, vitaminB12: number, vitaminC: number, etc. } - in mg/mcg
-  minerals     Json? // { iron: number, magnesium: number, calcium: number, etc. } - in mg
-  antioxidants Float? // Total antioxidant capacity
-
-  // Allergens
-  allergens String[] // gluten, dairy, nuts, shellfish, etc.
-
-  // Chef Attribution
-  chefId       String?
-  chef         ChefProfile? @relation(fields: [chefId], references: [id], onDelete: SetNull)
-  chefName     String?
-  chefVerified Boolean      @default(false) // Blockchain verified
-
-  // Manual Entry
-  foods String[] // Manually entered foods
-  notes String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId, date])
-  @@index([userId, mealType])
-}
-
-model DailyHabits {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  date DateTime @default(now())
-
-  waterIntake       Float? // liters
-  steps             Int?
-  meditationMinutes Int?
-  mealsLogged       Int      @default(0)
-  sleepHours        Float?
-  supplements       String[] // List of supplements taken
-  exerciseCompleted Boolean  @default(false)
-  exerciseType      String?
-  exerciseDuration  Int? // minutes
-
-  streak Int     @default(0)
-  notes  String?
-
-  createdAt DateTime @default(now())
-}
-
-model HealthReport {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  reportType String // comprehensive, monthly, custom
-  reportDate DateTime @default(now())
-
-  // Report Data
-  executiveSummary   Json
-  healthScore        Float
-  keyFindings        String[]
-  biomarkers         Json
-  riskAssessment     Json
-  recommendations    String[]
-  progressComparison Json?
-
-  // PDF
-  pdfUrl  String?
-  pdfData String? // Base64 encoded PDF
-
-  createdAt DateTime @default(now())
-}
-
-// ========== CHEF NETWORK ==========
-
-model ChefProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Basic Info
-  chefName        String
-  bio             String?
-  avatar          String?
-  location        String? // City, Country
-  cuisineTypes    String[] // French, Italian, Mediterranean, etc.
-  specializations String[] // longevity, keto, vegan, etc.
-
-  // Credentials
-  certifications       String[] // Culinary degrees, certificates
-  yearsExperience      Int?
-  restaurantBackground String[] // Previous restaurants worked at
-
-  // Availability
-  availabilityCalendar Json? // { date: string, available: boolean, timeSlots: string[] }[]
-  defaultPricePerHour  Float?
-
-  // Reputation
-  reputationScore  Float   @default(5.0) // 0-10 scale
-  onChainVerified  Boolean @default(false) // Blockchain verification for crypto users
-  totalBookings    Int     @default(0)
-  totalMealsLogged Int     @default(0)
-
-  // Portfolio
-  portfolioPhotos String[] // URLs to meal photos
-  sampleMenus     Json? // Array of sample menu objects
-
-  // Financial (Crypto Path)
-  taTokenBalance  Float @default(0)
-  taEarningsTotal Float @default(0)
-
-  // Financial (Fiat Path)
-  stripeAccountId    String? // Stripe Connect account ID
-  fiatEarningsTotal  Float   @default(0)
-  subscriptionActive Boolean @default(false) // $49/month subscription
-
-  // Settings
-  isActive      Boolean @default(true)
-  acceptsCrypto Boolean @default(true)
-  acceptsFiat   Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  services    ChefService[]
-  bookings    ChefBooking[]
-  mealPlans   ChefMealPlan[]
-  loggedMeals MealLog[]
-  reviews     ChefReview[]   @relation("ChefReviews")
-  earnings    ChefEarning[]
-
-  @@index([userId])
-  @@index([location])
-  @@index([reputationScore])
-  @@index([isActive])
-}
-
-model ChefService {
-  id     String      @id @default(cuid())
-  chefId String
-  chef   ChefProfile @relation(fields: [chefId], references: [id], onDelete: Cascade)
-
-  serviceType String // 'consultation', 'meal_prep', 'private_dining', 'cooking_class', 'meal_delivery'
-  name        String
-  description String?
-  duration    Int? // minutes
-  price       Float // in $TA or USD based on payment method
-
-  // Pricing
-  priceInTA  Float? // Crypto price
-  priceInUSD Float? // Fiat price
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([chefId])
-  @@index([serviceType])
-}
-
-model ChefBooking {
-  id     String      @id @default(cuid())
-  chefId String
-  chef   ChefProfile @relation(fields: [chefId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Booking Details
-  serviceType String // 'consultation', 'meal_prep', 'private_dining', etc.
-  serviceName String
-  scheduledAt DateTime
-  duration    Int? // minutes
-  location    String? // 'in_person', 'remote', or address
-
-  // Video Call (for consultations)
-  videoCallUrl String?
-  videoCallId  String?
-
-  // Status
-  status        String // 'pending', 'confirmed', 'completed', 'cancelled'
-  paymentStatus String // 'pending', 'paid', 'refunded'
-
-  // Pricing
-  price           Float
-  currency        String // 'TA' or 'USD'
-  paymentMethodId String?
-
-  // Transaction Tracking
-  txHash                String? // Blockchain transaction hash for crypto payments
-  stripePaymentIntentId String? // Stripe payment intent for fiat
-
-  // Notes
-  clientNotes String? // Special requests from client
-  chefNotes   String? // Chef's internal notes
-
-  // Completion
-  completedAt       DateTime?
-  feedbackRequested Boolean   @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  mealPlan ChefMealPlan?
-  review   ChefReview?
-
-  @@index([chefId])
-  @@index([userId])
-  @@index([scheduledAt])
-  @@index([status])
-}
-
-model ChefMealPlan {
-  id     String      @id @default(cuid())
-  chefId String
-  chef   ChefProfile @relation(fields: [chefId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Booking Reference
-  bookingId String?      @unique
-  booking   ChefBooking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-
-  // Meal Plan Details
-  name        String
-  description String?
-  startDate   DateTime
-  endDate     DateTime?
-  daysPerWeek Int?
-  mealsPerDay Int?
-
-  // Content
-  meals            Json // Array of meal objects with recipes, ingredients, nutrition
-  groceryList      Json? // Shopping list
-  prepInstructions String?
-
-  // Goals & Preferences
-  targetCalories      Int?
-  targetMacros        Json? // { protein: number, carbs: number, fats: number }
-  dietaryRestrictions String[]
-  healthGoals         String[]
-
-  // Status
-  isActive       Boolean @default(true)
-  mealsCompleted Int     @default(0)
-  mealsTotal     Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([chefId])
-  @@index([userId])
-  @@index([startDate])
-}
-
-model ChefReview {
-  id     String      @id @default(cuid())
-  chefId String
-  chef   ChefProfile @relation("ChefReviews", fields: [chefId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation("ClientReviews", fields: [userId], references: [id], onDelete: Cascade)
-
-  bookingId String?      @unique
-  booking   ChefBooking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-
-  // Review Content
-  rating  Int // 1-5 stars
-  comment String?
-
-  // Specific Ratings
-  foodQuality    Int? // 1-5
-  serviceQuality Int? // 1-5
-  valueForMoney  Int? // 1-5
-  communication  Int? // 1-5
-
-  // Blockchain Verification (for crypto users)
-  onChainVerified Boolean @default(false)
-  txHash          String? // Transaction hash if verified on-chain
-
-  // Moderation
-  isApproved Boolean @default(false)
-  isPublic   Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([chefId])
-  @@index([userId])
-  @@index([rating])
-}
-
-model ChefEarning {
-  id     String      @id @default(cuid())
-  chefId String
-  chef   ChefProfile @relation(fields: [chefId], references: [id], onDelete: Cascade)
-
-  // Earning Details
-  type   String // 'meal_logged', 'biomarker_bonus', 'referral', 'booking_commission', 'subscription'
-  amount Float
-
-  // Payment Method
-  currency        String // 'TA' or 'USD'
-  txHash          String? // Blockchain transaction hash
-  stripePaymentId String? // Stripe transfer ID
-
-  // Context
-  bookingId            String?
-  mealLogId            String?
-  referralUserId       String?
-  biomarkerImprovement Float? // Percentage improvement for bonus calculation
-
-  // Metadata
-  description String?
-  periodStart DateTime?
-  periodEnd   DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([chefId])
-  @@index([type])
-  @@index([createdAt])
-}
-
-// ========== TEST KITS & DIAGNOSTICS ==========
-
-model TestKit {
-  id String @id @default(cuid())
-
-  // Kit Info
-  name        String
-  description String?
-  kitType     String // 'blood', 'microbiome', 'dna', 'microfluidic'
-  category    String // 'metabolic_panel', 'hormone_panel', 'vitamin_panel', 'inflammation', 'microbiome', 'genetic'
-
-  // Biomarkers Tested
-  biomarkersTested String[] // ['CRP', 'Glucose', 'HbA1c', etc.]
-
-  // Pricing
-  priceInTA  Float? // Crypto price in $TA tokens
-  priceInUSD Float? // Fiat price in USD
-
-  // Kit Details
-  sampleType     String // 'blood_spot', 'stool', 'saliva', 'blood_fingerprick'
-  processingTime Int? // Days to process
-  provider       String? // 'internal', 'quest', 'labcorp', 'thorne', etc.
-  providerId     String? // External provider kit ID
-
-  // Instructions
-  instructions Json? // Step-by-step instructions
-  videoUrl     String? // Instruction video URL
-
-  // Availability
-  isAvailable Boolean @default(true)
-  stockCount  Int? // If tracked
-
-  // Metadata
-  imageUrl     String?
-  categoryTags String[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  orders TestOrder[]
-
-  @@index([kitType])
-  @@index([category])
-  @@index([isAvailable])
-}
-
-model TestOrder {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  kitId String
-  kit   TestKit @relation(fields: [kitId], references: [id], onDelete: Restrict)
-
-  // Order Details
-  quantity  Int      @default(1)
-  orderDate DateTime @default(now())
-
-  // Shipping
-  shippingAddress Json // { name, street, city, state, zip, country }
-  trackingNumber  String?
-  shippedAt       DateTime?
-  deliveredAt     DateTime?
-
-  // Payment
-  price                 Float
-  currency              String // 'TA' or 'USD'
-  paymentMethod         String? // 'crypto', 'stripe', etc.
-  paymentId             String? // Payment transaction ID
-  txHash                String? // Blockchain transaction hash
-  stripePaymentIntentId String?
-
-  // Status
-  status String // 'pending', 'paid', 'shipped', 'delivered', 'sample_received', 'processing', 'completed', 'cancelled'
-
-  // Kit Details (snapshot at time of order)
-  kitSnapshot Json? // Snapshot of kit details at time of order
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  results TestResult[]
-
-  @@index([userId])
-  @@index([kitId])
-  @@index([status])
-  @@index([orderDate])
-}
-
-model TestResult {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  orderId String?
-  order   TestOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
-
-  // Test Details
-  testType String // 'blood', 'microbiome', 'dna', 'microfluidic'
-  testName String // Name of the specific test
-
-  // Sample Collection
-  sampleCollectedAt     DateTime?
-  sampleReceivedAt      DateTime?
-  processingStartedAt   DateTime?
-  processingCompletedAt DateTime?
-
-  // Results
-  resultsData Json // Structured results data
-
-  // Processed Results (for linking to Biomarker model)
-  biomarkerEntries Json? // Array of biomarker entries to create
-
-  // Status
-  status String // 'pending', 'processing', 'completed', 'failed'
-
-  // Provider Info
-  provider          String? // Lab provider name
-  providerResultId  String? // External provider result ID
-  providerReportUrl String? // Link to provider's report
-
-  // Report
-  reportUrl    String? // Generated report URL
-  reportPdfUrl String? // PDF report URL
-
-  // Notes
-  notes           String?
-  recommendations String[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([orderId])
-  @@index([testType])
-  @@index([status])
-  @@index([processingCompletedAt])
-}
-
-// ========== DATA LICENSING & RESEARCH ==========
-
-model DataLicenseOptIn {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  optedIn   Boolean  @default(true)
-  optedInAt DateTime @default(now())
-  optedOutAt DateTime?
-
-  // What data types user has consented to share
-  dataTypes String[] // ['biomarkers', 'meal_logs', 'microbiome', 'health_assessments', 'all']
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId])
-  @@index([optedIn])
-}
-
-model DataLicensePurchase {
-  id String @id @default(cuid())
-
-  // Purchaser info
-  purchaserName    String
-  purchaserType    String // 'pharma', 'research_institution', 'longevity_clinic', 'other'
-  purchaserEmail   String?
-  purchaserAddress String?
-
-  // License details
-  licenseType     String // 'anonymized_aggregate', 'anonymized_individual', 'de_identified_cohort'
-  dataScope       String[] // ['biomarkers', 'meal_logs', 'microbiome', 'health_assessments']
-  durationMonths  Int
-  price           Float // Total price in USD
-  currency        String @default("USD")
-
-  // Payment
-  paymentStatus   String @default("pending") // 'pending', 'paid', 'refunded'
-  paymentMethod   String? // 'stripe', 'wire_transfer', 'crypto'
-  paymentId       String?
-  paidAt          DateTime?
-
-  // Revenue tracking (40% goes to users)
-  userRevenueShare Float // 40% of price
-  platformRevenue  Float // 60% of price
-
-  // Status
-  status String @default("pending") // 'pending', 'active', 'expired', 'cancelled'
-  startDate DateTime?
-  endDate   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([status])
-  @@index([paymentStatus])
-  @@index([purchaserType])
-}
-
-model DividendPayment {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Source
-  sourceType String // 'data_licensing', 'research_revenue', 'other'
-  sourceId   String? // ID of the DataLicensePurchase or other source
-
-  // Amount
-  amount      Float
-  currency    String @default("TA") // 'TA' for token holders, 'USD' for fiat users
-  usdValue    Float? // USD equivalent at time of distribution
-
-  // Distribution
-  distributionDate DateTime @default(now())
-  distributionMethod String // 'token_transfer', 'platform_credits', 'wallet_payout'
-  txHash          String? // Blockchain transaction hash if crypto
-  status          String @default("pending") // 'pending', 'completed', 'failed'
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([distributionDate])
-  @@index([status])
-  @@index([sourceType])
-}
-
-// Comprehensive Health Features (Neko Health inspired)

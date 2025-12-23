@@ -4,6 +4,88 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  /* Text color utility classes mapped to CSS variables */
+  .text-text-primary {
+    color: var(--text-primary);
+  }
+
+  .text-text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-text-tertiary {
+    color: var(--text-tertiary);
+  }
+
+  .text-accent-primary {
+    color: var(--accent-primary);
+  }
+
+  .text-accent-secondary {
+    color: var(--accent-secondary);
+  }
+
+  .text-semantic-success {
+    color: var(--semantic-success);
+  }
+
+  .text-semantic-warning {
+    color: var(--semantic-warning);
+  }
+
+  .text-semantic-error {
+    color: var(--semantic-error);
+  }
+
+  .text-semantic-info {
+    color: var(--semantic-info);
+  }
+
+  /* Background utility classes mapped to CSS variables */
+  .bg-bg-surface {
+    background-color: var(--bg-surface);
+  }
+
+  .bg-bg-elevated {
+    background-color: var(--bg-elevated);
+  }
+
+  /* "10" variants for accent/semantic backgrounds */
+  .bg-accent-primary\/10 {
+    background-color: rgba(125, 211, 252, 0.1);
+  }
+
+  .bg-accent-secondary\/10 {
+    background-color: rgba(196, 181, 253, 0.1);
+  }
+
+  .bg-semantic-success\/10 {
+    background-color: rgba(134, 239, 172, 0.1);
+  }
+
+  .bg-semantic-warning\/10 {
+    background-color: rgba(252, 211, 77, 0.1);
+  }
+
+  .bg-semantic-error\/10 {
+    background-color: rgba(252, 165, 165, 0.1);
+  }
+
+  .bg-semantic-info\/10 {
+    background-color: rgba(147, 197, 253, 0.1);
+  }
+
+  /* Border utility classes mapped to CSS variables */
+  .border-border-light {
+    border-color: var(--border-light);
+  }
+
+  .border-border-medium {
+    border-color: var(--border-medium);
+  }
+}
+
 @layer base {
   :root {
     /* REFINED CLINICAL DESIGN SYSTEM - PALE COLORS */
@@ -365,22 +447,41 @@
   }
 
   /* ==========================================
-     STANDARD CARD STYLES
-     Always use .glass-card for all cards
+     PREMIUM GLASS MORPHISM CARD STYLES
+     Frosted glass effect with blur backdrop
      ========================================== */
   .glass-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem; /* 16px */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
   }
 
+  /* Premium variant with gold border */
+  .glass-card.premium {
+    background: rgba(212, 175, 55, 0.1);
+    border: 2px solid rgba(212, 175, 55, 0.5);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.15),
+      0 0 20px rgba(212, 175, 55, 0.3);
+  }
+
+  /* Dark mode glass cards */
   [data-theme='dark'] .glass-card {
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid var(--border-light);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: rgba(31, 33, 33, 0.6);
+    border: 1px solid rgba(26, 155, 142, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme='dark'] .glass-card.premium {
+    background: rgba(139, 117, 20, 0.2);
+    border: 2px solid rgba(212, 175, 55, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 20px rgba(212, 175, 55, 0.2);
   }
   
   .glass-card-hover {
@@ -509,11 +610,51 @@
   .form-input:focus {
     border-color: rgba(125, 211, 252, 0.6);
     box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.1);
+    outline: 2px solid rgba(125, 211, 252, 0.6);
+    outline-offset: 2px;
   }
   
   [data-theme='dark'] .form-input:focus {
     border-color: rgba(125, 211, 252, 0.5);
     box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.08);
+    outline: 2px solid rgba(125, 211, 252, 0.5);
+    outline-offset: 2px;
+  }
+
+  /* Focus indicators for all interactive elements */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid rgba(125, 211, 252, 0.8);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  [data-theme='dark'] button:focus-visible,
+  [data-theme='dark'] a:focus-visible,
+  [data-theme='dark'] input:focus-visible,
+  [data-theme='dark'] select:focus-visible,
+  [data-theme='dark'] textarea:focus-visible {
+    outline: 2px solid rgba(125, 211, 252, 0.6);
+    outline-offset: 2px;
+  }
+
+  /* Skip link for keyboard navigation */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--accent-primary);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+  }
+
+  .skip-link:focus {
+    top: 0;
   }
 
   .form-select {
@@ -676,5 +817,136 @@
 
   .empty-state-description {
     @apply text-sm text-text-secondary max-w-md mx-auto;
+  }
+
+  /* ==========================================
+     PREMIUM METALLIC EFFECTS
+     Gold, Silver, Bronze gradients for rankings
+     ========================================== */
+  .metallic-gold {
+    background: linear-gradient(
+      135deg,
+      #D4AF37 0%,
+      #E8C547 50%,
+      #C9A227 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 4px 15px rgba(212, 175, 55, 0.4);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    color: #1F2121;
+    font-weight: 700;
+  }
+
+  .metallic-silver {
+    background: linear-gradient(
+      135deg,
+      #E8E8E8 0%,
+      #C0C0C0 50%,
+      #A8A8A8 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+      0 4px 15px rgba(192, 192, 192, 0.3);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    color: #1F2121;
+    font-weight: 700;
+  }
+
+  .metallic-bronze {
+    background: linear-gradient(
+      135deg,
+      #CD7F32 0%,
+      #E6A847 50%,
+      #B85E1F 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 4px 15px rgba(205, 127, 50, 0.3);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    color: #F5F3F0;
+    font-weight: 700;
+  }
+
+  /* Dark mode metallic (darker, subtler) */
+  [data-theme='dark'] .metallic-gold {
+    background: linear-gradient(
+      135deg,
+      #8B7514 0%,
+      #A89F4C 50%,
+      #6B5F0C 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 4px 15px rgba(139, 117, 20, 0.3);
+    color: #F5F3F0;
+  }
+
+  [data-theme='dark'] .metallic-silver {
+    background: linear-gradient(
+      135deg,
+      #A8A8A8 0%,
+      #808080 50%,
+      #606060 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 4px 15px rgba(128, 128, 128, 0.2);
+    color: #F5F3F0;
+  }
+
+  [data-theme='dark'] .metallic-bronze {
+    background: linear-gradient(
+      135deg,
+      #8B5A2B 0%,
+      #A67C52 50%,
+      #6B3F1A 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 4px 15px rgba(139, 90, 43, 0.2);
+    color: #F5F3F0;
+  }
+
+  /* ==========================================
+     TOKEN WALLET PREMIUM STYLING
+     Gold gradient text for token amounts
+     ========================================== */
+  .token-balance {
+    background: linear-gradient(to right, #D4AF37, #E8C547);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    font-family: 'Unbounded', 'Clash Display', Inter, system-ui, sans-serif;
+  }
+
+  .token-value {
+    color: #C0C0C0;
+    font-weight: 500;
+  }
+
+  /* ==========================================
+     ACHIEVEMENT BADGE STYLING
+     Metallic gold badge with shine
+     ========================================== */
+  .achievement-badge {
+    @apply p-4 rounded-xl border-2 shadow-lg;
+    background: linear-gradient(135deg, #D4AF37 0%, #E8C547 50%, #C9A227 100%);
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
+  }
+
+  .achievement-badge.gold {
+    background: linear-gradient(135deg, #D4AF37 0%, #E8C547 50%, #C9A227 100%);
+  }
+
+  [data-theme='dark'] .achievement-badge {
+    background: linear-gradient(135deg, #8B7514 0%, #A89F4C 50%, #6B5F0C 100%);
+    border-color: rgba(139, 117, 20, 0.5);
+    box-shadow: 0 8px 32px rgba(139, 117, 20, 0.2);
   }
 }

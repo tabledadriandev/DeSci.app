@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useAccount } from '@/hooks/useAccount';
-import { motion } from 'framer-motion';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { MessageSquare, ArrowLeft, Send } from 'lucide-react';
+import { useAccount } from 'wagmi';
 
 type ForumPost = {
   id: string;
@@ -38,62 +32,96 @@ export default function GroupDetailPage() {
 
   useEffect(() => {
     if (!groupId) return;
-    // Mock data for now
-    setGroupName(`Longevity Enthusiasts ${groupId}`);
-    setPosts([
-      { id: 'p1', title: 'My first post on NMN', content: 'Sharing my experience with NMN supplementation for the past month. Feeling great!', createdAt: new Date().toISOString(), user: { username: 'VitalitySeeker', walletAddress: '0xabc...' } },
-      { id: 'p2', title: 'Best workouts for anti-aging?', content: 'Looking for advice on resistance training vs cardio for longevity.', createdAt: new Date(Date.now() - 86400000).toISOString(), user: { username: 'FitnessFanatic', walletAddress: '0xdef...' } },
-    ]);
-    setLoading(false);
+    void loadPosts();
+    void loadGroup();
   }, [groupId]);
+
+  const loadGroup = async () => {
+    try {
+      const res = await fetch('/api/groups/create');
+      if (!res.ok) return;
+      const data = await res.json();
+      const group = (data as any[]).find((g) => g.id === groupId);
+      if (group) {
+        setGroupName(group.name as string);
+      }
+    } catch (err) {
+      console.error('Error loading group', err);
+    }
+  };
+
+  const loadPosts = async () => {
+    if (!groupId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/posts`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setPosts(data);
+    } catch (err) {
+      console.error('Error loading posts', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!address || !groupId || !formData.title.trim() || !formData.content.trim()) return;
     setCreating(true);
-
-    // Mock API call
-    setTimeout(() => {
-      const newPost: ForumPost = {
-        id: `p${posts.length + 1}`,
-        title: formData.title,
-        content: formData.content,
-        createdAt: new Date().toISOString(),
-        user: { username: 'You', walletAddress: address },
-      };
-      setPosts((prev) => [newPost, ...prev]);
-      setFormData({ title: '', content: '' });
+    try {
+      const res = await fetch(`/api/groups/${groupId}/posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          title: formData.title,
+          content: formData.content,
+        }),
+      });
+      if (res.ok) {
+        setFormData({ title: '', content: '' });
+        await loadPosts();
+      }
+    } catch (err) {
+      console.error('Error creating post', err);
+    } finally {
       setCreating(false);
-    }, 1000);
+    }
   };
 
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="mb-8">
-          <AnimatedButton variant="ghost" size="sm" onClick={() => router.back()} icon={<ArrowLeft className="w-4 h-4" />}>
-            Back to groups
-          </AnimatedButton>
-          <h1 className="text-3xl md:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text mt-4">
-            {groupName || 'Group Details'}
+    <div className="min-h-screen p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="text-xs sm:text-sm text-text-secondary hover:text-accent-primary"
+        >
+          ← Back to groups
+        </button>
+
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl sm:text-3xl font-display text-accent-primary">
+            {groupName || 'Group'}
           </h1>
-          <p className="text-base text-text-secondary max-w-2xl">
+          <p className="text-xs sm:text-sm text-text-secondary">
             Start a new thread to ask questions, share results, or swap protocols.
           </p>
-        </motion.div>
+        </div>
 
         {address && (
-          <motion.div className="glass-card p-6 mb-8" variants={fadeInUp}>
-            <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-              <MessageSquare className="w-6 h-6 text-accent-primary" /> Start a New Thread
+          <div className="bg-white rounded-xl shadow-md p-5 space-y-3">
+            <h2 className="text-base sm:text-lg font-semibold text-text-primary">
+              Start a new thread
             </h2>
-            <form onSubmit={handleCreate} className="space-y-4">
+            <form onSubmit={handleCreate} className="space-y-3">
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Thread title (e.g., My 30-day CRP reduction protocol)"
-                className="w-full px-4 py-3 bg-bg-surface border border-border-medium rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
+                placeholder="Thread title (e.g. My 30-day CRP reduction protocol)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 required
               />
               <textarea
@@ -101,50 +129,61 @@ export default function GroupDetailPage() {
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 placeholder="Share details, lab changes, meals, protocols, or questions..."
                 rows={4}
-                className="w-full px-4 py-3 bg-bg-surface border border-border-medium rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 required
               />
-              <AnimatedButton type="submit" disabled={creating} icon={<Send className="w-5 h-5" />}>
+              <button
+                type="submit"
+                disabled={creating}
+                className="bg-accent-primary text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-primary/90 transition-colors disabled:opacity-60"
+              >
                 {creating ? 'Posting...' : 'Post Thread'}
-              </AnimatedButton>
+              </button>
             </form>
-          </motion.div>
+          </div>
         )}
 
-        <motion.div className="glass-card p-6" variants={fadeInUp}>
-          <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-            <MessageSquare className="w-6 h-6 text-accent-primary" /> Group Threads
-          </h2>
+        <div className="bg-white rounded-xl shadow-md p-5">
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <LoadingSpinner text="Loading threads..." />
+            <div className="text-center py-6 text-text-secondary text-sm">
+              Loading threads…
             </div>
           ) : posts.length === 0 ? (
-            <p className="text-text-secondary">No threads yet. Be the first to start a conversation in this group.</p>
+            <div className="text-center py-8 text-text-secondary text-sm">
+              No threads yet. Be the first to start a conversation in this group.
+            </div>
           ) : (
-            <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+            <div className="space-y-4">
               {posts.map((post) => (
-                <motion.div key={post.id} variants={fadeInUp} className="glass-card-hover p-4 flex flex-col gap-2">
+                <div
+                  key={post.id}
+                  className="border border-border-light rounded-lg p-4 flex flex-col gap-1"
+                >
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-lg font-semibold text-text-primary">{post.title}</h3>
-                    <p className="text-xs text-text-secondary">
+                    <h3 className="text-sm sm:text-base font-semibold text-text-primary">
+                      {post.title}
+                    </h3>
+                    <span className="text-[10px] sm:text-xs text-text-secondary">
                       {new Date(post.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <p className="text-sm text-text-secondary whitespace-pre-wrap">{post.content}</p>
-                  <p className="text-xs text-text-tertiary mt-1">
-                    Posted by{' '}
-                    <span className="font-medium">
-                      {post.user?.username || (post.user?.walletAddress ? `User ${post.user.walletAddress.slice(0, 6)}...` : 'Member')}
                     </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-text-secondary whitespace-pre-wrap">
+                    {post.content}
                   </p>
-                </motion.div>
+                  <span className="text-[10px] sm:text-xs text-text-secondary mt-1">
+                    Posted by{' '}
+                    {post.user?.username ||
+                      (post.user?.walletAddress
+                        ? `User ${post.user.walletAddress.slice(0, 6)}`
+                        : 'Member')}
+                  </span>
+                </div>
               ))}
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

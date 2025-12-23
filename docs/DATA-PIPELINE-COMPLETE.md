@@ -44,7 +44,7 @@
 1. ✅ **Wallet Connect**
    - MetaMask, Rainbow, Coinbase Wallet support
    - Encrypted wallet address storage (AES-256)
-   - $5 minimum $TA verification
+   - $5 minimum $tabledadrian verification
    - Auto-reconnect on page refresh
    - 30-day session persistence
 

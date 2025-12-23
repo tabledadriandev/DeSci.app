@@ -19,13 +19,13 @@ Completed: Phase 6
 - Availability calendar (JSON)
 - Reputation score (0-10)
 - Portfolio photos and sample menus
-- Dual payment support (crypto $TA / fiat USD)
+- Dual payment support (crypto $tabledadrian / fiat USD)
 - Earnings tracking (separate crypto and fiat totals)
 - Blockchain verification flag
 
 **ChefService Model:**
 - Service types (consultation, meal_prep, private_dining, cooking_class, meal_delivery)
-- Pricing (supports both $TA and USD)
+- Pricing (supports both $tabledadrian and USD)
 - Duration and descriptions
 
 **ChefBooking Model:**
@@ -129,7 +129,7 @@ Completed: Phase 6
 - Image support
 - Food recognition data
 - Blockchain verification option
-- Automatic reward calculation (5 $TA per verified meal)
+- Automatic reward calculation (5 $tabledadrian per verified meal)
 - Chef stats update (total meals logged)
 - Links to MealLog model
 
@@ -138,27 +138,27 @@ Completed: Phase 6
 #### Earnings Calculator Features:
 
 **Total Earnings Summary:**
-- Separate crypto ($TA) and fiat (USD) totals
+- Separate crypto ($tabledadrian) and fiat (USD) totals
 - Breakdown by type (meal_logged, biomarker_bonus, referral, booking_commission, subscription)
 - Period summaries (week, month, quarter, year)
 
 **Reward Types:**
 
 1. **Meal Logged (Crypto Path):**
-   - 5 $TA per verified meal logged
+   - 5 $tabledadrian per verified meal logged
    - Automatic calculation in meal logging endpoint
 
 2. **Biomarker Bonus (Crypto Path):**
-   - 100-500 $TA bonus for biomarker improvements >20%
+   - 100-500 $tabledadrian bonus for biomarker improvements >20%
    - Tiered system:
-     - 20-30%: 100 $TA
-     - 30-40%: 200 $TA
-     - 40-50%: 300 $TA
-     - 50-60%: 400 $TA
-     - 60%+: 500 $TA
+     - 20-30%: 100 $tabledadrian
+     - 30-40%: 200 $tabledadrian
+     - 40-50%: 300 $tabledadrian
+     - 50-60%: 400 $tabledadrian
+     - 60%+: 500 $tabledadrian
 
 3. **Referral Bonus:**
-   - 100 $TA per client referral (crypto)
+   - 100 $tabledadrian per client referral (crypto)
    - $50 USD per client referral (fiat)
    - Prevents duplicate referrals
 
@@ -278,9 +278,9 @@ Completed: Phase 6
 ### ✅ Chef Earnings System
 
 **Crypto Path:**
-- [x] 5 $TA per verified meal logged
-- [x] 100-500 $TA bonus for biomarker improvements >20%
-- [x] 100 $TA per client referral
+- [x] 5 $tabledadrian per verified meal logged
+- [x] 100-500 $tabledadrian bonus for biomarker improvements >20%
+- [x] 100 $tabledadrian per client referral
 - [x] Earnings tracking and reporting
 
 **Fiat Path:**

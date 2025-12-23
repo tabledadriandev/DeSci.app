@@ -99,7 +99,7 @@
 - [ ] Notes field works
 - [ ] Submit button saves data
 - [ ] Health data list displays
-- [ ] $TA rewards are awarded on submission
+- [ ] $tabledadrian rewards are awarded on submission
 
 ### 10. Nutrition Analysis (/app/nutrition) ✅
 - [ ] Date picker works
@@ -171,7 +171,7 @@
 ### 18. Marketplace (/app/marketplace) ✅
 - [ ] Products display
 - [ ] Product cards are clickable
-- [ ] Purchase with $TA works
+- [ ] Purchase with $tabledadrian works
 - [ ] Cart functionality works
 
 ### 19. Staking (/app/staking) ✅
@@ -190,7 +190,7 @@
 ### 21. Chef Services (/app/chef-services) ✅
 - [ ] Services list displays
 - [ ] Book service button works
-- [ ] $TA payment works
+- [ ] $tabledadrian payment works
 - [ ] Booking confirmation shows
 
 ### 22. NFTs & Achievements (/app/nfts) ✅
@@ -202,7 +202,7 @@
 - [ ] Events list displays
 - [ ] Event cards are clickable
 - [ ] Purchase ticket button works
-- [ ] $TA payment works
+- [ ] $tabledadrian payment works
 
 ### 24. Additional Pages ✅
 - [ ] **Fasting** (/app/fasting) - Fasting tracker works
@@ -262,7 +262,7 @@
 - [ ] Wallet address displays
 - [ ] Balance displays
 - [ ] Transaction signing works
-- [ ] $TA token interactions work
+- [ ] $tabledadrian token interactions work
 
 ### 28. Responsive Design ✅
 - [ ] App works at minimum window size (1200x700)

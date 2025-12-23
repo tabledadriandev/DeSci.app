@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useAccount } from 'wagmi';
+import { motion } from 'framer-motion';
 import PageTransition from '@/components/ui/PageTransition';
+import AnimatedCard from '@/components/ui/AnimatedCard';
 import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
+import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations/variants';
 import { Watch, Activity, Moon, HeartPulse, CheckCircle2 } from 'lucide-react';
 
 type Device = 'apple' | 'fitbit' | 'oura';
@@ -15,6 +15,7 @@ export default function WearablesPage() {
   const { address, isConnected } = useAccount();
   const [device, setDevice] = useState<Device>('apple');
   const [accessToken, setAccessToken] = useState('');
+  const [fitbitUserId, setFitbitUserId] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ synced: number; reward: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,135 +34,223 @@ export default function WearablesPage() {
     setError(null);
     setResult(null);
 
-    // Mock API call
-    setTimeout(() => {
-      setResult({ synced: Math.floor(Math.random() * 500) + 100, reward: 5 });
+    try {
+      const response = await fetch('/api/wearables/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          device,
+          accessToken,
+          userId: device === 'fitbit' ? fitbitUserId || 'default' : undefined,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to sync device');
+      }
+      setResult(data.data || null);
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to sync device');
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   const cards = [
-    { icon: Activity, title: 'Steps & Activity', body: 'Import your daily steps, active minutes, and calorie burn.' },
-    { icon: Moon, title: 'Sleep Quality', body: 'Pull sleep duration, deep sleep, and quality scores.' },
-    { icon: HeartPulse, title: 'Heart Metrics', body: 'Track resting HR, average HR, and peak heart rates.' },
+    {
+      icon: Activity,
+      title: 'Steps & Activity',
+      body: 'Import your daily steps, active minutes, and calorie burn.',
+    },
+    {
+      icon: Moon,
+      title: 'Sleep Quality',
+      body: 'Pull sleep duration, deep sleep, and quality scores.',
+    },
+    {
+      icon: HeartPulse,
+      title: 'Heart Metrics',
+      body: 'Track resting HR, average HR, and peak heart rates.',
+    },
   ];
 
   return (
     <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="max-w-6xl mx-auto mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text mb-2">
-            Wearables & Devices
-          </h1>
-          <p className="text-base text-text-secondary max-w-2xl">
-            Link Apple Health, Fitbit, or Oura to keep your wellness data in sync and earn rewards.
-          </p>
-        </motion.div>
+      <div className="min-h-screen  p-4 md:p-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Header */}
+          <motion.div initial="initial" animate="animate" variants={fadeInUp}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                <Watch className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold gradient-text">
+                  Wearables & Devices
+                </h1>
+                <p className="text-sm md:text-base text-text-secondary">
+                  Link Apple Health, Fitbit, or Oura to keep your wellness data in sync.
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
-        <div className="max-w-6xl mx-auto">
           {/* Overview cards */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
             variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
+            initial="initial"
+            animate="animate"
           >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {cards.map((card, idx) => {
               const Icon = card.icon;
               return (
-                <motion.div key={card.title} variants={fadeInUp} className="glass-card p-6">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-bio-gradient flex items-center justify-center">
-                      <Icon className="w-6 h-6 text-white" />
+                <motion.div key={card.title} variants={staggerItem}>
+                  <AnimatedCard hover>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-accent-primary/10 to-accent-teal/10 flex items-center justify-center">
+                        <Icon className="w-5 h-5 text-accent-primary" />
+                      </div>
+                      <div className="text-sm font-semibold text-text-primary">
+                        {card.title}
+                      </div>
                     </div>
-                    <h2 className="text-lg font-bold text-text-primary">{card.title}</h2>
-                  </div>
-                  <p className="text-sm text-text-secondary">{card.body}</p>
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                      {card.body}
+                    </p>
+                  </AnimatedCard>
                 </motion.div>
               );
             })}
+            </div>
           </motion.div>
 
           {/* Connection form */}
-          <motion.div variants={fadeInUp} className="glass-card p-6">
-            <h2 className="text-2xl font-bold text-text-primary mb-4">Connect a Device</h2>
-            <p className="text-sm text-text-secondary mb-6 max-w-2xl">
-              In a production environment, this would open the official Apple Health, Fitbit, or Oura consent flows. For now, you can simulate a sync by entering any placeholder token.
-            </p>
+          <motion.div
+            variants={fadeInUp}
+            initial="initial"
+            animate="animate"
+            transition={{ delay: 0.15 }}
+          >
+            <AnimatedCard>
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                <div className="flex-1">
+                  <h2 className="text-lg md:text-xl font-semibold text-text-primary mb-2">
+                    Connect a device
+                  </h2>
+                  <p className="text-sm text-text-secondary mb-4">
+                    In production, this will open the official Apple, Fitbit, or Oura consent
+                    flows. For now, you can simulate a sync by entering a placeholder token.
+                  </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-1 space-y-3">
-                <h3 className="font-semibold text-text-secondary">Select Device</h3>
-                <button
-                  type="button"
-                  onClick={() => setDevice('apple')}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${device === 'apple' ? 'border-accent-primary bg-accent-primary/10' : 'border-border-medium hover:border-accent-secondary/50'}`}
-                >Apple Health</button>
-                <button
-                  type="button"
-                  onClick={() => setDevice('fitbit')}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${device === 'fitbit' ? 'border-accent-primary bg-accent-primary/10' : 'border-border-medium hover:border-accent-secondary/50'}`}
-                >Fitbit</button>
-                <button
-                  type="button"
-                  onClick={() => setDevice('oura')}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${device === 'oura' ? 'border-accent-primary bg-accent-primary/10' : 'border-border-medium hover:border-accent-secondary/50'}`}
-                >Oura</button>
-              </div>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setDevice('apple')}
+                      className={`px-3 py-2 rounded-xl text-xs font-medium border-2 transition-all ${
+                        device === 'apple'
+                          ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
+                          : 'border-gray-200 text-text-secondary hover:border-accent-primary/40'
+                      }`}
+                    >
+                      Apple Health
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDevice('fitbit')}
+                      className={`px-3 py-2 rounded-xl text-xs font-medium border-2 transition-all ${
+                        device === 'fitbit'
+                          ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
+                          : 'border-gray-200 text-text-secondary hover:border-accent-primary/40'
+                      }`}
+                    >
+                      Fitbit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDevice('oura')}
+                      className={`px-3 py-2 rounded-xl text-xs font-medium border-2 transition-all ${
+                        device === 'oura'
+                          ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
+                          : 'border-gray-200 text-text-secondary hover:border-accent-primary/40'
+                      }`}
+                    >
+                      Oura
+                    </button>
+                  </div>
 
-              <div className="md:col-span-2 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Access Token (use any test value)
-                  </label>
-                  <input
-                    type="text"
-                    value={accessToken}
-                    onChange={(e) => setAccessToken(e.target.value)}
-                    className="w-full px-4 py-3 bg-bg-surface border border-border-medium rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
-                    placeholder="Paste or type a placeholder token"
-                  />
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-text-primary mb-1">
+                        Access token (test value)
+                      </label>
+                      <input
+                        type="text"
+                        value={accessToken}
+                        onChange={(e) => setAccessToken(e.target.value)}
+                        className="input-premium w-full"
+                        placeholder="Paste or type a placeholder token"
+                      />
+                    </div>
+                    {device === 'fitbit' && (
+                      <div>
+                        <label className="block text-xs font-medium text-text-primary mb-1">
+                          Fitbit user ID (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={fitbitUserId}
+                          onChange={(e) => setFitbitUserId(e.target.value)}
+                          className="input-premium w-full"
+                          placeholder="Fitbit user id"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {error && (
+                    <div className="mt-3 text-xs text-semantic-error bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <AnimatedButton
+                      type="button"
+                      variant="primary"
+                      size="md"
+                      onClick={handleSync}
+                      disabled={loading}
+                    >
+                      {loading ? 'Syncing…' : 'Sync now'}
+                    </AnimatedButton>
+                  </div>
                 </div>
 
-                <AnimatePresence>
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="text-sm text-semantic-error bg-semantic-error/10 border border-semantic-error/20 rounded-lg p-3"
-                    >
-                      {error}
-                    </motion.div>
-                  )}
-                  {result && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="glass-card p-4 flex items-center gap-3"
-                    >
-                      <CheckCircle2 className="w-6 h-6 text-semantic-success" />
-                      <div>
-                        <p className="font-semibold text-text-primary">Sync Successful</p>
-                        <p className="text-sm text-text-secondary">
-                          {result.synced} data points imported. You earned <span className="font-bold text-semantic-success">{result.reward} $TA</span>.
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                
-                <AnimatedButton
-                  type="button"
-                  onClick={handleSync}
-                  disabled={loading || !accessToken.trim()}
-                  icon={<Watch className="w-5 h-5" />}
-                >
-                  {loading ? 'Syncing...' : 'Sync Now'}
-                </AnimatedButton>
+                {result && (
+                  <div className="w-full md:w-72 border border-border-light rounded-2xl p-4 bg-cream/40">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="w-5 h-5 text-semantic-success" />
+                      <span className="text-sm font-semibold text-text-primary">
+                        Last sync
+                      </span>
+                    </div>
+                    <p className="text-xs text-text-secondary mb-2">
+                      {result.synced} data points imported. You earned{' '}
+                      <span className="font-semibold text-semantic-success">
+                        {result.reward} $tabledadrian
+                      </span>{' '}
+                      for staying connected.
+                    </p>
+                    <p className="text-[11px] text-text-tertiary">
+                      Tip: keep your wearable connected and sync daily to keep your health coach
+                      up to date.
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
+            </AnimatedCard>
           </motion.div>
         </div>
       </div>

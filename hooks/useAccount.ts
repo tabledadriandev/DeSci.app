@@ -1,19 +1,21 @@
 'use client';
 
-import { useWallet, SafeAccountData } from '@/app/components/WalletProviders';
-
 /**
- * Safe replacement for wagmi's useAccount hook.
- * Uses our WalletContext which always provides safe defaults,
- * even before wagmi is fully loaded.
- * 
- * Usage: Replace `import { useAccount } from 'wagmi'` with
- * `import { useAccount } from '@/hooks/useAccount'`
+ * Minimal placeholder for a wallet/account hook so the app can compile.
+ * In a full implementation, this would be wired to wagmi / RainbowKit or your
+ * chosen web3 provider and return the connected wallet address and status.
  */
-export function useAccount(): SafeAccountData {
-  const { account } = useWallet();
-  return account;
+
+export interface AccountInfo {
+  address?: `0x${string}`;
+  isConnected: boolean;
 }
 
-export default useAccount;
+export function useAccount(): AccountInfo {
+  // For now, always report as disconnected with no address.
+  return {
+    address: undefined,
+    isConnected: false,
+  };
+}
 

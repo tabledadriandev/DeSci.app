@@ -1,154 +1,173 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion } from 'framer-motion';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import ProgressBar from '@/components/ui/ProgressBar';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import { Trophy, Users, CheckCircle, Calendar } from 'lucide-react';
+import { useAccount } from 'wagmi';
 
 export default function TournamentsPage() {
   const { address } = useAccount();
   const [tournaments, setTournaments] = useState<any[]>([]);
   const [myEntries, setMyEntries] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data for now
-    setTournaments([
-      { id: '1', name: 'Metabolic Health Masters', description: 'Compete based on the biggest improvement in your metabolic health score over 30 days.', status: 'active', prizePool: 10000, entryFee: 50, participants: 78, maxParticipants: 100, endDate: new Date(Date.now() + 86400000 * 20).toISOString() },
-      { id: '2', name: 'Sleep Score Champions', description: 'Achieve the highest average sleep score over one week.', status: 'upcoming', prizePool: 5000, entryFee: 20, participants: 0, maxParticipants: 200, endDate: new Date(Date.now() + 86400000 * 30).toISOString() },
-    ]);
-    setMyEntries([
-      { tournamentId: '1' },
-    ]);
-    setLoading(false);
+    loadTournaments();
+    if (address) {
+      loadMyEntries();
+    }
   }, [address]);
 
+  const loadTournaments = async () => {
+    try {
+      const response = await fetch('/api/tournaments');
+      const data = await response.json();
+      setTournaments(data);
+    } catch (error) {
+      console.error('Error loading tournaments:', error);
+    }
+  };
+
+  const loadMyEntries = async () => {
+    try {
+      const response = await fetch(`/api/tournaments/entries?address=${address}`);
+      const data = await response.json();
+      setMyEntries(data);
+    } catch (error) {
+      console.error('Error loading entries:', error);
+    }
+  };
+
   const joinTournament = async (tournamentId: string) => {
-    if (!address) return;
-    alert(`Joining tournament ${tournamentId}! (Mock)`);
+    if (!address) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/tournaments/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          tournamentId,
+        }),
+      });
+
+      if (response.ok) {
+        await loadMyEntries();
+        alert('Tournament entry successful!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Entry failed');
+      }
+    } catch (error) {
+      console.error('Error joining tournament:', error);
+      alert('Entry failed');
+    }
   };
 
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text mb-2">
-            Wellness Tournaments
-          </h1>
-          <p className="text-base text-text-secondary max-w-2xl">
-            Compete with the community, prove your progress, and earn substantial rewards.
-          </p>
-        </motion.div>
+    <div className="min-h-screen  p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-display text-accent-primary mb-8">
+          Tournaments
+        </h1>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-96">
-            <LoadingSpinner text="Loading tournaments..." />
+        {/* Active Tournaments */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-display mb-4">Active Tournaments</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {tournaments
+              .filter((t) => t.status === 'active')
+              .map((tournament) => {
+                const isJoined = myEntries.some(
+                  (e) => e.tournamentId === tournament.id
+                );
+
+                return (
+                  <div
+                    key={tournament.id}
+                    className="bg-white rounded-xl shadow-md p-6"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-2xl font-display text-text-primary mb-2">
+                          {tournament.name}
+                        </h3>
+                        <p className="text-text-secondary">
+                          {tournament.description}
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                        Active
+                      </span>
+                    </div>
+
+                    <div className="mb-4 p-4 bg-yellow-50 rounded-lg">
+                      <div className="font-semibold text-text-primary mb-2">
+                        💰 Prize Pool
+                      </div>
+                      <div className="text-2xl font-display text-accent-primary">
+                        {tournament.prizePool} $tabledadrian
+                      </div>
+                      <div className="text-sm text-text-secondary mt-2">
+                        Entry Fee: {tournament.entryFee} $tabledadrian
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm text-text-secondary mb-2">
+                        <span>Participants</span>
+                        <span>{tournament.participants || 0} / {tournament.maxParticipants || '∞'}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-accent-primary h-2 rounded-full transition-all"
+                          style={{
+                            width: `${((tournament.participants || 0) / (tournament.maxParticipants || 100)) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-text-secondary">
+                        Ends: {new Date(tournament.endDate).toLocaleDateString()}
+                      </div>
+                      {isJoined ? (
+                        <span className="text-green-600 text-sm">✓ Joined</span>
+                      ) : (
+                        <button
+                          onClick={() => joinTournament(tournament.id)}
+                          className="bg-accent-primary text-white px-4 py-2 rounded-lg hover:bg-accent-primary/90 transition-colors"
+                        >
+                          Join ({tournament.entryFee} $tabledadrian)
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Active Tournaments */}
-            <motion.div className="lg:col-span-2 space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-              <h2 className="text-2xl font-bold text-text-primary">Active Tournaments</h2>
-              {tournaments
-                .filter((t) => t.status === 'active')
-                .map((tournament) => {
-                  const isJoined = myEntries.some((e) => e.tournamentId === tournament.id);
-                  return (
-                    <motion.div
-                      key={tournament.id}
-                      variants={fadeInUp}
-                      className="glass-card-hover p-6"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-text-primary mb-2">
-                            {tournament.name}
-                          </h3>
-                          <p className="text-text-secondary text-sm">{tournament.description}</p>
-                        </div>
-                        <span className="px-3 py-1 bg-semantic-success/10 text-semantic-success rounded-full text-xs font-semibold border border-semantic-success/20">
-                          Active
-                        </span>
-                      </div>
+        </div>
 
-                      <div className="glass-card p-4 mb-4">
-                        <p className="text-sm text-text-secondary">Prize Pool</p>
-                        <p className="text-3xl font-bold text-accent-primary">{tournament.prizePool.toLocaleString()} $TA</p>
-                        <p className="text-xs text-text-tertiary mt-1">Entry Fee: {tournament.entryFee} $TA</p>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="flex justify-between text-sm text-text-secondary mb-2">
-                          <p className="flex items-center gap-1"><Users className="w-4 h-4" /> Participants</p>
-                          <p>{tournament.participants} / {tournament.maxParticipants}</p>
-                        </div>
-                        <ProgressBar value={(tournament.participants / tournament.maxParticipants) * 100} size="sm" showValue={false} />
-                      </div>
-
-                      <div className="flex justify-between items-center text-sm text-text-secondary">
-                        <p className="flex items-center gap-1"><Calendar className="w-4 h-4" /> Ends: {new Date(tournament.endDate).toLocaleDateString()}</p>
-                        {isJoined ? (
-                          <p className="font-semibold text-semantic-success flex items-center gap-1">
-                            <CheckCircle className="w-4 h-4" /> Joined
-                          </p>
-                        ) : (
-                          <AnimatedButton onClick={() => joinTournament(tournament.id)}>
-                            Join ({tournament.entryFee} $TA)
-                          </AnimatedButton>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-            </motion.div>
-
-            {/* Leaderboard */}
-            <motion.div variants={fadeInUp} className="glass-card p-6">
-              <h2 className="text-2xl font-bold text-text-primary mb-4 flex items-center gap-2">
-                <Trophy className="w-6 h-6 text-accent-primary" /> Leaderboard
-              </h2>
-              <div className="space-y-3">
-                <div className="glass-card p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <p className="text-2xl">🥇</p>
-                    <div>
-                      <p className="font-semibold text-text-primary">BioHacker_01</p>
-                      <p className="text-sm text-text-secondary">5,000 pts</p>
-                    </div>
-                  </div>
-                  <p className="text-accent-primary font-bold">500 $TA</p>
-                </div>
-                <div className="glass-card p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <p className="text-2xl">🥈</p>
-                    <div>
-                      <p className="font-semibold text-text-primary">WellnessWarrior</p>
-                      <p className="text-sm text-text-secondary">4,500 pts</p>
-                    </div>
-                  </div>
-                  <p className="text-accent-secondary font-bold">300 $TA</p>
-                </div>
-                <div className="glass-card p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <p className="text-2xl">🥉</p>
-                    <div>
-                      <p className="font-semibold text-text-primary">LongevitySeeker</p>
-                      <p className="text-sm text-text-secondary">4,200 pts</p>
-                    </div>
-                  </div>
-                  <p className="text-accent-secondary font-bold">100 $TA</p>
+        {/* Leaderboard */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-2xl font-display mb-4">Current Leaderboard</h2>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-2xl mr-3">🥇</span>
+                <div>
+                  <div className="font-semibold">Top Competitor</div>
+                  <div className="text-sm text-text-secondary">5,000 points</div>
                 </div>
               </div>
-            </motion.div>
+              <div className="text-accent-primary font-semibold">500 $tabledadrian</div>
+            </div>
+            {/* More leaderboard entries */}
           </div>
-        )}
+        </div>
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

@@ -1,128 +1,462 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion, AnimatePresence } from 'framer-motion';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Beaker, Filter, ShoppingCart, Package, Dna, Droplet, Microscope, X, CheckCircle } from 'lucide-react';
-import Image from 'next/image';
+import { useAccount } from 'wagmi';
+import { motion } from 'framer-motion';
+import {
+  Search,
+  Filter,
+  ShoppingCart,
+  TrendingUp,
+  Calendar,
+  Package,
+  Beaker,
+  Dna,
+  Droplet,
+  Microscope,
+} from 'lucide-react';
 
 export default function TestKitsPage() {
   const { address } = useAccount();
   const [testKits, setTestKits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedKit, setSelectedKit] = useState<any>(null);
+  const [filters, setFilters] = useState({
+    kitType: '',
+    category: '',
+    currency: 'TA',
+    minPrice: '',
+    maxPrice: '',
+    provider: '',
+  });
+  const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
-    // Mock data for test kits
-    setTestKits([
-      { id: '1', name: 'Comprehensive Blood Panel', description: 'Measures over 50 key biomarkers for a full health overview.', imageUrl: 'https://images.unsplash.com/photo-1576092762791-d21f859f71bf?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', price: 199, currency: 'USD', kitType: 'blood', biomarkersTested: ['Cholesterol', 'Glucose', 'Vitamin D', 'Testosterone', 'CRP'], processingTime: 5 },
-      { id: '2', name: 'Gut Microbiome Analysis', description: 'Full shotgun sequencing of your gut microbiome to analyze diversity and function.', imageUrl: 'https://images.unsplash.com/photo-1628348083864-dd68c34f5466?auto=format&fit=crop&q=80&w=2940&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', price: 299, currency: 'USD', kitType: 'microbiome', biomarkersTested: ['Shannon Index', 'Akkermansia', 'Bifidobacterium'], processingTime: 14 },
-    ]);
-    setLoading(false);
-  }, []);
+    loadTestKits();
+    if (address) {
+      loadOrders();
+    }
+  }, [address, filters]);
 
-  const handleOrder = (kit: any) => {
+  const loadTestKits = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.kitType) params.append('kitType', filters.kitType);
+      if (filters.category) params.append('category', filters.category);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+      if (filters.provider) params.append('provider', filters.provider);
+      params.append('currency', filters.currency);
+
+      const response = await fetch(`/api/test-kits?${params.toString()}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setTestKits(data.testKits || []);
+      }
+    } catch (error) {
+      console.error('Error loading test kits:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadOrders = async () => {
+    if (!address) return;
+    
+    try {
+      const response = await fetch(`/api/test-kits/orders?userId=${address}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setOrders(data.orders || []);
+      }
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    }
+  };
+
+  const handleOrder = async (kit: any) => {
     if (!address) {
-      alert('Please connect your wallet to order.');
+      alert('Please connect your wallet to order test kits');
       return;
     }
+
     setSelectedKit(kit);
   };
-  
+
   const getKitTypeIcon = (kitType: string) => {
     switch (kitType) {
-      case 'blood': return Droplet;
-      case 'microbiome': return Beaker;
-      case 'dna': return Dna;
-      case 'microfluidic': return Microscope;
-      default: return Package;
+      case 'blood':
+        return Droplet;
+      case 'microbiome':
+        return Beaker;
+      case 'dna':
+        return Dna;
+      case 'microfluidic':
+        return Microscope;
+      default:
+        return Package;
     }
   };
 
+  const kitTypes = [
+    { value: '', label: 'All Types' },
+    { value: 'blood', label: 'Blood Tests' },
+    { value: 'microbiome', label: 'Microbiome' },
+    { value: 'dna', label: 'DNA Tests' },
+    { value: 'microfluidic', label: 'Microfluidic' },
+  ];
+
+  const categories = [
+    { value: '', label: 'All Categories' },
+    { value: 'metabolic_panel', label: 'Metabolic Panel' },
+    { value: 'hormone_panel', label: 'Hormone Panel' },
+    { value: 'vitamin_panel', label: 'Vitamin Panel' },
+    { value: 'inflammation', label: 'Inflammation' },
+    { value: 'microbiome', label: 'Microbiome' },
+    { value: 'genetic', label: 'Genetic' },
+  ];
+
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="max-w-7xl mx-auto mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text mb-2">
+    <div className="min-h-screen  p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center gap-3 mb-8">
+          <Beaker className="w-8 h-8 text-accent-primary" />
+          <h1 className="text-4xl font-display text-accent-primary">
             Test Kits & Diagnostics
           </h1>
-          <p className="text-base text-text-secondary max-w-3xl">
-            Order at-home test kits to get deep insights into your biomarkers and take control of your health.
-          </p>
-        </motion.div>
+        </div>
 
+        {/* Filters */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-5 h-5 text-text-secondary" />
+            <h2 className="text-lg font-semibold">Filters</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {/* Kit Type Filter */}
+            <select
+              value={filters.kitType}
+              onChange={(e) => setFilters({ ...filters, kitType: e.target.value })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-primary"
+            >
+              {kitTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Category Filter */}
+            <select
+              value={filters.category}
+              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-primary"
+            >
+              {categories.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Currency Toggle */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilters({ ...filters, currency: 'TA' })}
+                className={`px-4 py-2 rounded-lg ${
+                  filters.currency === 'TA'
+                    ? 'bg-accent-primary text-white'
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                $tabledadrian
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, currency: 'USD' })}
+                className={`px-4 py-2 rounded-lg ${
+                  filters.currency === 'USD'
+                    ? 'bg-accent-primary text-white'
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                USD
+              </button>
+            </div>
+
+            {/* Price Range */}
+            <input
+              type="number"
+              placeholder="Min Price"
+              value={filters.minPrice}
+              onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-primary"
+            />
+            <input
+              type="number"
+              placeholder="Max Price"
+              value={filters.maxPrice}
+              onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-primary"
+            />
+          </div>
+        </div>
+
+        {/* Test Kits Grid */}
         {loading ? (
-          <div className="flex justify-center items-center h-96">
-            <LoadingSpinner text="Loading test kits..." />
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mx-auto"></div>
+            <p className="mt-4 text-text-secondary">Loading test kits...</p>
+          </div>
+        ) : testKits.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Test Kits Found</h3>
+            <p className="text-text-secondary">
+              Try adjusting your filters or check back later for new test kits.
+            </p>
           </div>
         ) : (
-          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" variants={staggerContainer} initial="hidden" animate="visible">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {testKits.map((kit) => {
               const Icon = getKitTypeIcon(kit.kitType);
               return (
-                <motion.div key={kit.id} variants={fadeInUp} className="glass-card-hover p-6 flex flex-col justify-between">
-                  <div>
-                    {kit.imageUrl && (
-                      <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-bg-elevated">
-                        <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" />
-                      </div>
-                    )}
+                <div
+                  key={kit.id}
+                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow"
+                >
+                  {kit.imageUrl && (
+                    <img
+                      src={kit.imageUrl}
+                      alt={kit.name}
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
+                  <div className="p-6">
                     <div className="flex items-center gap-2 mb-2">
                       <Icon className="w-5 h-5 text-accent-primary" />
-                      <p className="text-xs font-semibold uppercase tracking-wider text-accent-primary">{kit.kitType}</p>
+                      <span className="text-xs font-medium text-text-secondary uppercase">
+                        {kit.kitType}
+                      </span>
                     </div>
-                    <h3 className="text-xl font-bold text-text-primary mb-2">{kit.name}</h3>
-                    <p className="text-sm text-text-secondary line-clamp-3">{kit.description}</p>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-border-medium">
-                      <p className="text-2xl font-bold text-accent-primary">${kit.price}</p>
-                      <AnimatedButton onClick={() => handleOrder(kit)} icon={<ShoppingCart className="w-4 h-4" />}>
-                        Order Kit
-                      </AnimatedButton>
+                    <h3 className="text-xl font-display text-text-primary mb-2">
+                      {kit.name}
+                    </h3>
+                    <p className="text-text-secondary text-sm mb-4 line-clamp-2">
+                      {kit.description}
+                    </p>
+                    
+                    {kit.biomarkersTested && kit.biomarkersTested.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs font-medium text-text-secondary mb-1">
+                          Tests:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {kit.biomarkersTested.slice(0, 4).map((marker: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-1 bg-cream rounded text-xs text-text-primary"
+                            >
+                              {marker}
+                            </span>
+                          ))}
+                          {kit.biomarkersTested.length > 4 && (
+                            <span className="px-2 py-1 bg-cream rounded text-xs text-text-primary">
+                              +{kit.biomarkersTested.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <div className="text-2xl font-display text-accent-primary">
+                          {kit.price} {kit.currency === 'TA' ? '$tabledadrian' : '$'}
+                        </div>
+                        {kit.processingTime && (
+                          <div className="text-xs text-text-secondary flex items-center gap-1 mt-1">
+                            <Calendar className="w-3 h-3" />
+                            {kit.processingTime} days processing
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    <button
+                      onClick={() => handleOrder(kit)}
+                      className="w-full bg-accent-primary text-white px-4 py-2 rounded-lg hover:bg-accent-primary/90 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Order Now
+                    </button>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
-          </motion.div>
+          </div>
         )}
 
-        <AnimatePresence>
-          {selectedKit && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-              onClick={() => setSelectedKit(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0.95 }}
-                className="glass-card max-w-md w-full p-6"
-                onClick={(e) => e.stopPropagation()}
+        {/* Order Modal */}
+        {selectedKit && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
+              <h2 className="text-2xl font-display mb-4">Order Test Kit</h2>
+              <div className="mb-4">
+                <h3 className="font-semibold">{selectedKit.name}</h3>
+                <p className="text-text-secondary text-sm">{selectedKit.description}</p>
+                <p className="text-xl font-bold text-accent-primary mt-2">
+                  {selectedKit.price} {selectedKit.currency === 'TA' ? '$tabledadrian' : '$'}
+                </p>
+              </div>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const shippingAddress = {
+                    name: formData.get('name'),
+                    street: formData.get('street'),
+                    city: formData.get('city'),
+                    state: formData.get('state'),
+                    zip: formData.get('zip'),
+                    country: formData.get('country'),
+                  };
+
+                  try {
+                    const response = await fetch('/api/test-kits/order', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userId: address,
+                        kitId: selectedKit.id,
+                        quantity: 1,
+                        shippingAddress,
+                        paymentMethod: selectedKit.currency === 'TA' ? 'crypto' : 'fiat',
+                      }),
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                      alert('Order placed successfully!');
+                      setSelectedKit(null);
+                      await loadOrders();
+                    } else {
+                      alert(data.error || 'Order failed');
+                    }
+                  } catch (error) {
+                    console.error('Order error:', error);
+                    alert('Order failed');
+                  }
+                }}
+                className="space-y-4"
               >
-                <h2 className="text-2xl font-bold text-text-primary mb-4">Order Confirmation</h2>
-                <p className="text-text-secondary mb-4">You are about to order the <span className="font-bold text-text-primary">{selectedKit.name}</span>.</p>
-                <div className="glass-card p-4 mb-4">
-                  <p className="text-3xl font-bold text-accent-primary">${selectedKit.price}</p>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Shipping Address</label>
+                  <input
+                    name="name"
+                    placeholder="Full Name"
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2"
+                  />
+                  <input
+                    name="street"
+                    placeholder="Street Address"
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      name="city"
+                      placeholder="City"
+                      required
+                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                    <input
+                      name="state"
+                      placeholder="State"
+                      required
+                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <input
+                      name="zip"
+                      placeholder="ZIP Code"
+                      required
+                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                    <input
+                      name="country"
+                      placeholder="Country"
+                      required
+                      className="px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
                 </div>
-                <div className="flex gap-4">
-                  <AnimatedButton variant="secondary" onClick={() => setSelectedKit(null)} className="flex-1">Cancel</AnimatedButton>
-                  <AnimatedButton onClick={() => alert('Order placed! (Mock)')} className="flex-1">Confirm Order</AnimatedButton>
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedKit(null)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-accent-primary text-white px-4 py-2 rounded-lg hover:bg-accent-primary/90"
+                  >
+                    Place Order
+                  </button>
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* My Orders */}
+        {address && orders.length > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-6 mt-8">
+            <h2 className="text-2xl font-display mb-4">My Orders</h2>
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="p-4 border border-gray-200 rounded-lg flex items-center justify-between"
+                >
+                  <div>
+                    <div className="font-semibold">{order.kit.name}</div>
+                    <div className="text-sm text-text-secondary">
+                      Ordered: {new Date(order.orderDate).toLocaleDateString()}
+                    </div>
+                    {order.trackingNumber && (
+                      <div className="text-sm text-text-secondary">
+                        Tracking: {order.trackingNumber}
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm ${
+                      order.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : order.status === 'shipped'
+                        ? 'bg-blue-100 text-blue-800'
+                        : order.status === 'processing'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {order.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

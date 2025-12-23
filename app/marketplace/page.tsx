@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAccount } from '@/hooks/useAccount';
+import { useAccount } from 'wagmi';
 import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations/variants';
 import AnimatedCard from '@/components/ui/AnimatedCard';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import PageTransition from '@/components/ui/PageTransition';
-import { ShoppingBag, Package, Sparkles, CreditCard, Heart, Search, X, CheckCircle, Star, TrendingUp, ShoppingCart, Filter } from 'lucide-react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { ShoppingBag, Package, Sparkles, CreditCard, Heart, Search, X, CheckCircle, Star, TrendingUp, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/ToastProvider';
@@ -87,7 +86,7 @@ export default function MarketplacePage() {
         setShowPurchaseConfirm(false);
         showToast({
           title: 'Purchase successful',
-          description: payload.message || 'Your item has been purchased.',
+          description: payload.message || 'Your wellness item has been purchased.',
           variant: 'success',
         });
         await loadItems(activeCategory);
@@ -136,122 +135,159 @@ export default function MarketplacePage() {
 
   return (
     <PageTransition>
-      <div className="page-container">
-        <motion.div initial="initial" animate="animate" variants={fadeInUp} className="page-header">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="page-title">DeSci Marketplace</h1>
-              <p className="page-subtitle max-w-2xl">
-                Curated products, services, and subscriptions aligned with your longevity protocols.
-              </p>
-            </div>
-            {address && (
-              <Link href="/marketplace/orders">
-                <AnimatedButton variant="secondary" size="sm" icon={<Package className="w-4 h-4" />}>
-                  My Orders
-                </AnimatedButton>
-              </Link>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Search Bar */}
-        <motion.div className="section-card mb-6" variants={fadeInUp}>
-          <div className="relative max-w-2xl w-full">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-tertiary" />
-            <input
-              type="text"
-              placeholder="Search products, services, subscriptions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="form-input pl-12 pr-12"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-bg-elevated transition"
-              >
-                <X className="w-4 h-4 text-text-tertiary" />
-              </button>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Category Filters */}
-        <motion.div className="glass-card p-4 mb-8" variants={fadeInUp}>
-          <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-            <Filter className="w-6 h-6 text-accent-primary" /> Categories
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              const isActive = activeCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`glass-card-hover flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                    isActive
-                      ? 'bg-accent-primary text-white shadow-sm'
-                      : 'border border-border-medium hover:border-accent-secondary/50 text-text-secondary'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Items Grid */}
-        {loading ? (
-          <div className="flex justify-center items-center h-96">
-            <LoadingSpinner text="Loading marketplace items..." />
-          </div>
-        ) : (
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {filteredItems.length === 0 ? (
-              <motion.div variants={fadeInUp} className="glass-card col-span-full text-center py-12">
-                <Package className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-text-primary mb-2">No items found</h3>
-                <p className="text-text-secondary mb-6">
-                  {searchQuery
-                    ? `We couldn't find any items matching "${searchQuery}". Try adjusting your search or browse other categories.`
-                    : 'Check back soon for new longevity products and services in this category!'}
+      <div className="min-h-screen  p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <motion.div
+              initial="initial"
+              animate="animate"
+              variants={fadeInUp}
+            >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-2">
+                  Marketplace
+                </h1>
+                <p className="text-text-secondary text-lg">
+                  Curated wellness products, services, and subscriptions aligned with your Table d'Adrian protocols
                 </p>
+              </div>
+              {address && (
+                <Link href="/marketplace/orders">
+                  <AnimatedButton variant="secondary" size="sm">
+                    <Package className="w-4 h-4 mr-2" />
+                    My Orders
+                  </AnimatedButton>
+                </Link>
+              )}
+            </div>
+            </motion.div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-6">
+            <motion.div
+              initial="initial"
+              animate="animate"
+              variants={fadeInUp}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="relative max-w-2xl">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+                <input
+                  type="text"
+                  placeholder="Search products, services, subscriptions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-12 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 outline-none transition"
+                />
                 {searchQuery && (
-                  <AnimatedButton variant="secondary" onClick={() => setSearchQuery('')}>
-                    Clear Search
-                  </AnimatedButton>
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition"
+                  >
+                    <X className="w-4 h-4 text-text-tertiary" />
+                  </button>
                 )}
-                {!searchQuery && activeCategory !== 'all' && (
-                  <AnimatedButton onClick={() => setActiveCategory('all')}>
-                    View All Items
-                  </AnimatedButton>
-                )}
-              </motion.div>
-            ) : (
-              filteredItems.map((item, index) => (
-                <motion.div key={item.id} variants={fadeInUp}>
-                  <div className="glass-card-hover p-6 h-full flex flex-col">
-                    {item.image && (
-                      <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-bg-elevated">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Category Filters */}
+          <div className="mb-8">
+            <motion.div
+              initial="initial"
+              animate="animate"
+              variants={fadeInUp}
+              transition={{ delay: 0.15 }}
+            >
+            <div className="flex flex-wrap gap-3">
+              {categories.map((cat) => {
+                const Icon = cat.icon;
+                const isActive = activeCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                      isActive
+                        ? `bg-gradient-to-r ${cat.color} text-white shadow-lg scale-105`
+                        : 'bg-white text-text-primary hover:bg-gray-50 border-2 border-gray-200'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+            </motion.div>
+          </div>
+
+          {/* Items Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="premium-card">
+                  <div className="skeleton h-40 w-full rounded-xl mb-4" />
+                  <div className="skeleton h-5 w-2/3 rounded-md mb-2" />
+                  <div className="skeleton h-3 w-full rounded-md mb-2" />
+                  <div className="skeleton h-3 w-3/4 rounded-md mb-4" />
+                  <div className="flex items-center justify-between">
+                    <div className="skeleton h-6 w-20 rounded-md" />
+                    <div className="skeleton h-9 w-24 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+              >
+              {filteredItems.length === 0 ? (
+                <AnimatedCard className="col-span-full">
+                  <EmptyState
+                    icon={Package}
+                    title={searchQuery ? 'No results found' : 'No items in this category'}
+                    description={
+                      searchQuery
+                        ? `We couldn't find any items matching "${searchQuery}". Try adjusting your search or browse other categories.`
+                        : 'Check back soon for new wellness products and services in this category!'
+                    }
+                    action={
+                      searchQuery
+                        ? {
+                            label: 'Clear Search',
+                            onClick: () => setSearchQuery(''),
+                            variant: 'secondary',
+                          }
+                        : {
+                            label: 'View All Items',
+                            onClick: () => setActiveCategory('all'),
+                            variant: 'primary',
+                          }
+                    }
+                  />
+                </AnimatedCard>
+              ) : (
+                filteredItems.map((item, index) => (
+                  <motion.div key={item.id} variants={staggerItem}>
+                    <AnimatedCard hover delay={index * 0.05} className="h-full flex flex-col">
+                      {item.image && (
+                        <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-gray-100">
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="text-xl font-bold text-text-primary">{item.name}</h3>
                           <span className="px-2 py-1 bg-accent-primary/10 text-accent-primary rounded-full text-xs font-semibold">
@@ -261,45 +297,227 @@ export default function MarketplacePage() {
                         <p className="text-text-secondary text-sm mb-4 line-clamp-2">
                           {item.description}
                         </p>
-                      </div>
-                      <div className="flex items-center justify-between mt-4">
-                        <p className="text-2xl font-bold text-accent-primary">
-                          {item.price} {item.currency}
-                        </p>
-                        <div className="flex gap-2">
-                          <AnimatedButton
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setSelectedItem(item)}
-                          >
-                            Details
-                          </AnimatedButton>
-                          <AnimatedButton
-                            variant="primary"
-                            size="sm"
-                            onClick={() => purchaseItem(item.id)}
-                            disabled={purchasingId === item.id || (item.stock !== null && item.stock <= 0)}
-                          >
-                            {purchasingId === item.id ? (
-                              'Purchasing...'
-                            ) : item.stock !== null && item.stock <= 0 ? (
-                              'Out of Stock'
-                            ) : (
-                              <>
-                                <ShoppingCart className="w-4 h-4 mr-1" />
-                                Buy
-                              </>
-                            )}
-                          </AnimatedButton>
+                        <div className="flex items-center justify-between">
+                          <div className="text-2xl font-bold text-accent-primary">
+                            {item.price} $tabledadrian
+                          </div>
+                          <div className="flex gap-2">
+                            <AnimatedButton
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setSelectedItem(item)}
+                            >
+                              Details
+                            </AnimatedButton>
+                            <AnimatedButton
+                              variant="primary"
+                              size="sm"
+                              onClick={() => purchaseItem(item.id)}
+                              disabled={purchasingId === item.id || (item.stock !== null && item.stock <= 0)}
+                            >
+                              {purchasingId === item.id ? (
+                                'Purchasing...'
+                              ) : item.stock !== null && item.stock <= 0 ? (
+                                'Out of Stock'
+                              ) : (
+                                <>
+                                  <ShoppingCart className="w-4 h-4 mr-1" />
+                                  Buy
+                                </>
+                              )}
+                            </AnimatedButton>
+                          </div>
                         </div>
                       </div>
+                    </AnimatedCard>
+                  </motion.div>
+                ))
+              )}
+              </motion.div>
+            </div>
+          )}
+
+          {/* Item Detail Modal */}
+          {selectedItem && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedItem(null)}>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                >
+                  <div className="max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-2xl p-6 md:p-8" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between mb-4">
+                  <h2 className="text-3xl font-bold text-text-primary">
+                    {selectedItem.name}
+                  </h2>
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {selectedItem.image && (
+                    <div className="relative w-full h-64 rounded-xl overflow-hidden bg-gray-100">
+                      <Image
+                        src={selectedItem.image}
+                        alt={selectedItem.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
+                  )}
+
+                  <div className="flex items-center gap-4">
+                    <span className="px-3 py-1 bg-accent-primary/10 text-accent-primary rounded-full text-sm font-semibold">
+                      {selectedItem.type}
+                    </span>
+                    <span className="px-3 py-1 bg-gray-100 text-text-secondary rounded-full text-sm font-semibold">
+                      {selectedItem.category}
+                    </span>
+                    {selectedItem.stock !== null && (
+                      <span className="px-3 py-1 bg-semantic-warning/10 text-semantic-warning rounded-full text-sm font-semibold">
+                        {selectedItem.stock > 0 ? `${selectedItem.stock} in stock` : 'Out of stock'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-semibold text-text-primary mb-2">Description</h3>
+                    <p className="text-text-secondary leading-relaxed">{selectedItem.description}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div>
+                      <div className="text-sm text-text-secondary mb-1">Price</div>
+                      <div className="text-3xl font-bold text-accent-primary">
+                        {selectedItem.price} $tabledadrian
+                      </div>
+                    </div>
+                    <AnimatedButton
+                      variant="primary"
+                      size="lg"
+                      onClick={() => purchaseItem(selectedItem.id)}
+                      disabled={purchasingId === selectedItem.id || (selectedItem.stock !== null && selectedItem.stock <= 0)}
+                    >
+                      {purchasingId === selectedItem.id ? (
+                        'Processing...'
+                      ) : selectedItem.stock !== null && selectedItem.stock <= 0 ? (
+                        'Out of Stock'
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-5 h-5 mr-2" />
+                          Purchase Now
+                        </>
+                      )}
+                    </AnimatedButton>
+                  </div>
+                </div>
                   </div>
                 </motion.div>
-              ))
-            )}
-          </motion.div>
-        )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Purchase Confirmation Modal */}
+          {showPurchaseConfirm && selectedItem && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowPurchaseConfirm(false)}>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                >
+                  <div className="max-w-md w-full bg-white rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
+                <h2 className="text-2xl font-bold text-text-primary mb-4">
+                  Confirm Purchase
+                </h2>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <div className="font-semibold text-text-primary mb-2">{selectedItem.name}</div>
+                    <div className="text-2xl font-bold text-accent-primary">
+                      {selectedItem.price} $tabledadrian
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-text-secondary">
+                    By confirming, you agree to complete the transaction using your connected wallet.
+                  </div>
+
+                  <div className="flex gap-3">
+                    <AnimatedButton
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowPurchaseConfirm(false);
+                        setSelectedItem(null);
+                      }}
+                    >
+                      Cancel
+                    </AnimatedButton>
+                    <AnimatedButton
+                      variant="primary"
+                      className="flex-1"
+                      onClick={() => purchaseItem(selectedItem.id, true)}
+                      disabled={purchasingId === selectedItem.id}
+                    >
+                      {purchasingId === selectedItem.id ? 'Processing...' : 'Confirm Purchase'}
+                    </AnimatedButton>
+                  </div>
+                </div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Purchase Success Animation */}
+          {purchaseSuccess && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+            >
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setPurchaseSuccess(false)}>
+                <motion.div
+                  initial={{ y: 20 }}
+                  animate={{ y: 0 }}
+                >
+                  <div className="bg-white rounded-2xl p-8 text-center max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: 'spring' }}
+                    >
+                      <div className="w-20 h-20 bg-semantic-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="w-12 h-12 text-semantic-success" />
+                      </div>
+                    </motion.div>
+                    <h3 className="text-2xl font-bold text-text-primary mb-2">Purchase Successful!</h3>
+                    <p className="text-text-secondary mb-6">
+                      Your purchase has been confirmed. You can view your order history in your profile.
+                    </p>
+                    <AnimatedButton variant="primary" onClick={() => setPurchaseSuccess(false)}>
+                      Continue Shopping
+                    </AnimatedButton>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </div>
       </div>
     </PageTransition>
   );

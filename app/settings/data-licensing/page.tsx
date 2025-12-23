@@ -1,14 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, CheckCircle, XCircle, Info, Database, Wallet, BarChart3 } from 'lucide-react';
-import PageTransition from '@/components/ui/PageTransition';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { fadeInUp } from '@/lib/animations/variants';
-import { useToast } from '@/components/ui/ToastProvider';
+import { useAccount } from 'wagmi';
+import { Shield, CheckCircle, XCircle, Info } from 'lucide-react';
+import Skeleton from '@/components/ui/Skeleton';
 
 export default function DataLicensingSettingsPage() {
   const { address } = useAccount();
@@ -16,40 +11,73 @@ export default function DataLicensingSettingsPage() {
   const [dataTypes, setDataTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const { showToast } = useToast();
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (address) {
-      // Mock data loading
-      setTimeout(() => {
-        setOptedIn(true);
-        setDataTypes(['all']);
-        setLoading(false);
-      }, 1000);
-    } else {
-      setLoading(false);
+      loadOptInStatus();
     }
   }, [address]);
 
+  const loadOptInStatus = async () => {
+    if (!address) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/data-licensing/opt-in?address=${address}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setOptedIn(data.optedIn);
+        setDataTypes(data.dataTypes || []);
+      }
+    } catch (error) {
+      console.error('Error loading opt-in status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleToggle = async (newOptedIn: boolean) => {
     if (!address) {
-      showToast({ type: 'error', title: 'Please connect your wallet' });
+      setMessage({ type: 'error', text: 'Please connect your wallet' });
       return;
     }
 
-    setSaving(true);
-    // Mock API call
-    setTimeout(() => {
-      setOptedIn(newOptedIn);
-      showToast({ type: 'success', title: 'Settings Updated', description: `You have ${newOptedIn ? 'opted in to' : 'opted out of'} data sharing.` });
+    try {
+      setSaving(true);
+      setMessage(null);
+
+      const response = await fetch('/api/data-licensing/opt-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          optedIn: newOptedIn,
+          dataTypes: dataTypes.length > 0 ? dataTypes : ['all'],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setOptedIn(data.data.optedIn);
+        setDataTypes(data.data.dataTypes);
+        setMessage({
+          type: 'success',
+          text: newOptedIn
+            ? 'You have opted in to data sharing. Thank you for contributing to research!'
+            : 'You have opted out of data sharing.',
+        });
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to update preference' });
+      }
+    } catch (error) {
+      console.error('Error updating opt-in:', error);
+      setMessage({ type: 'error', text: 'Failed to update preference' });
+    } finally {
       setSaving(false);
-    }, 1000);
-  };
-  
-  const handleDataTypeChange = (newType: string) => {
-    setDataTypes([newType]);
-    // Mock API call
-    showToast({ type: 'success', title: 'Data Preference Updated', description: `Sharing preference set to ${newType}.` });
+    }
   };
 
   const dataTypeOptions = [
@@ -57,126 +85,157 @@ export default function DataLicensingSettingsPage() {
     { id: 'biomarkers', label: 'Biomarkers Only', description: 'Lab results and health metrics' },
     { id: 'meal_logs', label: 'Meal Logs Only', description: 'Nutrition and meal tracking data' },
     { id: 'microbiome', label: 'Microbiome Only', description: 'Gut health and microbiome analysis' },
+    { id: 'health_assessments', label: 'Health Assessments Only', description: 'Questionnaire and assessment data' },
   ];
 
   return (
-    <PageTransition>
-      <div className="page-container max-w-4xl">
-        <motion.div initial="initial" animate="animate" variants={fadeInUp} className="page-header">
-          <h1 className="page-title">Data Licensing & Research</h1>
-          <p className="page-subtitle">
-            Control how your anonymized health data is used for research and earn dividends.
+    <div className="min-h-screen  p-4 sm:p-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl sm:text-4xl font-display text-accent-primary mb-2">
+            Data Licensing & Research
+          </h1>
+          <p className="text-sm sm:text-base text-text-secondary">
+            Control how your anonymized health data is used for research and earn dividends from
+            data licensing revenue.
           </p>
-        </motion.div>
+        </div>
 
-        {!address ? (
-          <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="glass-card text-center py-12 mt-8 max-w-md mx-auto">
-            <Wallet className="w-16 h-16 text-accent-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-text-primary mb-2">Connect Your Wallet</h2>
-            <p className="text-text-secondary">Please connect your wallet to manage your data sharing preferences.</p>
-          </motion.div>
-        ) : loading ? (
-          <div className="flex justify-center items-center h-96">
-            <LoadingSpinner text="Loading your data preferences..." />
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto mt-8 space-y-8">
-            <motion.div variants={fadeInUp} className="glass-card p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-text-primary mb-2 flex items-center gap-2">
-                    <Shield className="w-6 h-6 text-accent-primary" /> Data Sharing Opt-In
-                  </h2>
-                  <p className="text-sm text-text-secondary">
-                    Your anonymized health data can be licensed for research, earning you 40% of all licensing revenue.
-                  </p>
-                </div>
-                <AnimatedButton
-                  onClick={() => handleToggle(!optedIn)}
-                  disabled={saving}
-                  variant={optedIn ? 'primary' : 'secondary'}
-                  size="sm"
-                >
-                  {saving ? 'Saving...' : optedIn ? 'Opted In' : 'Opt Out'}
-                </AnimatedButton>
-              </div>
-
-              <AnimatePresence>
-                {optedIn && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginTop: '1rem' }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    className="glass-card p-4 flex items-start gap-2"
-                  >
-                    <Info className="w-5 h-5 text-accent-secondary flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-text-secondary">
-                      <strong>Your data is always anonymized:</strong> All personally identifiable information (wallet addresses, emails, names) is removed before aggregation. Only statistical patterns and trends are shared.
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            <AnimatePresence>
-              {optedIn && (
-                <motion.div variants={fadeInUp} className="glass-card p-6">
-                  <h3 className="text-xl font-bold text-text-primary mb-4">Data Types to Share</h3>
-                  <div className="space-y-3">
-                    {dataTypeOptions.map((option) => (
-                      <div
-                        key={option.id}
-                        className={`glass-card-hover p-4 flex items-center gap-4 cursor-pointer transition-all ${
-                          (dataTypes.includes('all') || dataTypes.includes(option.id)) ? 'ring-2 ring-accent-primary' : ''
-                        }`}
-                        onClick={() => handleDataTypeChange(option.id)}
-                      >
-                        <input
-                          type="radio"
-                          name="dataType"
-                          value={option.id}
-                          checked={dataTypes.includes('all') || dataTypes.includes(option.id)}
-                          onChange={() => handleDataTypeChange(option.id)}
-                          className="w-5 h-5 text-accent-primary bg-bg-surface border-border-medium focus:ring-accent-primary"
-                        />
-                        <div className="flex-1">
-                          <p className="font-semibold text-text-primary">{option.label}</p>
-                          <p className="text-xs text-text-secondary mt-1">{option.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <motion.div className="glass-card p-6" variants={fadeInUp}>
-              <h3 className="text-xl font-bold text-text-primary mb-4">How It Works</h3>
-              <div className="space-y-4 text-sm text-text-secondary">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-bio-gradient text-white flex items-center justify-center font-bold flex-shrink-0">1</div>
-                  <div>
-                    <strong className="text-text-primary">Opt In:</strong> Choose to share your anonymized data for research purposes.
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-bio-gradient text-white flex items-center justify-center font-bold flex-shrink-0">2</div>
-                  <div>
-                    <strong className="text-text-primary">Anonymization:</strong> All personal identifiers are removed. Only aggregate statistics are shared.
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-bio-gradient text-white flex items-center justify-center font-bold flex-shrink-0">3</div>
-                  <div>
-                    <strong className="text-text-primary">Licensing & Dividends:</strong> You receive 40% of licensing revenue as $TA tokens, distributed quarterly.
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+        {!address && (
+          <div className="bg-white rounded-xl shadow-md p-8 text-center">
+            <Shield className="w-16 h-16 mx-auto mb-4 text-text-secondary" />
+            <h2 className="text-2xl font-display text-text-primary mb-2">
+              Connect Your Wallet
+            </h2>
+            <p className="text-text-secondary text-sm sm:text-base">
+              Please connect your wallet to manage your data sharing preferences.
+            </p>
           </div>
         )}
+
+        {address && (
+          <>
+
+        {message && address && (
+          <div
+            className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${
+              message.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-800'
+                : 'bg-red-50 border border-red-200 text-red-800'
+            }`}
+          >
+            {message.type === 'success' ? (
+              <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            ) : (
+              <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            )}
+            <p className="text-sm">{message.text}</p>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h2 className="text-xl font-display text-text-primary mb-2">
+                Data Sharing Opt-In
+              </h2>
+              <p className="text-sm text-text-secondary">
+                When you opt in, your anonymized health data (with all personally identifiable
+                information removed) can be licensed to research institutions, pharmaceutical
+                companies, and longevity clinics. You earn 40% of all licensing revenue as
+                dividends.
+              </p>
+            </div>
+            {loading ? (
+              <Skeleton className="w-28 h-9 rounded-lg" />
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleToggle(!optedIn)}
+                disabled={saving}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  optedIn
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                } disabled:opacity-50`}
+              >
+                {saving ? 'Saving...' : optedIn ? 'Opted In' : 'Opt Out'}
+              </button>
+            )}
+          </div>
+
+          {optedIn && !loading && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-2 mb-2">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-800">
+                  <strong>Your data is anonymized:</strong> All personally identifiable information
+                  (wallet addresses, emails, names) is removed before aggregation. Only statistical
+                  patterns and trends are shared.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {optedIn && !loading && (
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-display text-text-primary mb-4">
+              Data Types to Share
+            </h3>
+            <div className="space-y-3">
+              {dataTypeOptions.map((option) => (
+                <label
+                  key={option.id}
+                  className="flex items-start gap-3 p-3 border border-border-light rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="dataType"
+                    value={option.id}
+                    checked={dataTypes.includes(option.id) || (dataTypes.length === 0 && option.id === 'all')}
+                    onChange={() => {
+                      const newTypes = option.id === 'all' ? ['all'] : [option.id];
+                      setDataTypes(newTypes);
+                      handleToggle(true);
+                    }}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-text-primary text-sm">{option.label}</div>
+                    <div className="text-xs text-text-secondary mt-1">{option.description}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl shadow-md p-6 mt-6">
+          <h3 className="text-lg font-display text-text-primary mb-4">How It Works</h3>
+          <div className="space-y-4 text-sm text-text-secondary">
+            <div>
+              <strong className="text-text-primary">1. Opt In:</strong> Choose to share your
+              anonymized data for research purposes.
+            </div>
+            <div>
+              <strong className="text-text-primary">2. Anonymization:</strong> All personal
+              identifiers are removed. Only aggregate statistics are shared.
+            </div>
+            <div>
+              <strong className="text-text-primary">3. Licensing:</strong> Research institutions
+              purchase access to anonymized datasets.
+            </div>
+            <div>
+              <strong className="text-text-primary">4. Dividends:</strong> You receive 40% of
+              licensing revenue as $tabledadrian tokens or platform credits, distributed quarterly.
+            </div>
+          </div>
+        </div>
+          </>
+        )}
       </div>
-    </PageTransition>
+    </div>
   );
 }
 

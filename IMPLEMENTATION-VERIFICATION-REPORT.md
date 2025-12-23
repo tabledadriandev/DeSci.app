@@ -359,18 +359,18 @@ The wellness-app project is **comprehensively implemented** with all major featu
 - ✅ Achievement system
 - ✅ Challenge system
 - ✅ Leaderboards
-- ✅ Rewards system ($TA tokens)
+- ✅ Rewards system ($tabledadrian tokens)
 - ✅ Battle pass
 - ✅ Tournaments
 - ✅ Clans
 
 #### Web3 Features
-- ✅ Token gating ($5 minimum $TA)
+- ✅ Token gating ($5 minimum $tabledadrian)
 - ✅ Wallet connection
 - ✅ Staking system (12% APY)
 - ✅ Token rewards for actions
 - ✅ NFT system (achievements, recipes, VIP access)
-- ✅ Marketplace ($TA payments)
+- ✅ Marketplace ($tabledadrian payments)
 - ✅ DAO governance (proposals, voting)
 - ✅ Treasury management
 

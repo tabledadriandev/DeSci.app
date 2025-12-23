@@ -1,14 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAccount } from '@/hooks/useAccount';
-import { motion } from 'framer-motion';
-import PageTransition from '@/components/ui/PageTransition';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import AnimatedButton from '@/components/ui/AnimatedButton';
-import { fadeInUp, staggerContainer } from '@/lib/animations/variants';
+import { useAccount } from 'wagmi';
 import { CalendarDays, Clock, Stethoscope, Video } from 'lucide-react';
-import Link from 'next/link';
 
 interface Appointment {
   id: string;
@@ -26,116 +20,164 @@ interface Appointment {
 export default function TelemedicineAppointmentsPage() {
   const { address } = useAccount();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Mock data for now
-    setAppointments([
-      { id: '1', startTime: new Date(Date.now() + 86400000).toISOString(), status: 'confirmed', reason: 'Follow-up on biomarker results', provider: { id: 'p1', fullName: 'Dr. Eva Rostova', type: 'Longevity Specialist' } },
-      { id: '2', startTime: new Date(Date.now() - 86400000 * 7).toISOString(), endTime: new Date(Date.now() - 86400000 * 7 + 1800000).toISOString(), status: 'completed', reason: 'Initial consultation', provider: { id: 'p2', fullName: 'Dr. Kenji Tanaka', type: 'Nutritionist' } },
-      { id: '3', startTime: new Date(Date.now() + 86400000 * 3).toISOString(), status: 'pending', reason: 'Review sleep data', provider: { id: 'p1', fullName: 'Dr. Eva Rostova', type: 'Longevity Specialist' } },
-    ]);
-    setLoading(false);
+    if (!address) return;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/telemedicine/appointments/list?userId=${encodeURIComponent(address)}`,
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.appointments) {
+          setAppointments(data.appointments);
+        }
+      } catch {
+        // ignore for now
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [address]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-semantic-success/10 text-semantic-success border-semantic-success/20';
-      case 'confirmed':
-        return 'bg-blue-400/10 text-blue-400 border-blue-400/20';
-      case 'pending':
-        return 'bg-semantic-warning/10 text-semantic-warning border-semantic-warning/20';
-      case 'cancelled':
-        return 'bg-semantic-error/10 text-semantic-error border-semantic-error/20';
-      default:
-        return 'bg-bg-elevated text-text-secondary border-border-medium';
-    }
-  };
-
   return (
-    <PageTransition>
-      <div className="p-4 sm:p-6 lg:p-8">
-        <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold bg-crypto-gradient text-transparent bg-clip-text mb-2">
-            Telemedicine Appointments
-          </h1>
-          <p className="text-base text-text-secondary">
-            Manage your virtual consultations with our network of specialists.
-          </p>
-        </motion.div>
+    <div className="min-h-screen  flex flex-col">
+      <header className="w-full border-b border-border-light bg-white/90 backdrop-blur sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => window.location.assign('/telemedicine')}
+              className="px-3 py-1 text-xs sm:text-sm border border-border-light rounded-full hover:bg-cream whitespace-nowrap"
+            >
+              Telemedicine
+            </button>
+            <div className="flex items-center gap-2 min-w-0">
+              <img src="/logo.ico" alt="Logo" className="w-6 h-6 flex-shrink-0" />
+              <span className="font-semibold text-sm sm:text-base">
+                Table d&apos;Adrian Wellness
+              </span>
+            </div>
+          </div>
+        </div>
+      </header>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-96">
-            <LoadingSpinner text="Loading your appointments..." />
+      <main className="flex-1 px-4 sm:px-6 md:px-8 py-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-2xl sm:text-3xl font-sans font-bold text-accent-primary flex items-center gap-2">
+              <CalendarDays className="w-6 h-6" />
+              Telemedicine Appointments
+            </h1>
           </div>
-        ) : (
-          <div className="max-w-6xl mx-auto mt-8">
-            {appointments.length === 0 ? (
-              <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="glass-card text-center py-12">
-                <Video className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-text-primary mb-2">No appointments yet</h2>
-                <p className="text-text-secondary mb-6">
-                  Book your first video consultation from the Telemedicine & Care page.
-                </p>
-                <Link href="/telemedicine">
-                  <AnimatedButton>Go to Telemedicine</AnimatedButton>
-                </Link>
-              </motion.div>
-            ) : (
-              <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: 2 }).map((_, idx) => (
+                <div key={idx} className="bg-white rounded-xl shadow-md p-5">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="skeleton h-4 w-40 rounded-md" />
+                      <div className="skeleton h-3 w-24 rounded-md" />
+                    </div>
+                    <div className="skeleton h-5 w-16 rounded-full" />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <div className="skeleton h-3 w-24 rounded-md" />
+                    <div className="skeleton h-3 w-28 rounded-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : appointments.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-md p-8 text-center">
+              <Video className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+              <h2 className="text-lg font-semibold mb-2">No appointments yet</h2>
+              <p className="text-sm text-text-secondary mb-4">
+                Book your first video consultation from the Telemedicine &amp; Care page.
+              </p>
+              <a
+                href="/telemedicine"
+                className="btn-primary text-sm px-5 py-2 inline-flex items-center justify-center"
               >
-                {appointments.map((appt) => {
-                  const start = new Date(appt.startTime);
-                  const end = appt.endTime ? new Date(appt.endTime) : null;
-                  return (
-                    <motion.div
-                      key={appt.id}
-                      variants={fadeInUp}
-                      className="glass-card-hover p-6 flex flex-col gap-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Stethoscope className="w-5 h-5 text-accent-primary" />
-                            <p className="font-semibold text-lg text-text-primary">
-                              {appt.provider.fullName}
-                            </p>
-                          </div>
-                          <p className="text-sm text-text-secondary">
-                            {appt.provider.type}
-                          </p>
+                Go to Telemedicine
+              </a>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {appointments.map((appt) => {
+                const start = new Date(appt.startTime);
+                const end = appt.endTime ? new Date(appt.endTime) : null;
+                return (
+                  <div
+                    key={appt.id}
+                    className="bg-white rounded-xl shadow-md p-5 flex flex-col gap-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Stethoscope className="w-4 h-4 text-accent-primary" />
+                          <span className="font-semibold text-sm sm:text-base text-text-primary">
+                            {appt.provider.fullName}
+                          </span>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(appt.status)}`}>
-                          {appt.status}
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-sm text-text-secondary">
-                        <p className="flex items-center gap-2"><CalendarDays className="w-4 h-4" /> {start.toLocaleDateString()}</p>
-                        <p className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {end && ` - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                        </p>
-                      </div>
-                      {appt.reason && (
-                        <div className="text-sm text-text-primary border-t border-border-medium pt-3 mt-1">
-                          <strong className="text-text-secondary">Reason:</strong> {appt.reason}
+                        <div className="text-xs text-text-secondary">
+                          {appt.provider.type || 'Healthcare Provider'}
                         </div>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            )}
-          </div>
-        )}
-      </div>
-    </PageTransition>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-[11px] uppercase tracking-wide ${
+                          appt.status === 'confirmed'
+                            ? 'bg-green-100 text-green-700'
+                            : appt.status === 'completed'
+                            ? 'bg-gray-100 text-gray-700'
+                            : appt.status === 'cancelled'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}
+                      >
+                        {appt.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs text-text-secondary">
+                      <div className="flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3" />
+                        {start.toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {end && (
+                          <>
+                            {' – '}
+                            {end.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {appt.reason && (
+                      <div className="text-xs sm:text-sm text-text-secondary border-t border-border-light pt-3 mt-1">
+                        <span className="font-medium text-text-primary">Reason:</span>{' '}
+                        {appt.reason}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
 

@@ -15,7 +15,7 @@ Completed: Phase 7
 **TestKit Model:**
 - Kit information (name, description, type, category)
 - Biomarkers tested array
-- Dual pricing (crypto $TA / fiat USD)
+- Dual pricing (crypto $tabledadrian / fiat USD)
 - Sample type (blood_spot, stool, saliva, fingerprick)
 - Processing time
 - Provider information
@@ -219,7 +219,7 @@ Completed: Phase 7
    - Real-time biomarker analysis
 
 ### Payment Processing:
-- **Crypto Path**: $TA token payments
+- **Crypto Path**: $tabledadrian token payments
 - **Fiat Path**: Stripe integration for USD payments
 - Automatic payment intent creation
 - Payment status tracking
