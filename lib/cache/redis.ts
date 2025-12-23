@@ -3,15 +3,26 @@
  * Provides caching for API responses and computed data
  */
 
-import Redis from 'ioredis';
+let Redis: any = null;
+try {
+  Redis = require('ioredis').default || require('ioredis');
+} catch (error) {
+  // ioredis is optional - app works without it
+  console.warn('ioredis not installed - Redis caching disabled');
+}
 
-let redis: Redis | null = null;
+let redis: any = null;
 
 /**
  * Initialize Redis connection
  */
 export function initRedis() {
   if (redis) return redis;
+
+  if (!Redis) {
+    console.warn('ioredis not available - caching disabled');
+    return null;
+  }
 
   const redisUrl = process.env.REDIS_URL;
   if (!redisUrl) {
