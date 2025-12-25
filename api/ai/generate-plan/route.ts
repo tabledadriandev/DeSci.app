@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       })),
     }));
 
-    const foodData = foodLogs.map(log => ({
+    const foodData = foodLogs.map((log: any) => ({
       calories: log.calories,
       protein: log.protein,
       carbs: log.carbs,
