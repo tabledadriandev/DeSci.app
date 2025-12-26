@@ -4,13 +4,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createCohortAnalysisService } from '@/lib/desci/cohortAnalysis';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromHeader } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = getUserIdFromHeader(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const cohortService = createCohortAnalysisService();
     const comparison = await cohortService.getCohortComparison(
-      session.user.id,
+      userId,
       metrics,
       filters
     );

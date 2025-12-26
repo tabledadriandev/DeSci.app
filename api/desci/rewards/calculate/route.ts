@@ -4,17 +4,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createTokenRewardsService } from '@/lib/desci/tokenRewards';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromBody, getUserIdFromHeader } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const body = await request.json();
+    const userId = getUserIdFromBody(body) || getUserIdFromHeader(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
     const { type, metadata } = body;
 
     if (!type) {
@@ -27,7 +26,7 @@ export async function POST(request: NextRequest) {
     const rewardsService = createTokenRewardsService();
     const calculation = await rewardsService.calculateReward({
       type,
-      userId: session.user.id,
+      userId,
       metadata,
     });
 

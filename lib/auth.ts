@@ -640,3 +640,41 @@ export class AuthService {
 
 export const authService = new AuthService();
 
+/**
+ * Simple auth helper for API routes
+ * Extracts userId from request body (for POST) or headers (JWT)
+ * Note: For POST requests, call this AFTER reading the body
+ */
+export function getUserIdFromBody(body: any): string | null {
+  return body?.userId || null;
+}
+
+/**
+ * Extract userId from JWT token in Authorization header
+ */
+export function getUserIdFromHeader(request: Request): string | null {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        return decoded.userId || decoded.id || null;
+      } catch {
+        // Invalid token
+        return null;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Stub for next-auth compatibility (for routes that still reference it)
+export const authOptions = {};
+export async function getServerSession(options: any): Promise<{ user: { id: string } } | null> {
+  // This is a stub - routes should use getUserIdFromRequest instead
+  return null;
+}
+

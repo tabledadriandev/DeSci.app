@@ -4,19 +4,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createTokenRewardsService } from '@/lib/desci/tokenRewards';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromHeader } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = getUserIdFromHeader(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const rewardsService = createTokenRewardsService();
-    const earnings = await rewardsService.getUserTokenEarnings(session.user.id);
-    const breakdown = await rewardsService.getUserEarningsBreakdown(session.user.id);
+    const earnings = await rewardsService.getUserTokenEarnings(userId);
+    const breakdown = await rewardsService.getUserEarningsBreakdown(userId);
 
     return NextResponse.json({
       success: true,

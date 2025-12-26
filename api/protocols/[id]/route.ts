@@ -4,23 +4,22 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createProtocolBuilder } from '@/lib/protocols/protocolBuilder';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromHeader } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const userId = getUserIdFromHeader(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = params;
 
     const builder = createProtocolBuilder();
-    const protocol = await builder.getProtocolWithCorrelations(id, session.user.id);
+    const protocol = await builder.getProtocolWithCorrelations(id, userId);
 
     return NextResponse.json({
       success: true,

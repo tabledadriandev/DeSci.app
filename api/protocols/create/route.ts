@@ -4,17 +4,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createProtocolBuilder } from '@/lib/protocols/protocolBuilder';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getUserIdFromBody, getUserIdFromHeader } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const body = await request.json();
+    const userId = getUserIdFromBody(body) || getUserIdFromHeader(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
     const { name, goal, currentState, availableTime, preferences, commitmentLevel } = body;
 
     if (!name || !goal) {
@@ -26,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const builder = createProtocolBuilder();
     const protocol = await builder.generateProtocol({
-      userId: session.user.id,
+      userId,
       name,
       goal,
       currentState: currentState || {},
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
       commitmentLevel: commitmentLevel || 'medium',
     });
 
-    const protocolId = await builder.saveProtocol(session.user.id, protocol);
+    const protocolId = await builder.saveProtocol(userId, protocol);
 
     return NextResponse.json({
       success: true,
