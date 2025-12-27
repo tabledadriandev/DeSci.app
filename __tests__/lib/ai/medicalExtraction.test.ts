@@ -65,8 +65,7 @@ describe('MedicalExtractionClient', () => {
           unit: 'mg/dl',
         },
       ];
-      const user = { age: 45, gender: 'M' };
-      const comparison = await client.compareToRanges(biomarkers, user);
+      const comparison = await client.compareToRanges(biomarkers, 45, 'M');
       expect(Array.isArray(comparison)).toBe(true);
     });
 
@@ -78,8 +77,7 @@ describe('MedicalExtractionClient', () => {
           unit: 'mg/dl',
         },
       ];
-      const user = { age: 45, gender: 'M' };
-      const comparison = await client.compareToRanges(biomarkers, user);
+      const comparison = await client.compareToRanges(biomarkers, 45, 'M');
       const glucose = comparison.find(c => c.biomarker.toLowerCase().includes('glucose'));
       if (glucose) {
         expect(['suboptimal', 'concerning']).toContain(glucose.status);

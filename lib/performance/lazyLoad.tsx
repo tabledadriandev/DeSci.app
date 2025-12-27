@@ -9,7 +9,7 @@ import { ComponentType } from 'react';
 /**
  * Lazy load a component with loading spinner
  */
-export function lazyLoadComponent<T = {}>(
+export function lazyLoadComponent<T = Record<string, never>>(
   importFunc: () => Promise<{ default: ComponentType<T> }>
 ) {
   return dynamic(importFunc, {
@@ -25,7 +25,7 @@ export function lazyLoadComponent<T = {}>(
 /**
  * Lazy load a component without SSR
  */
-export function lazyLoadNoSSR<T = {}>(
+export function lazyLoadNoSSR<T = Record<string, never>>(
   importFunc: () => Promise<{ default: ComponentType<T> }>
 ) {
   return dynamic(importFunc, {
@@ -36,7 +36,7 @@ export function lazyLoadNoSSR<T = {}>(
 /**
  * Lazy load a chart component (heavy library)
  */
-export function lazyLoadChart<T = {}>(
+export function lazyLoadChart<T = Record<string, never>>(
   importFunc: () => Promise<{ default: ComponentType<T> }>
 ) {
   return dynamic(importFunc, {

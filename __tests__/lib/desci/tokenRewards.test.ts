@@ -116,7 +116,7 @@ describe('TokenRewardsService', () => {
       const action = {
         type: 'unknown_action',
         userId: 'user123',
-      } as RewardAction;
+      } as unknown as RewardAction;
       await expect(service.calculateReward(action)).rejects.toThrow();
     });
   });

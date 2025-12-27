@@ -22,7 +22,7 @@ const createMockModel = () => ({
   aggregate: async () => ({}),
 });
 
-export const prisma = (() => {
+export const prisma: PrismaClient = (() => {
   if (isBuildTime || !hasDatabaseUrl) {
     // Return a comprehensive mock client during build or when DATABASE_URL is missing
     return {
@@ -33,10 +33,42 @@ export const prisma = (() => {
       socialAccount: createMockModel(),
       userAuth: createMockModel(),
       userSession: createMockModel(),
+      biomarkerReading: createMockModel(),
+      medicalResult: createMockModel(),
+      mealLog: createMockModel(),
+      longevityPlan: createMockModel(),
+      protocolExperiment: createMockModel(),
+      wearableConnection: createMockModel(),
+      biologicalAge: createMockModel(),
+      advancedMetric: createMockModel(),
+      desciContribution: createMockModel(),
+      achievement: createMockModel(),
+      staking: createMockModel(),
+      leaderboard: createMockModel(),
+      cameraAnalysis: createMockModel(),
+      proofOfHealth: createMockModel(),
+      healthBadge: createMockModel(),
+      deviceAttestation: createMockModel(),
+      moleTracking: createMockModel(),
+      challengeProgress: createMockModel(),
+      challenge: createMockModel(),
+      transaction: createMockModel(),
+      chefProfile: createMockModel(),
+      chefService: createMockModel(),
+      chefBooking: createMockModel(),
+      chefEarning: createMockModel(),
+      chefMealPlan: createMockModel(),
+      post: createMockModel(),
+      dataLicenseOptIn: createMockModel(),
+      dividendPayment: createMockModel(),
       $connect: async () => {},
       $disconnect: async () => {},
       $transaction: async (fn: any) => fn({}),
-    } as any as PrismaClient
+      $queryRaw: async () => [],
+      $queryRawUnsafe: async () => [],
+      $executeRaw: async () => 0,
+      $executeRawUnsafe: async () => 0,
+    } as unknown as PrismaClient
   }
   
   if (globalForPrisma.prisma) {

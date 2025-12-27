@@ -21,7 +21,7 @@ test.describe('Protocol Completion Flow', () => {
 
     const goalSelect = page.locator('select');
     if (await goalSelect.isVisible()) {
-      await goalSelect.selectOption({ label: /boost.*hrv|improve.*hrv/i });
+      await goalSelect.selectOption({ label: 'boost hrv' });
     }
 
     // Step 4: Generate protocol
