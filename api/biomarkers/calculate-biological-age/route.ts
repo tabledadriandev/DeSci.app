@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get chronological age (would come from user profile)
-    const chronologicalAge = user.biologicalAge 
+    // Calculate from user creation date or use default
+    const chronologicalAge = user.createdAt
       ? Math.round((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
       : 40; // Default if not available
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     startDate.setDate(startDate.getDate() - 90);
 
     // Get HRV data
-    const hrvReadings = await prisma.biomarkerReading.findMany({
+    const hrvReadings = await (prisma as any).biomarkerReading.findMany({
       where: {
         userId,
         metric: 'hrv',
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Get sleep data
-    const sleepReadings = await prisma.biomarkerReading.findMany({
+    const sleepReadings = await (prisma as any).biomarkerReading.findMany({
       where: {
         userId,
         metric: { in: ['sleep_score', 'sleep_duration', 'sleep_efficiency'] },
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Get activity data
-    const activityReadings = await prisma.biomarkerReading.findMany({
+    const activityReadings = await (prisma as any).biomarkerReading.findMany({
       where: {
         userId,
         metric: { in: ['steps', 'active_minutes'] },
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Get recovery data
-    const recoveryReadings = await prisma.biomarkerReading.findMany({
+    const recoveryReadings = await (prisma as any).biomarkerReading.findMany({
       where: {
         userId,
         metric: { in: ['recovery', 'readiness'] },
@@ -83,7 +84,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Transform data for calculator
-    const hrvData = hrvReadings.map(r => ({
+    interface BiomarkerReading {
+      value: number;
+      date: Date;
+      metric?: string;
+      metadata?: unknown;
+    }
+    const hrvData = hrvReadings.map((r: BiomarkerReading) => ({
       value: r.value,
       date: r.date,
     }));
@@ -125,9 +132,9 @@ export async function POST(request: NextRequest) {
     const activityData = Array.from(activityByDate.values());
 
     // Transform recovery data
-    const recoveryData = recoveryReadings.map(r => ({
+    const recoveryData = recoveryReadings.map((r: BiomarkerReading) => ({
       score: r.value,
-      hrvRecovery: (r.metadata as any)?.hrvRecovery || 0,
+      hrvRecovery: (r.metadata as { hrvRecovery?: number })?.hrvRecovery || 0,
       date: r.date,
     }));
 
@@ -141,7 +148,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Store in database
-    await prisma.biologicalAge.create({
+    await (prisma as any).biologicalAge.create({
       data: {
         userId,
         chronologicalAge,
@@ -157,7 +164,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Update user's biological age
-    await prisma.user.update({
+    await (prisma as any).user.update({
       where: { id: userId },
       data: {
         biologicalAge: result.biologicalAge,
