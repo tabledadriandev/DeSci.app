@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       breakdown: {
         unstaked: baseWeight - totalStaked,
         staked: totalStaked,
-        weightedStaked: user?.stakings.reduce((sum, s) => {
+        weightedStaked: user?.stakings.reduce((sum: number, s: { amount: number; unlockDate: Date | null }) => {
           const daysLocked = s.unlockDate 
             ? Math.floor((s.unlockDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
             : 0;
