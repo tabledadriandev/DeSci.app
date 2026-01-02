@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         where: { userId: user.id },
         select: { polyphenols: true },
       });
-      const polyphenolMeals = allMealLogs.filter((m) => m.polyphenols !== null && m.polyphenols !== undefined).length;
+      const polyphenolMeals = allMealLogs.filter((m: { polyphenols: unknown }) => m.polyphenols !== null && m.polyphenols !== undefined).length;
       if (polyphenolMeals >= 30) {
         const created = await prisma.achievement.create({
           data: {
