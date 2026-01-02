@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "type-check:clean": "rm -f tsconfig.tsbuildinfo && tsc --noEmit",
+    "type-check:clean": "node -e \"const fs = require('fs'); try { fs.unlinkSync('tsconfig.tsbuildinfo'); } catch(e) {}\" && tsc --noEmit",
     "pre-commit": "npm run type-check:clean",
     "replace-token": "node scripts/replace-token-name.js",
     "replace-token:dry": "node scripts/replace-token-name.js --dry-run",
