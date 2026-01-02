@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         where: {
           userId: user.id,
           polyphenols: {
-            not: Prisma.JsonNull,
+            not: null,
           },
         },
       });
