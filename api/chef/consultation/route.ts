@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get service price
-    const consultationService = chef.services.find((s) => {
+    const consultationService = chef.services.find((s: unknown) => {
       const service = s as { duration?: number };
       const serviceDuration = service.duration || 30;
       return Math.abs(serviceDuration - duration) <= 15; // Within 15 minutes
