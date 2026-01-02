@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+// Prisma types are not needed - using prisma client directly
 import { ACHIEVEMENT_TYPES, getAchievementMetadata } from '@/lib/gamification/achievement-types';
 
 export const dynamic = 'force-dynamic';
