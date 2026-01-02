@@ -12,6 +12,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "type-check:clean": "rm -f tsconfig.tsbuildinfo && tsc --noEmit",
+    "pre-commit": "npm run type-check:clean",
     "replace-token": "node scripts/replace-token-name.js",
     "replace-token:dry": "node scripts/replace-token-name.js --dry-run",
     "fix-any-types": "node scripts/fix-any-types.js",
