@@ -243,7 +243,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      moles: moles.map((mole) => ({
+      moles: moles.map((mole: typeof moles[0]) => ({
         id: mole.id,
         moleId: mole.moleId,
         name: mole.name,
