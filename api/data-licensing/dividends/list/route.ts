@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         sourceType: d.sourceType,
       })),
       totalEarned,
-      pendingCount: dividends.filter((d) => d.status === 'pending').length,
+      pendingCount: dividends.filter((d: { status: string }) => d.status === 'pending').length,
     });
   } catch (error) {
     console.error('Error listing dividends:', error);
