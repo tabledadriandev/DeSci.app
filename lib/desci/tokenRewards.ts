@@ -219,7 +219,7 @@ export class TokenRewardsService {
     return {
       totalEarned: user?.totalTokensEarned || 0,
       totalDataPoints,
-      contributions: contributions.map((c) => ({
+      contributions: contributions.map((c: typeof contributions[0]) => ({
         id: c.id,
         date: c.date,
         dataPoints: c.dataPoints,
@@ -247,7 +247,7 @@ export class TokenRewardsService {
 
     // Note: We'd need to store action type in DeSciContribution model
     // For now, infer from researchStudy field or use metadata
-    contributions.forEach((c) => {
+    contributions.forEach((c: typeof contributions[0]) => {
       const category = c.researchStudy || 'other';
       if (!breakdown[category]) {
         breakdown[category] = { count: 0, tokens: 0, dataPoints: 0 };

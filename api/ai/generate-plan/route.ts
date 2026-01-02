@@ -117,12 +117,12 @@ export async function POST(request: NextRequest) {
         flag?: string;
       }>;
     };
-    const medicalData = medicalResults.map((result: unknown) => {
+    const medicalData = medicalResults.map((result: typeof medicalResults[0]) => {
       const medicalResult = result as MedicalResult;
       return {
         biomarkers: (medicalResult.biomarkers || [])
-          .filter((b) => b.name && b.value !== undefined)
-          .map((b) => ({
+          .filter((b: { name?: string; value?: number; flag?: string }) => b.name && b.value !== undefined)
+          .map((b: { name?: string; value?: number; flag?: string }) => ({
             name: b.name!,
             value: b.value!,
             status: (b.flag === 'normal' ? 'optimal' : b.flag === 'high' || b.flag === 'low' ? 'suboptimal' : 'concerning') as 'optimal' | 'good' | 'suboptimal' | 'concerning',
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       fat?: number;
       micronutrients?: Record<string, unknown>;
     };
-    const foodData = foodLogs.map((log: unknown) => {
+    const foodData = foodLogs.map((log: typeof foodLogs[0]) => {
       const foodLog = log as FoodLog;
       return {
         calories: foodLog.calories || 0,

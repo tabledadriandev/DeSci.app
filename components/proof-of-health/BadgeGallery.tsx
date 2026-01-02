@@ -60,7 +60,7 @@ export default function BadgeGallery() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {badges.map((badge) => (
+      {badges.map((badge: typeof badges[0]) => (
         <BadgeCard key={badge.id} badge={badge} />
       ))}
     </div>

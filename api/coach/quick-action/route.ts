@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         }
         const biomarkerModule = new BiomarkerInterpretationModule();
         // Transform array to LabResults format
-        const labResults = latestLabs.reduce((acc: Record<string, unknown>, lab: unknown) => {
+        const labResults = latestLabs.reduce((acc: Record<string, unknown>, lab: typeof latestLabs[0]) => {
           const labObj = lab as { metric?: string; value?: number; unit?: string; referenceRange?: string; flag?: string };
           if (labObj.metric) {
             acc[labObj.metric] = {

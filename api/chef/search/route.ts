@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
     // Filter by price range if specified
     let filteredChefs = chefs;
     if (minPrice || maxPrice) {
-      filteredChefs = chefs.filter((chef) => {
+      filteredChefs = chefs.filter((chef: typeof chefs[0]) => {
         const price = chef.defaultPricePerHour || 0;
         if (minPrice && price < parseFloat(minPrice)) return false;
         if (maxPrice && price > parseFloat(maxPrice)) return false;
@@ -104,13 +104,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Use rating from chef profile
-    const chefsWithRatings = filteredChefs.map((chef) => {
+    const chefsWithRatings = filteredChefs.map((chef: typeof filteredChefs[0]) => {
       const chefProfile = chef as { rating?: number };
       const avgRating = chefProfile.rating || 0;
 
       // Calculate service prices (min/max)
       const services = chef.services || [];
-      const prices = services.map((s) => {
+      const prices = services.map((s: typeof services[0]) => {
         const service = s as { price?: number };
         return service.price || 0;
       }).filter((p: number) => p > 0);

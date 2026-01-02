@@ -8,8 +8,9 @@ import { prisma } from './prisma';
 import { redisCache } from './redis';
 
 // Optional dependency - gracefully handles when socket.io is not installed
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let SocketIOServer: any = null;
+type SocketIOServerConstructor = new (server: HTTPServer, options?: unknown) => SocketIOServerInstance;
+
+let SocketIOServer: SocketIOServerConstructor | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   SocketIOServer = require('socket.io').Server;
@@ -91,7 +92,7 @@ export class WebSocketService {
         try {
           await prisma.healthData.createMany({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data: syncData.healthData.map((item: unknown) => ({
+            data: syncData.healthData.map((item: typeof syncData.healthData[0]) => ({
               userId: syncData.userId,
               ...(item as Record<string, unknown>),
             })) as any,
@@ -201,7 +202,7 @@ export class WebSocketService {
     const userSockets = this.userSockets.get(userId);
     if (!userSockets) return;
 
-    userSockets.forEach((socketId) => {
+    userSockets.forEach((socketId: string) => {
       if (socketId !== excludeSocketId) {
         this.io!.to(socketId).emit(event, data);
       }

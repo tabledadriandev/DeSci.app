@@ -93,13 +93,48 @@ function getStatus(value: number, key: string): 'optimal' | 'borderline' | 'conc
   return 'concerning';
 }
 
+interface BiomarkerTrend {
+  trend: 'improving' | 'declining' | 'stable' | 'insufficient_data';
+  change: number;
+  latestValue: number;
+  previousValue?: number;
+  dataPoints: Array<{ date: string; value: number }>;
+}
+
+interface UnifiedResultItem {
+  source: string;
+  date: Date | string;
+  testResultId?: string;
+  testName?: string;
+  testType?: string;
+  labName?: string;
+  provider?: string;
+  statusMap?: Record<string, 'optimal' | 'borderline' | 'concerning'>;
+  [key: string]: unknown;
+}
+
+interface UnifiedResults {
+  success: boolean;
+  results: UnifiedResultItem[];
+  trends: Record<string, BiomarkerTrend>;
+  summary?: {
+    totalResults: number;
+    totalTestResults: number;
+    totalBiomarkerEntries: number;
+    dateRange?: {
+      earliest: Date | string | null;
+      latest: Date | string | null;
+    };
+  };
+}
+
 export default function BiomarkersPage() {
   const { address } = useAccount();
   const [activeTab, setActiveTab] = useState('vital');
   const [formData, setFormData] = useState<BiomarkerData>({});
-  const [biomarkers, setBiomarkers] = useState<any[]>([]);
-  const [unifiedResults, setUnifiedResults] = useState<any>(null);
-  const [trends, setTrends] = useState<any>({});
+  const [biomarkers, setBiomarkers] = useState<BiomarkerData[]>([]);
+  const [unifiedResults, setUnifiedResults] = useState<UnifiedResults | null>(null);
+  const [trends, setTrends] = useState<Record<string, BiomarkerTrend>>({});
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedBiomarker, setSelectedBiomarker] = useState<string | null>(null);
@@ -202,9 +237,10 @@ export default function BiomarkersPage() {
     try {
       // Get test result IDs
       const testResultIds = unifiedResults.results
-        .filter((r: any) => r.testResultId)
-        .map((r: any) => r.testResultId)
-        .filter((id: string | undefined, index: number, self: string[]) => id && self.indexOf(id) === index);
+        .filter((r) => r.testResultId)
+        .map((r) => r.testResultId)
+        .filter((id): id is string => id !== undefined)
+        .filter((id, index, self) => self.indexOf(id) === index);
 
       const params = new URLSearchParams({
         userId: address,
@@ -678,22 +714,23 @@ export default function BiomarkersPage() {
                   Biomarker Trends & Analysis
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(trends).map(([biomarkerName, trendData]: [string, any]) => {
-                    if (trendData.trend === 'insufficient_data') return null;
+                  {Object.entries(trends).map(([biomarkerName, trendData]: [string, unknown]) => {
+                    const trend = trendData as { trend?: string; latestValue?: number; unit?: string; dataPoints?: Array<{ date: string | Date; value: number }> };
+                    if (trend.trend === 'insufficient_data') return null;
 
-                    const status = trendData.latestValue
-                      ? getStatus(trendData.latestValue, biomarkerName)
+                    const status = trend.latestValue
+                      ? getStatus(trend.latestValue, biomarkerName)
                       : 'optimal';
                     
-                    const trendIcon = trendData.trend === 'improving' ? (
+                    const trendIcon = trend.trend === 'improving' ? (
                       <TrendingUp className="w-5 h-5 text-green-500" />
-                    ) : trendData.trend === 'declining' ? (
+                    ) : trend.trend === 'declining' ? (
                       <TrendingDown className="w-5 h-5 text-red-500" />
                     ) : (
                       <Minus className="w-5 h-5 text-gray-500" />
                     );
 
-  return (
+                    return (
                       <div
                         key={biomarkerName}
                         className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
@@ -714,21 +751,21 @@ export default function BiomarkersPage() {
         </div>
       </div>
                         <div className="text-2xl font-bold text-accent-primary mb-1">
-                          {trendData.latestValue?.toFixed(1) || 'N/A'}
+                          {trend.latestValue?.toFixed(1) || 'N/A'}
                           <span className="text-sm text-text-secondary ml-1">
                             {REFERENCE_RANGES[biomarkerName]?.unit || ''}
                           </span>
                         </div>
-                        {trendData.change !== undefined && trendData.change !== 0 && (
+                        {(trend as { change?: number }).change !== undefined && (trend as { change?: number }).change !== 0 && (
                           <div className={`text-sm ${
-                            trendData.trend === 'improving' ? 'text-green-600' :
-                            trendData.trend === 'declining' ? 'text-red-600' :
+                            trend.trend === 'improving' ? 'text-green-600' :
+                            trend.trend === 'declining' ? 'text-red-600' :
                             'text-gray-500'
                           }`}>
-                            {trendData.change > 0 ? '+' : ''}{trendData.change.toFixed(1)}% change
+                            {(trend as { change?: number }).change! > 0 ? '+' : ''}{(trend as { change?: number }).change!.toFixed(1)}% change
                           </div>
                         )}
-                        {trendData.dataPoints && trendData.dataPoints.length > 1 && (
+                        {trend.dataPoints && trend.dataPoints.length > 1 && (
                           <button
                             onClick={() => setSelectedBiomarker(selectedBiomarker === biomarkerName ? null : biomarkerName)}
                             className="text-xs text-accent-primary mt-2 hover:underline flex items-center gap-1"
@@ -737,18 +774,18 @@ export default function BiomarkersPage() {
                             {selectedBiomarker === biomarkerName ? 'Hide' : 'Show'} trend chart
                           </button>
                         )}
-                        {selectedBiomarker === biomarkerName && trendData.dataPoints && trendData.dataPoints.length > 1 && (
+                        {selectedBiomarker === biomarkerName && trend.dataPoints && trend.dataPoints.length > 1 && (
                           <div className="mt-4 pt-4 border-t border-gray-200">
                           <div className="h-64">
                             <LineChart
                               data={{
-                                labels: trendData.dataPoints.map((dp: any) => 
+                                labels: trend.dataPoints.map((dp: { date: string | Date; value: number }) => 
                                   new Date(dp.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                                 ),
                                 datasets: [
                                   {
                                     label: biomarkerName,
-                                    data: trendData.dataPoints.map((dp: any) => dp.value),
+                                    data: trend.dataPoints.map((dp: { date: string | Date; value: number }) => dp.value),
                                     borderColor: '#0F4C81',
                                     backgroundColor: 'rgba(15, 76, 129, 0.3)',
                                     tension: 0.4,
@@ -756,7 +793,7 @@ export default function BiomarkersPage() {
                                   },
                                   {
                                     label: 'Optimal Min',
-                                    data: trendData.dataPoints.map(() => 
+                                    data: trend.dataPoints.map(() => 
                                       REFERENCE_RANGES[biomarkerName] 
                                         ? REFERENCE_RANGES[biomarkerName].min + (REFERENCE_RANGES[biomarkerName].max - REFERENCE_RANGES[biomarkerName].min) * 0.1
                                         : 0
@@ -768,7 +805,7 @@ export default function BiomarkersPage() {
                                   },
                                   {
                                     label: 'Optimal Max',
-                                    data: trendData.dataPoints.map(() => 
+                                    data: trend.dataPoints.map(() => 
                                       REFERENCE_RANGES[biomarkerName]
                                         ? REFERENCE_RANGES[biomarkerName].max - (REFERENCE_RANGES[biomarkerName].max - REFERENCE_RANGES[biomarkerName].min) * 0.1
                                         : 100
@@ -800,7 +837,7 @@ export default function BiomarkersPage() {
                   All Test Results
                 </h2>
                 <div className="space-y-4">
-                  {unifiedResults.results.map((result: any, idx: number) => (
+                  {unifiedResults.results.map((result, idx: number) => (
                     <div
                       key={idx}
                       className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
@@ -825,7 +862,7 @@ export default function BiomarkersPage() {
                           </div>
                           {result.statusMap && Object.keys(result.statusMap).length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {Object.entries(result.statusMap).slice(0, 5).map(([field, status]: [string, any]) => (
+                              {result.statusMap && Object.entries(result.statusMap).slice(0, 5).map(([field, status]) => (
                                 <span
                                   key={field}
                                   className={`text-xs px-2 py-1 rounded ${
@@ -834,7 +871,7 @@ export default function BiomarkersPage() {
                                     'bg-red-100 text-red-700'
                                   }`}
                                 >
-                                  {field.replace(/([A-Z])/g, ' $1')}: {status}
+                                  {field.replace(/([A-Z])/g, ' $1')}: {String(status)}
                                 </span>
                               ))}
                             </div>
@@ -860,9 +897,10 @@ export default function BiomarkersPage() {
             ) : (
               <div className="space-y-6">
                 {Object.keys(REFERENCE_RANGES).map((key) => {
+                  const biomarkerKey = key as keyof BiomarkerData;
                   const values = biomarkers
-                    .map(b => ({ value: b[key], date: b.recordedAt }))
-                    .filter(v => v.value != null)
+                    .map(b => ({ value: b[biomarkerKey] as number | undefined, date: b.labDate || '' }))
+                    .filter((v): v is { value: number; date: string } => v.value != null && v.date !== '')
                     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
                   if (values.length === 0) return null;
@@ -872,8 +910,8 @@ export default function BiomarkersPage() {
                   const trend = previous ? (latest.value > previous.value ? 'up' : latest.value < previous.value ? 'down' : 'stable') : 'stable';
                   const status = getStatus(latest.value, key);
 
-  return (
-                  <div key={key} className="border-b border-gray-200 pb-4 last:border-0">
+                  return (
+                    <div key={key} className="border-b border-gray-200 pb-4 last:border-0">
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <h3 className="font-semibold text-text-primary">
@@ -922,13 +960,13 @@ export default function BiomarkersPage() {
                           <div className="mt-4 h-48">
                             <LineChart
                               data={{
-                                labels: values.map((v) => 
+                                labels: values.map((v: typeof values[0]) => 
                                   new Date(v.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                                 ),
                                 datasets: [
                                   {
                                     label: key,
-                                    data: values.map((v) => v.value),
+                                    data: values.map((v: typeof values[0]) => v.value),
                                     borderColor: '#0F4C81',
                                     backgroundColor: 'rgba(15, 76, 129, 0.1)',
                                     tension: 0.4,

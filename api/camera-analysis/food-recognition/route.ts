@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
         imageUrl,
         cameraAnalysisId: analysis.id,
         foods: recognitionResult.foods, // Required field
-        foodsIdentified: recognitionResult.foods.map((f) => f.name),
-        portionSizes: recognitionResult.foods.map((f) => ({
+        foodsIdentified: recognitionResult.foods.map((f: typeof recognitionResult.foods[0]) => f.name),
+        portionSizes: recognitionResult.foods.map((f: typeof recognitionResult.foods[0]) => ({
           food: f.name,
           size: f.portionSize.estimated,
           unit: f.portionSize.unit,

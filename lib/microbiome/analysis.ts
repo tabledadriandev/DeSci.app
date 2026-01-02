@@ -213,7 +213,7 @@ export class MicrobiomeAnalyzer {
       return { shannon: 0, simpson: 0, richness: 0 };
     }
 
-    const total = species.reduce((sum, s) => sum + (s.abundance || 0), 0);
+    const total = species.reduce((sum: number, s: typeof species[0]) => sum + (s.abundance || 0), 0);
     if (total === 0) {
       return { shannon: 0, simpson: 0, richness: 0 };
     }
@@ -262,7 +262,7 @@ export class MicrobiomeAnalyzer {
       Other: 0,
     };
 
-    const total = species.reduce((sum, s) => sum + (s.abundance || 0), 0);
+    const total = species.reduce((sum: number, s: typeof species[0]) => sum + (s.abundance || 0), 0);
 
     for (const s of species) {
       const phylum = s.phylum || 'Other';

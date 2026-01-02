@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Calculate total rewards
-    const totalDataPoints = results.reduce((sum, r) => sum + r.dataPoints, 0);
+    const totalDataPoints = results.reduce((sum: number, r: typeof results[0]) => sum + r.dataPoints, 0);
     const totalReward = totalDataPoints * 0.1; // 0.1 $TA per data point
 
     // Record DeSci contribution

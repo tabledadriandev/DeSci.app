@@ -287,11 +287,11 @@ export class GutBrainAxisTracker {
     if (x.length !== y.length || x.length < 2) return 0;
 
     const n = x.length;
-    const sumX = x.reduce((a, b) => a + b, 0);
-    const sumY = y.reduce((a, b) => a + b, 0);
-    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-    const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
-    const sumYY = y.reduce((sum, yi) => sum + yi * yi, 0);
+    const sumX = x.reduce((a: number, b: number) => a + b, 0);
+    const sumY = y.reduce((a: number, b: number) => a + b, 0);
+    const sumXY = x.reduce((sum: number, xi: number, i: number) => sum + xi * y[i], 0);
+    const sumXX = x.reduce((sum: number, xi: number) => sum + xi * xi, 0);
+    const sumYY = y.reduce((sum: number, yi: number) => sum + yi * yi, 0);
 
     const numerator = n * sumXY - sumX * sumY;
     const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));

@@ -42,7 +42,7 @@ export async function calculateDataDonorScore(
         const proof = p as { metadata?: { metric?: string; logs?: Array<{ metric?: string }> } };
         if (proof.metadata?.metric) return proof.metadata.metric;
         if (proof.metadata?.logs) {
-          return proof.metadata.logs.map((l) => l.metric).filter(Boolean);
+          return proof.metadata.logs.map((l: { metric?: string }) => l.metric).filter(Boolean);
         }
         return null;
       })
@@ -115,7 +115,7 @@ export async function allocateRPGF(
   scores.sort((a, b) => b.totalScore - a.totalScore);
 
   // Quadratic funding allocation
-  const allocations = scores.map((score) => {
+  const allocations = scores.map((score: typeof scores[0]) => {
     // Quadratic: allocation = sqrt(score) / sum(sqrt(all scores)) * total
     const sqrtScore = Math.sqrt(score.totalScore);
     return {
@@ -125,10 +125,10 @@ export async function allocateRPGF(
     };
   });
 
-  const totalSqrt = allocations.reduce((sum, a) => sum + a.sqrtScore, 0);
+  const totalSqrt = allocations.reduce((sum: number, a: typeof allocations[0]) => sum + a.sqrtScore, 0);
 
   // Allocate proportionally
-  const finalAllocations = allocations.map((a) => ({
+  const finalAllocations = allocations.map((a: typeof allocations[0]) => ({
     userId: a.userId,
     allocation: (a.sqrtScore / totalSqrt) * totalAllocation,
     score: a.score,

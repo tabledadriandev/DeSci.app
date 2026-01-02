@@ -5,10 +5,44 @@
 
 import { prisma } from './prisma';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let Stripe: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let stripe: any = null;
+// Optional Stripe dependency - types are unknown when package isn't installed
+type StripeConstructor = new (apiKey: string, options?: { apiVersion?: string; typescript?: boolean }) => StripeInstance;
+
+interface StripeInstance {
+  customers: {
+    create: (params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    update: (customerId: string, params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  };
+  paymentIntents: {
+    create: (params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    retrieve: (id: string) => Promise<Record<string, unknown>>;
+  };
+  subscriptions: {
+    create: (params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    retrieve: (id: string) => Promise<Record<string, unknown>>;
+    update: (id: string, params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    cancel: (id: string) => Promise<Record<string, unknown>>;
+  };
+  prices: {
+    create: (params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  };
+  refunds: {
+    create: (params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  };
+  invoices: {
+    retrieve: (id: string) => Promise<Record<string, unknown>>;
+  };
+  paymentMethods: {
+    list: (params: Record<string, unknown>) => Promise<{ data: Record<string, unknown>[] }>;
+    attach: (id: string, params: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  };
+  webhooks: {
+    constructEvent: (payload: string | Buffer, signature: string, secret: string) => Record<string, unknown>;
+  };
+}
+
+let Stripe: StripeConstructor | null = null;
+let stripe: StripeInstance | null = null;
 
 // Try to load Stripe (optional dependency)
 try {
@@ -85,7 +119,7 @@ export class StripeService {
       // TODO: Store stripeCustomerId in Transaction metadata when PaymentMethod model is added
       // await prisma.paymentMethod.upsert({...});
 
-      return customer.id;
+      return (customer.id as unknown as string);
     } catch (error: unknown) {
       console.error('Error creating Stripe customer:', error);
       throw new Error(`Failed to create Stripe customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -101,7 +135,7 @@ export class StripeService {
     currency: string, // 'usd', 'eur', 'gbp', or 'ta'
     description: string,
     metadata?: Record<string, string>
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     if (!stripe) {
       throw new Error('Stripe is not initialized');
     }
@@ -123,7 +157,7 @@ export class StripeService {
         },
       });
 
-      return paymentIntent;
+      return paymentIntent as Record<string, unknown>;
     } catch (error) {
       console.error('Error creating payment intent:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -139,7 +173,10 @@ export class StripeService {
     tier: SubscriptionTier,
     billingCycle: BillingCycle,
     paymentMethodId?: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const customerId = await this.getOrCreateCustomer(userId);
       
@@ -165,11 +202,11 @@ export class StripeService {
               billingCycle,
             },
           },
-        });
+        }) as Record<string, unknown>;
 
         const subscription = await stripe.subscriptions.create({
           customer: customerId,
-          items: [{ price: price.id }],
+          items: [{ price: (price.id as string) }],
           payment_behavior: 'default_incomplete',
           payment_settings: {
             payment_method_types: ['card'],
@@ -183,7 +220,7 @@ export class StripeService {
           },
         });
 
-        return subscription;
+        return subscription as Record<string, unknown>;
       } else {
         // Use existing price ID
         const subscription = await stripe.subscriptions.create({
@@ -202,7 +239,7 @@ export class StripeService {
           },
         });
 
-        return subscription;
+        return subscription as Record<string, unknown>;
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
@@ -217,16 +254,19 @@ export class StripeService {
   async cancelSubscription(
     subscriptionId: string,
     cancelAtPeriodEnd: boolean = true
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
+      if (!stripe) {
+        throw new Error('Stripe is not initialized');
+      }
       if (cancelAtPeriodEnd) {
         const subscription = await stripe.subscriptions.update(subscriptionId, {
           cancel_at_period_end: true,
         });
-        return subscription;
+        return subscription as Record<string, unknown>;
       } else {
         const subscription = await stripe.subscriptions.cancel(subscriptionId);
-        return subscription;
+        return subscription as Record<string, unknown>;
       }
     } catch (error) {
       console.error('Error canceling subscription:', error);
@@ -242,29 +282,34 @@ export class StripeService {
     subscriptionId: string,
     newTier?: SubscriptionTier,
     newBillingCycle?: BillingCycle
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId) as Record<string, unknown>;
       
       if (newTier && newBillingCycle) {
         const priceInCents = PRICING_TIERS[newTier][newBillingCycle].fiat;
         const priceId = process.env[`STRIPE_PRICE_ID_${newTier.toUpperCase()}_${newBillingCycle.toUpperCase()}`];
         
         if (priceId) {
+          const subscriptionItems = (subscription.items as Record<string, unknown>).data as Array<Record<string, unknown>>;
+          const subscriptionMetadata = subscription.metadata as Record<string, unknown>;
           const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
             items: [{
-              id: subscription.items.data[0].id,
+              id: subscriptionItems[0].id as string,
               price: priceId,
             }],
             proration_behavior: 'create_prorations',
             metadata: {
-              ...subscription.metadata,
+              ...subscriptionMetadata,
               tier: newTier,
               billingCycle: newBillingCycle,
             },
           });
           
-          return updatedSubscription;
+          return updatedSubscription as Record<string, unknown>;
         }
       }
 
@@ -283,7 +328,10 @@ export class StripeService {
     chargeId: string,
     amount?: number,
     reason?: 'duplicate' | 'fraudulent' | 'requested_by_customer'
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const refund = await stripe.refunds.create({
         charge: chargeId,
@@ -291,7 +339,7 @@ export class StripeService {
         reason: reason || 'requested_by_customer',
       });
 
-      return refund;
+      return refund as Record<string, unknown>;
     } catch (error) {
       console.error('Error creating refund:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -302,10 +350,13 @@ export class StripeService {
   /**
    * Retrieve payment intent
    */
-  async getPaymentIntent(paymentIntentId: string): Promise<any> {
+  async getPaymentIntent(paymentIntentId: string): Promise<Record<string, unknown>> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      return paymentIntent;
+      return paymentIntent as Record<string, unknown>;
     } catch (error) {
       console.error('Error retrieving payment intent:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -316,10 +367,13 @@ export class StripeService {
   /**
    * Retrieve subscription
    */
-  async getSubscription(subscriptionId: string): Promise<any> {
+  async getSubscription(subscriptionId: string): Promise<Record<string, unknown>> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      return subscription;
+      return subscription as Record<string, unknown>;
     } catch (error) {
       console.error('Error retrieving subscription:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -334,13 +388,16 @@ export class StripeService {
     payload: string | Buffer,
     signature: string
   ): Record<string, unknown> | null {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const event = stripe.webhooks.constructEvent(
         payload,
         signature,
         stripeConfig.webhookSecret
       );
-      return event;
+      return event as Record<string, unknown>;
     } catch (error) {
       console.error('Webhook signature verification failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -352,9 +409,12 @@ export class StripeService {
    * Create invoice PDF
    */
   async getInvoicePdfUrl(invoiceId: string): Promise<string | null> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
-      const invoice = await stripe.invoices.retrieve(invoiceId);
-      return invoice.invoice_pdf || null;
+      const invoice = await stripe.invoices.retrieve(invoiceId) as Record<string, unknown>;
+      return (invoice.invoice_pdf as string | null) || null;
     } catch (error) {
       console.error('Error retrieving invoice PDF:', error);
       return null;
@@ -364,7 +424,10 @@ export class StripeService {
   /**
    * List payment methods for customer
    */
-  async listPaymentMethods(customerId: string): Promise<any[]> {
+  async listPaymentMethods(customerId: string): Promise<Record<string, unknown>[]> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const paymentMethods = await stripe.paymentMethods.list({
         customer: customerId,
@@ -384,12 +447,15 @@ export class StripeService {
   async attachPaymentMethod(
     paymentMethodId: string,
     customerId: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
         customer: customerId,
       });
-      return paymentMethod;
+      return paymentMethod as Record<string, unknown>;
     } catch (error) {
       console.error('Error attaching payment method:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -403,14 +469,17 @@ export class StripeService {
   async setDefaultPaymentMethod(
     customerId: string,
     paymentMethodId: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
     try {
       const customer = await stripe.customers.update(customerId, {
         invoice_settings: {
           default_payment_method: paymentMethodId,
         },
       });
-      return customer;
+      return customer as Record<string, unknown>;
     } catch (error) {
       console.error('Error setting default payment method:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

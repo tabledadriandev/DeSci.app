@@ -62,7 +62,7 @@ export function buildMerkleTree(leaves: string[]): MerkleNode | null {
   }
 
   // Build leaf nodes
-  const nodes: MerkleNode[] = leaves.map((leaf) => ({
+  const nodes: MerkleNode[] = leaves.map((leaf: string) => ({
     hash: leaf,
     data: leaf,
   }));
@@ -208,7 +208,7 @@ export function generateWeeklyMerkleRoot(
   }
 
   // Hash each log entry
-  const leaves = logs.map((log) =>
+  const leaves = logs.map((log: typeof logs[0]) =>
     hashBiomarkerLog(log.userId, log.metric, log.value, log.date, log.metadata)
   );
 

@@ -149,7 +149,7 @@ export class InsightGenerator {
       userId,
       biologicalAge: user?.biologicalAge || undefined,
       goals: ((user?.preferences as unknown) as { goals?: string[] })?.goals || [],
-      biomarkers: latestReadings.map((r) => ({
+      biomarkers: latestReadings.map((r: typeof latestReadings[0]) => ({
         metric: r.metric,
         value: r.value,
         date: r.date,

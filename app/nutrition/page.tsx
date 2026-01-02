@@ -75,7 +75,7 @@ export default function NutritionPage() {
       
       setFormData({
         ...formData,
-        foods: foods.map((f: any) => f.name),
+        foods: foods.map((f: typeof foods[0]) => f.name),
         calories: nutrition.calories,
         protein: nutrition.protein,
         carbs: nutrition.carbs,
@@ -89,7 +89,7 @@ export default function NutritionPage() {
     }
   };
 
-  const identifyFoods = async (imageData: string): Promise<any[]> => {
+  const identifyFoods = async (imageData: string): Promise<Array<{ name: string; confidence: number; portion: string }>> => {
     // Simulated food recognition - in production use TensorFlow.js or API
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -104,7 +104,7 @@ export default function NutritionPage() {
     });
   };
 
-  const estimateNutrition = (foods: any[]): any => {
+  const estimateNutrition = (foods: Array<{ name: string; confidence?: number; portion?: string }>): { calories: number; protein: number; carbs: number; fats: number; fiber: number } => {
     // Simple nutrition estimation (in production, use comprehensive food database)
     const nutritionDB: Record<string, any> = {
       'Grilled Chicken': { calories: 165, protein: 31, carbs: 0, fats: 3.6, fiber: 0 },
@@ -114,7 +114,7 @@ export default function NutritionPage() {
 
     const totals = { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 };
     
-    foods.forEach((food) => {
+    foods.forEach((food: typeof foods[0]) => {
       const nutrition = nutritionDB[food.name] || { calories: 100, protein: 5, carbs: 15, fats: 3, fiber: 2 };
       totals.calories += nutrition.calories;
       totals.protein += nutrition.protein;
@@ -238,14 +238,15 @@ export default function NutritionPage() {
             
             {/* Progress Bars */}
             <div className="mt-6 space-y-3">
-              {dailyTotals.targets && Object.entries(dailyTotals.targets).map(([key, target]: [string, any]) => {
+              {dailyTotals.targets && Object.entries(dailyTotals.targets).map(([key, target]: [string, unknown]) => {
                 const current = dailyTotals[key] || 0;
-                const percentage = Math.min(100, (current / target) * 100);
+                const targetNum = typeof target === 'number' ? target : 0;
+                const percentage = Math.min(100, (current / targetNum) * 100);
                 return (
                   <div key={key}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="capitalize">{key}</span>
-                      <span>{current.toFixed(1)} / {target} {key === 'calories' ? '' : 'g'}</span>
+                      <span>{current.toFixed(1)} / {targetNum} {key === 'calories' ? '' : 'g'}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
@@ -381,7 +382,7 @@ export default function NutritionPage() {
                 </div>
                 {formData.foods.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {formData.foods.map((food) => (
+                    {formData.foods.map((food: string) => (
                       <span
                         key={food}
                         className="px-3 py-1 bg-accent-primary/20 text-accent-primary rounded-lg text-sm flex items-center gap-2"
@@ -504,7 +505,7 @@ export default function NutritionPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {mealLogs.map((meal) => (
+              {mealLogs.map((meal: typeof mealLogs[0]) => (
                 <div key={meal.id} className="border-b border-gray-200 pb-4 last:border-0">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

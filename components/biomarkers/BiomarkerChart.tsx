@@ -20,11 +20,11 @@ export function BiomarkerChart({ name, unit, history, normalRange }: BiomarkerCh
   const trend = change > 0 ? '↑' : change < 0 ? '↓' : '→';
 
   const chartData = {
-    labels: history.map((entry) => entry.date),
+    labels: history.map((entry: typeof history[0]) => entry.date),
     datasets: [
       {
         label: `${name} (${unit})`,
-        data: history.map((entry) => entry.value),
+        data: history.map((entry: typeof history[0]) => entry.value),
         borderColor: '#a855f7',
         backgroundColor: 'rgba(168, 85, 247, 0.1)',
       tension: 0.4,

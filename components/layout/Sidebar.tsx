@@ -98,7 +98,7 @@ export default function Sidebar() {
 
       {/* Navigation Menu */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {navItems.map((item) => {
+        {navItems.map((item: typeof navItems[0]) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (
@@ -141,7 +141,7 @@ export default function Sidebar() {
               <span className="text-sm">All Work</span>
             </div>
           </Link>
-          {workgroups.map((group) => {
+          {workgroups.map((group: typeof workgroups[0]) => {
             const isExpanded = expandedGroups.has(group.name);
             const hasItems = group.items && group.items.length > 0;
             return (
@@ -170,7 +170,7 @@ export default function Sidebar() {
                       className="overflow-hidden"
                     >
                       <div className="ml-4 mt-1 space-y-1">
-                        {group.items?.map((item) => (
+                        {group.items?.map((item: typeof group.items[0]) => (
                           <Link key={item.href} href={item.href}>
                             <div className="px-3 py-1.5 rounded-lg text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors text-sm">
                               {item.name}

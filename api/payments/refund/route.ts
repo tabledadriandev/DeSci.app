@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       );
 
       // Update transaction record
-      const finalRefundAmount = refund.amount / 100; // Convert from cents
+      const finalRefundAmount = ((refund.amount as number) || 0) / 100; // Convert from cents
       const isFullRefund = finalRefundAmount >= Math.abs(payment.amount);
 
       await prisma.transaction.update({

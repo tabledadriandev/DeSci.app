@@ -63,7 +63,7 @@ User Health Context:`;
       }
       if (healthContext.recentBiomarkers && healthContext.recentBiomarkers.length > 0) {
         systemContext += `\n- Recent Biomarkers:`;
-        healthContext.recentBiomarkers.slice(0, 3).forEach((b: unknown) => {
+        healthContext.recentBiomarkers.slice(0, 3).forEach((b: typeof healthContext.recentBiomarkers[0]) => {
           const biomarker = b as { bloodGlucose?: number; cholesterolTotal?: number; bloodPressureSystolic?: number; bloodPressureDiastolic?: number };
           if (biomarker.bloodGlucose) systemContext += `\n  Blood Glucose: ${biomarker.bloodGlucose} mg/dL`;
           if (biomarker.cholesterolTotal) systemContext += `\n  Total Cholesterol: ${biomarker.cholesterolTotal} mg/dL`;
@@ -74,7 +74,7 @@ User Health Context:`;
 
     if (user?.biomarkerReadings && user.biomarkerReadings.length > 0) {
       systemContext += `\n- Recent Biomarker Readings:`;
-      user.biomarkerReadings.slice(0, 5).forEach((data: unknown) => {
+      user.biomarkerReadings.slice(0, 5).forEach((data: typeof user.biomarkerReadings[0]) => {
         const reading = data as { metric?: string; value?: number; unit?: string };
         systemContext += `\n  ${reading.metric || 'Unknown'}: ${reading.value || 'N/A'} ${reading.unit || ''}`;
       });

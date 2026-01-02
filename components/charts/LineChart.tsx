@@ -54,7 +54,7 @@ interface LineChartProps {
 export default function LineChart({ data, title, height = 300 }: LineChartProps) {
   const chartData = useMemo(() => ({
     labels: data.labels,
-    datasets: data.datasets.map((dataset, index) => ({
+    datasets: data.datasets.map((dataset: typeof data.datasets[0], index: number) => ({
       ...dataset,
       borderColor: dataset.borderColor || `hsl(${index * 60}, 70%, 50%)`,
       backgroundColor: dataset.backgroundColor || `hsla(${index * 60}, 70%, 50%, 0.1)`,

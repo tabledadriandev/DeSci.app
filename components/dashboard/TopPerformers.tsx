@@ -16,14 +16,14 @@ interface TopPerformersProps {
 }
 
 export default function TopPerformers({ performers }: TopPerformersProps) {
-  const maxScore = Math.max(...performers.map((p) => p.score));
+  const maxScore = Math.max(...performers.map((p: typeof performers[0]) => p.score));
 
   return (
     <Card className="bg-[#1a1a1a] border border-gray-800">
       <CardBody className="p-6">
         <h3 className="text-white font-semibold text-lg mb-4">Top Performers</h3>
         <div className="space-y-4">
-          {performers.map((performer, index) => (
+          {performers.map((performer: typeof performers[0], index: number) => (
             <div key={performer.id} className="flex items-center gap-4">
               <div className="relative">
                 <Avatar

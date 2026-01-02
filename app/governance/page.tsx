@@ -16,12 +16,37 @@ import MainLayout from '@/components/layout/MainLayout';
 
 const TA_CONTRACT = '0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07' as `0x${string}`;
 
+interface GovernanceVote {
+  voter: string;
+  vote: 'for' | 'against';
+  weight: number;
+  multiplier?: number;
+}
+
+interface GovernanceProposal {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  votesFor?: number;
+  votesAgainst?: number;
+  votes?: GovernanceVote[];
+  createdAt?: string;
+  endDate?: string;
+}
+
+interface VotingPower {
+  totalWeightedPower: number;
+  maxMultiplier?: number;
+}
+
 export default function GovernancePage() {
   const { address, isConnected } = useAccount();
-  const [proposals, setProposals] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<GovernanceProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [newProposal, setNewProposal] = useState({ title: '', description: '', type: 'feature' });
-  const [votingPower, setVotingPower] = useState<any>(null);
+  const [votingPower, setVotingPower] = useState<VotingPower | null>(null);
   const [selectedProposal, setSelectedProposal] = useState<string | null>(null);
 
   const { data: balance } = useBalance({
@@ -145,7 +170,7 @@ export default function GovernancePage() {
                 {totalVotingPower.toFixed(2)}
               </div>
               <div className="text-xs text-text-tertiary">votes</div>
-              {votingPower && votingPower.maxMultiplier > 1.0 && (
+              {votingPower && votingPower.maxMultiplier && votingPower.maxMultiplier > 1.0 && (
                 <div className="text-xs text-semantic-success mt-2 font-semibold">
                   {votingPower.maxMultiplier.toFixed(1)}x multiplier active
                 </div>
@@ -246,7 +271,7 @@ export default function GovernancePage() {
                   const totalVotes = (proposal.votesFor || 0) + (proposal.votesAgainst || 0);
                   const forPercentage = totalVotes > 0 ? ((proposal.votesFor || 0) / totalVotes) * 100 : 0;
                   const isActive = proposal.status === 'active';
-                  const hasVoted = proposal.votes?.some((v: any) => v.voter === address);
+                  const hasVoted = proposal.votes?.some((v) => v.voter === address);
 
                   return (
                     <motion.div key={proposal.id} variants={staggerItem}>
@@ -373,9 +398,9 @@ export default function GovernancePage() {
                                   </div>
                                   <div className="space-y-2">
                                     {[...(proposal.votes || [])]
-                                      .sort((a: any, b: any) => b.weight - a.weight)
+                                      .sort((a, b) => b.weight - a.weight)
                                       .slice(0, 10)
-                                      .map((vote: any, idx: number) => (
+                                      .map((vote, idx: number) => (
                                         <div
                                           key={idx}
                                           className="flex items-center justify-between p-2 bg-white rounded-lg"
@@ -396,7 +421,7 @@ export default function GovernancePage() {
                                                 ) : (
                                                   <span className="text-semantic-error">✗ Against</span>
                                                 )}
-                                                {vote.multiplier > 1.0 && (
+                                                {vote.multiplier && vote.multiplier > 1.0 && (
                                                   <span className="ml-2 text-semantic-warning">
                                                     {vote.multiplier.toFixed(1)}x
                                                   </span>
@@ -427,10 +452,10 @@ export default function GovernancePage() {
                                             {
                                               label: 'Voters',
                                               data: [
-                                                proposal.votes.filter((v: any) => v.weight <= 100).length,
-                                                proposal.votes.filter((v: any) => v.weight > 100 && v.weight <= 500).length,
-                                                proposal.votes.filter((v: any) => v.weight > 500 && v.weight <= 1000).length,
-                                                proposal.votes.filter((v: any) => v.weight > 1000).length,
+                                                proposal.votes.filter((v) => v.weight <= 100).length,
+                                                proposal.votes.filter((v) => v.weight > 100 && v.weight <= 500).length,
+                                                proposal.votes.filter((v) => v.weight > 500 && v.weight <= 1000).length,
+                                                proposal.votes.filter((v) => v.weight > 1000).length,
                                               ],
                                               backgroundColor: '#0F4C81',
                                               borderColor: '#0F4C81',

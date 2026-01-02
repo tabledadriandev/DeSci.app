@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     });
 
     const progressMap: Record<string, unknown> = {};
-    progress.forEach((p) => {
+    progress.forEach((p: typeof progress[0]) => {
       const progressItem = p as { challengeId: string };
       progressMap[progressItem.challengeId] = p;
     });

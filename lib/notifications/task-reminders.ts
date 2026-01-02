@@ -51,7 +51,7 @@ export async function getTodayTaskSummary(userId: string): Promise<DailyTaskSumm
   }
 
   const totalCount = today.tasks.length;
-  const completedCount = today.tasks.filter((t) => t.completed).length;
+  const completedCount = today.tasks.filter((t: typeof today.tasks[0]) => t.completed).length;
   const completionRate = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   return {

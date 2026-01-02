@@ -120,7 +120,7 @@ export class FermentationPredictor {
     // Adjust based on user's butyrate-producing bacteria
     if (microbiome?.scfaProducers) {
       const butyrateProducers = microbiome.scfaProducers.filter(p => p.scfaType === 'butyrate');
-      const totalAbundance = butyrateProducers.reduce((sum, p) => sum + p.abundance, 0);
+      const totalAbundance = butyrateProducers.reduce((sum: number, p: typeof butyrateProducers[0]) => sum + p.abundance, 0);
       // Higher abundance = better conversion (multiplier: 0.5 to 1.5)
       const multiplier = 0.5 + (totalAbundance * 1.0);
       butyrate *= multiplier;
@@ -172,7 +172,7 @@ export class FermentationPredictor {
     // Adjust based on user's propionate-producing bacteria
     if (microbiome?.scfaProducers) {
       const propionateProducers = microbiome.scfaProducers.filter(p => p.scfaType === 'propionate');
-      const totalAbundance = propionateProducers.reduce((sum, p) => sum + p.abundance, 0);
+      const totalAbundance = propionateProducers.reduce((sum: number, p: typeof propionateProducers[0]) => sum + p.abundance, 0);
       const multiplier = 0.5 + (totalAbundance * 1.0);
       propionate *= multiplier;
     }
@@ -224,7 +224,7 @@ export class FermentationPredictor {
     // Adjust based on user's acetate-producing bacteria
     if (microbiome?.scfaProducers) {
       const acetateProducers = microbiome.scfaProducers.filter(p => p.scfaType === 'acetate');
-      const totalAbundance = acetateProducers.reduce((sum, p) => sum + p.abundance, 0);
+      const totalAbundance = acetateProducers.reduce((sum: number, p: typeof acetateProducers[0]) => sum + p.abundance, 0);
       const multiplier = 0.6 + (totalAbundance * 0.9);
       acetate *= multiplier;
     }

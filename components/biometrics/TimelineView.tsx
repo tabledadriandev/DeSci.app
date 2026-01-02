@@ -116,7 +116,7 @@ export default function TimelineView({
         )}
 
         <div className="grid grid-cols-7 gap-1 mt-4">
-          {days.map((day, index) => {
+          {days.map((day: Date, index: number) => {
             const hasData = dataPoints.some(dp => 
               dp.date.toDateString() === day.toDateString()
             );

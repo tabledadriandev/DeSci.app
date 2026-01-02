@@ -172,7 +172,7 @@ export class LabResultsPDFGenerator {
             ${user?.email ? `<p><strong>Email:</strong> ${user.email}</p>` : ''}
           </div>
           
-          ${testResults.map((result: unknown) => this.buildTestResultSection(result as TestResult, options)).join('')}
+          ${testResults.map((result: typeof testResults[0]) => this.buildTestResultSection(result as TestResult, options)).join('')}
           
           ${options.includeRecommendations && trends.length > 0 ? this.buildTrendsSection(trends) : ''}
           

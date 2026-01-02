@@ -119,7 +119,7 @@ function computeBiomarkerTrend(biomarkers: Array<{ date: Date; value: number; me
   const last = sorted[sorted.length - 1];
 
   // Find weight readings
-  const weightReadings = biomarkers.filter(b => b.metric === 'weight');
+  const weightReadings = biomarkers.filter((b: typeof biomarkers[0]) => b.metric === 'weight');
   let weightTrend: 'up' | 'down' | 'stable' | undefined;
   if (weightReadings.length >= 2) {
     const firstWeight = weightReadings[0].value;
@@ -143,7 +143,7 @@ function computeHabitsSummary(habits: unknown[]) {
 
   const avgSteps = average(
     habits
-      .map((h) => {
+      .map((h: typeof habits[0]) => {
         const habit = h as Record<string, unknown>;
         return (habit.steps as number | null) ?? null;
       })
@@ -151,7 +151,7 @@ function computeHabitsSummary(habits: unknown[]) {
   );
   const avgMeditationMinutes = average(
     habits
-      .map((h) => {
+      .map((h: typeof habits[0]) => {
         const habit = h as Record<string, unknown>;
         return (habit.meditationMinutes as number | null) ?? null;
       })
@@ -159,7 +159,7 @@ function computeHabitsSummary(habits: unknown[]) {
   );
   const avgWaterIntake = average(
     habits
-      .map((h) => {
+      .map((h: typeof habits[0]) => {
         const habit = h as Record<string, unknown>;
         return (habit.waterIntake as number | null) ?? null;
       })
@@ -175,7 +175,7 @@ function computeHabitsSummary(habits: unknown[]) {
 
 function average(values: number[]) {
   if (!values.length) return null;
-  const sum = values.reduce((acc, v) => acc + v, 0);
+  const sum = values.reduce((acc: number, v: number) => acc + v, 0);
   return Math.round((sum / values.length) * 10) / 10;
 }
 

@@ -145,7 +145,7 @@ export default function HealthScorePage() {
               animate="animate"
               transition={{ delay: 0.2 }}
             >
-            {categories.map((category, index) => {
+            {categories.map((category: typeof categories[0], index: number) => {
               const Icon = category.icon;
               const score = healthScore[category.key] || 0;
               return (
@@ -223,13 +223,13 @@ export default function HealthScorePage() {
                   <div className="h-64">
                     <LineChart
                       data={{
-                        labels: [...scores].reverse().map((s) => 
+                        labels: [...scores].reverse().map((s: typeof scores[0]) => 
                           new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                         ),
                         datasets: [
                           {
                             label: 'Overall Score',
-                            data: [...scores].reverse().map((s) => s.overallScore),
+                            data: [...scores].reverse().map((s: typeof scores[0]) => s.overallScore),
                             borderColor: '#0F4C81',
                             backgroundColor: 'rgba(15, 76, 129, 0.3)',
                             tension: 0.4,
@@ -293,48 +293,48 @@ export default function HealthScorePage() {
                   <div className="h-64">
                     <LineChart
                       data={{
-                        labels: [...scores].reverse().map((s) => 
+                        labels: [...scores].reverse().map((s: typeof scores[0]) => 
                           new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                         ),
                         datasets: [
                           {
                             label: 'Cardiovascular',
-                            data: [...scores].reverse().map((s) => s.cardiovascularScore || 0),
+                            data: [...scores].reverse().map((s: typeof scores[0]) => s.cardiovascularScore || 0),
                             borderColor: '#EF4444',
                             backgroundColor: 'rgba(239, 68, 68, 0.1)',
                             tension: 0.4,
                           },
                           {
                             label: 'Metabolic',
-                            data: [...scores].reverse().map((s) => s.metabolicScore || 0),
+                            data: [...scores].reverse().map((s: typeof scores[0]) => s.metabolicScore || 0),
                             borderColor: '#F59E0B',
                             backgroundColor: 'rgba(245, 158, 11, 0.1)',
                             tension: 0.4,
                           },
                           {
                             label: 'Mental',
-                            data: [...scores].reverse().map((s) => s.mentalWellnessScore || 0),
+                            data: [...scores].reverse().map((s: typeof scores[0]) => s.mentalWellnessScore || 0),
                             borderColor: '#8B5CF6',
                             backgroundColor: 'rgba(139, 92, 246, 0.1)',
                             tension: 0.4,
                           },
                           {
                             label: 'Fitness',
-                            data: [...scores].reverse().map((s) => s.physicalFitnessScore || 0),
+                            data: [...scores].reverse().map((s: typeof scores[0]) => s.physicalFitnessScore || 0),
                             borderColor: '#3B82F6',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             tension: 0.4,
                           },
                           {
                             label: 'Nutrition',
-                            data: [...scores].reverse().map((s) => s.nutritionScore || 0),
+                            data: [...scores].reverse().map((s: typeof scores[0]) => s.nutritionScore || 0),
                             borderColor: '#10B981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             tension: 0.4,
                           },
                           {
                             label: 'Sleep',
-                            data: [...scores].reverse().map((s) => s.sleepScore || 0),
+                            data: [...scores].reverse().map((s: typeof scores[0]) => s.sleepScore || 0),
                             borderColor: '#6366F1',
                             backgroundColor: 'rgba(99, 102, 241, 0.1)',
                             tension: 0.4,
@@ -357,7 +357,7 @@ export default function HealthScorePage() {
                 <AnimatedCard>
                   <h2 className="text-2xl font-bold text-text-primary mb-4">Recent History</h2>
                   <div className="space-y-3">
-                    {scores.slice(0, 5).map((score, index) => (
+                    {scores.slice(0, 5).map((score: typeof scores[0], index: number) => (
                       <div
                         key={index}
                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"

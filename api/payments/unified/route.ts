@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
           amountInCents,
           currency.toLowerCase(),
           description
-        );
+        ) as Record<string, unknown>;
 
         // TODO: Payment model not yet implemented, use Transaction instead
         await prisma.transaction.create({
@@ -177,11 +177,11 @@ export async function POST(request: NextRequest) {
             type: 'purchase',
             amount: -amount, // Negative for purchase
             description,
-            status: paymentIntent.status === 'succeeded' ? 'completed' : 'pending',
+            status: (paymentIntent.status as string) === 'succeeded' ? 'completed' : 'pending',
             metadata: {
               currency: currency.toUpperCase(),
               paymentMethod: 'stripe_card',
-              stripePaymentIntentId: paymentIntent.id,
+              stripePaymentIntentId: (paymentIntent.id as string) || null,
             },
           },
         });

@@ -206,10 +206,10 @@ ${medicalResults.map(r =>
 ).join('\n')}
 
 FOOD LOGS (Last 7 days):
-- Average Calories: ${foodLogs.reduce((sum, log) => sum + log.calories, 0) / foodLogs.length}
-- Average Protein: ${foodLogs.reduce((sum, log) => sum + log.protein, 0) / foodLogs.length}g
-- Average Carbs: ${foodLogs.reduce((sum, log) => sum + log.carbs, 0) / foodLogs.length}g
-- Average Fat: ${foodLogs.reduce((sum, log) => sum + log.fat, 0) / foodLogs.length}g
+- Average Calories: ${foodLogs.reduce((sum: number, log: typeof foodLogs[0]) => sum + log.calories, 0) / foodLogs.length}
+- Average Protein: ${foodLogs.reduce((sum: number, log: typeof foodLogs[0]) => sum + log.protein, 0) / foodLogs.length}g
+- Average Carbs: ${foodLogs.reduce((sum: number, log: typeof foodLogs[0]) => sum + log.carbs, 0) / foodLogs.length}g
+- Average Fat: ${foodLogs.reduce((sum: number, log: typeof foodLogs[0]) => sum + log.fat, 0) / foodLogs.length}g
 
 Generate a comprehensive 30-day longevity plan with:
 1. NUTRITION PLAN:

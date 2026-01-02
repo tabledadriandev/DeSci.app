@@ -163,7 +163,7 @@ function generateWeeklyTasks(
 ) {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  return days.map((day, index) => {
+  return days.map((day: string, index: number) => {
     const tasks: unknown[] = [];
 
     // Exercise tasks

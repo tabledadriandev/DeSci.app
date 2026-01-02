@@ -51,8 +51,8 @@ export default function WearablesPage() {
         throw new Error(data.error || 'Failed to sync device');
       }
       setResult(data.data || null);
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to sync device');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to sync device');
     } finally {
       setLoading(false);
     }
