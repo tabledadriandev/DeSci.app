@@ -123,14 +123,12 @@ export async function POST(request: NextRequest) {
 
     // Polyphenol Pro – placeholder: check if user has at least 30 MealLogs with polyphenols info
     if (!existingTypes.has(ACHIEVEMENT_TYPES.POLYPHENOL_PRO)) {
-      const polyphenolMeals = await prisma.mealLog.count({
-        where: {
-          userId: user.id,
-          polyphenols: {
-            not: null,
-          },
-        },
+      // Count meal logs with polyphenols data
+      const allMealLogs = await prisma.mealLog.findMany({
+        where: { userId: user.id },
+        select: { polyphenols: true },
       });
+      const polyphenolMeals = allMealLogs.filter((m) => m.polyphenols !== null && m.polyphenols !== undefined).length;
       if (polyphenolMeals >= 30) {
         const created = await prisma.achievement.create({
           data: {
