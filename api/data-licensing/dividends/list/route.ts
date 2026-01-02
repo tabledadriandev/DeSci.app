@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
     });
 
     const totalEarned = dividends
-      .filter((d) => d.status === 'completed')
-      .reduce((sum, d) => sum + d.amount, 0);
+      .filter((d: { status: string }) => d.status === 'completed')
+      .reduce((sum: number, d: { amount: number }) => sum + d.amount, 0);
 
     interface DividendPayment {
       id: string;
