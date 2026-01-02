@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
       totalUsers: optedInUsers.length,
       eligibleUsers: nonZeroDividends.length,
       licenseCount: licensePurchases.length,
-      dividends: nonZeroDividends.sort((a, b) => b.dividendAmount - a.dividendAmount),
+      dividends: nonZeroDividends.sort((a: { dividendAmount: number }, b: { dividendAmount: number }) => b.dividendAmount - a.dividendAmount),
       calculatedAt: new Date().toISOString(),
     });
   } catch (error) {
