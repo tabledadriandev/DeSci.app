@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
             name: b.name!,
             value: b.value!,
             status: (b.flag === 'normal' ? 'optimal' : b.flag === 'high' || b.flag === 'low' ? 'suboptimal' : 'concerning') as 'optimal' | 'good' | 'suboptimal' | 'concerning',
-          })),
+        })),
       };
     });
 
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       protein?: number;
       carbs?: number;
       fat?: number;
-      micronutrients?: unknown;
+      micronutrients?: Record<string, unknown>;
     };
     const foodData = foodLogs.map((log: unknown) => {
       const foodLog = log as FoodLog;
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
         protein: foodLog.protein || 0,
         carbs: foodLog.carbs || 0,
         fat: foodLog.fat || 0,
-        micronutrients: foodLog.micronutrients,
+        micronutrients: foodLog.micronutrients as Record<string, unknown> | undefined,
       };
     });
 
@@ -162,11 +162,11 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         planType: 'combined',
-        recommendations: plan as any,
-        mealPlan: plan.nutrition.mealPlan as any,
-        exercisePlan: plan.exercise as any,
-        supplementStack: plan.supplements as any,
-        expectedResults: plan.expectedResults as any,
+        recommendations: JSON.parse(JSON.stringify(plan)),
+        mealPlan: JSON.parse(JSON.stringify(plan.nutrition?.mealPlan || {})),
+        exercisePlan: JSON.parse(JSON.stringify(plan.exercise || {})),
+        supplementStack: JSON.parse(JSON.stringify(plan.supplements || {})),
+        expectedResults: JSON.parse(JSON.stringify(plan.expectedResults || {})),
         startDate: new Date(),
         status: 'active',
       },

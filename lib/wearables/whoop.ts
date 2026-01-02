@@ -65,7 +65,8 @@ export class WhoopClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(error.message || `WHOOP API error: ${response.status}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(errorMessage || `WHOOP API error: ${response.status}`);
     }
 
     return response.json();

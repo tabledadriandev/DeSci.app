@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // TODO: HealthAssessment model not yet implemented
-    const assessment = null;
+    const assessment: Record<string, unknown> = {};
     
     // Fetch health score separately
     const healthScore = await prisma.healthScore.findFirst({
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const planData = buildWellnessPlan({
       assessment,
       healthScore,
-      profile: null, // Profile not in User model
+      profile: undefined, // Profile not in User model
       biomarkerTrend,
       habitsSummary,
       reason: 'adjustment',

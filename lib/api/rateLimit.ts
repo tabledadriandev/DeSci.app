@@ -7,7 +7,11 @@
 import { ApiException } from './errorHandler';
 
 // Fallback to in-memory rate limiting if Upstash not configured
-let redisClient: any = null;
+let redisClient: {
+  incr: (key: string) => Promise<number>;
+  expire: (key: string, seconds: number) => Promise<number>;
+  ttl: (key: string) => Promise<number>;
+} | null = null;
 
 try {
   // Try to use Upstash Redis if available
@@ -17,7 +21,11 @@ try {
       redisClient = new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL!,
         token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      });
+      }) as {
+        incr: (key: string) => Promise<number>;
+        expire: (key: string, seconds: number) => Promise<number>;
+        ttl: (key: string) => Promise<number>;
+      };
     });
   }
 } catch {

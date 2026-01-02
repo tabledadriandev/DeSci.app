@@ -3,30 +3,32 @@
  * Optional dependency - gracefully handles when ioredis is not installed
  */
 
-let Redis: any = null;
-let redisClient: any = null;
+let Redis: (new (config: { host?: string; port?: number; password?: string; retryStrategy?: (times: number) => number }) => { get: (key: string) => Promise<string | null>; set: (key: string, value: string, expiryMode?: string, time?: number) => Promise<string>; del: (key: string) => Promise<number>; on: (event: string, handler: (err: unknown) => void) => void }) | null = null;
+let redisClient: unknown = null;
 
 // Try to load ioredis (optional dependency)
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   Redis = require('ioredis');
-  redisClient = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    password: process.env.REDIS_PASSWORD,
-    retryStrategy: (times: number) => {
-      const delay = Math.min(times * 50, 2000);
-      return delay;
-    },
-  });
+  if (Redis) {
+    redisClient = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD,
+      retryStrategy: (times: number) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+    });
 
-  redisClient.on('error', (err: unknown) => {
-    console.error('Redis Client Error:', err);
-  });
+    (redisClient as { on: (event: string, handler: (err: unknown) => void) => void }).on('error', (err: unknown) => {
+      console.error('Redis Client Error:', err);
+    });
 
-  redisClient.on('connect', () => {
-    console.log('✅ Redis connected');
-  });
+    (redisClient as { on: (event: string, handler: () => void) => void }).on('connect', () => {
+      console.log('✅ Redis connected');
+    });
+  }
 } catch {
   // ioredis not installed - Redis operations will be no-ops
   console.warn('ioredis not installed - Redis caching disabled');
@@ -39,7 +41,7 @@ export class RedisCache {
   async get(key: string): Promise<string | null> {
     if (!redisClient) return null;
     try {
-      return await redisClient.get(key);
+      return await (redisClient as { get: (key: string) => Promise<string | null> }).get(key);
     } catch (error) {
       console.error('Redis get error:', error);
       return null;
@@ -52,10 +54,11 @@ export class RedisCache {
   async set(key: string, value: string, expirySeconds?: number): Promise<boolean> {
     if (!redisClient) return false;
     try {
+      const client = redisClient as { setex: (key: string, seconds: number, value: string) => Promise<string>; set: (key: string, value: string) => Promise<string> };
       if (expirySeconds) {
-        await redisClient.setex(key, expirySeconds, value);
+        await client.setex(key, expirySeconds, value);
       } else {
-        await redisClient.set(key, value);
+        await client.set(key, value);
       }
       return true;
     } catch (error) {
@@ -70,7 +73,7 @@ export class RedisCache {
   async delete(key: string): Promise<boolean> {
     if (!redisClient) return false;
     try {
-      await redisClient.del(key);
+      await (redisClient as { del: (key: string) => Promise<number> }).del(key);
       return true;
     } catch (error) {
       console.error('Redis delete error:', error);
@@ -81,14 +84,14 @@ export class RedisCache {
   /**
    * Cache session
    */
-  async cacheSession(sessionToken: string, userData: any, expirySeconds: number = 86400): Promise<boolean> {
+  async cacheSession(sessionToken: string, userData: Record<string, unknown>, expirySeconds: number = 86400): Promise<boolean> {
     return this.set(`session:${sessionToken}`, JSON.stringify(userData), expirySeconds);
   }
 
   /**
    * Get cached session
    */
-  async getSession(sessionToken: string): Promise<any | null> {
+  async getSession(sessionToken: string): Promise<Record<string, unknown> | null> {
     const data = await this.get(`session:${sessionToken}`);
     return data ? JSON.parse(data) : null;
   }
@@ -96,7 +99,7 @@ export class RedisCache {
   /**
    * Cache user progress
    */
-  async cacheUserProgress(userId: string, progress: any): Promise<boolean> {
+  async cacheUserProgress(userId: string, progress: Record<string, unknown>): Promise<boolean> {
     return this.set(`progress:${userId}`, JSON.stringify(progress), 3600); // 1 hour
   }
 

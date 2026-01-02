@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const factors = latest.factors as any;
+    const factors = latest.factors as Record<string, unknown> | null;
 
     return NextResponse.json({
       biologicalAge: latest.biologicalAge,
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         sleepAge: latest.sleepAge,
         activityAge: latest.activityAge,
         recoveryAge: latest.recoveryAge,
-        drivers: factors?.drivers || {},
+        drivers: (factors?.drivers as Record<string, unknown>) || {},
       },
     });
   } catch (error) {

@@ -50,9 +50,9 @@ export interface BodyCompositionResult {
     difference: number;
   };
   postureAnalysis: {
-    front?: any;
-    side?: any;
-    back?: any;
+    front?: Record<string, unknown>;
+    side?: Record<string, unknown>;
+    back?: Record<string, unknown>;
     spinalAlignment?: string;
     shoulderSymmetry?: string;
     gaitAnalysis?: string;
@@ -204,9 +204,10 @@ export class CameraAnalysisService {
         stressLevel: 5,
         estimatedAge: 30,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error analyzing facial features:', error);
-      throw new Error(`Facial analysis failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Facial analysis failed: ${errorMessage}`);
     }
   }
 
@@ -225,9 +226,10 @@ export class CameraAnalysisService {
       // Placeholder: Return average heart rate estimate
       // Real implementation would require video processing library
       return Math.floor(60 + Math.random() * 40); // 60-100 bpm
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error estimating heart rate:', error);
-      throw new Error(`Heart rate estimation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Heart rate estimation failed: ${errorMessage}`);
     }
   }
 
@@ -288,9 +290,10 @@ Return as JSON.`,
         postureAnalysis: {},
         measurements: {},
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error analyzing body composition:', error);
-      throw new Error(`Body composition analysis failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Body composition analysis failed: ${errorMessage}`);
     }
   }
 
@@ -363,9 +366,10 @@ Return as JSON with foods array and nutritionAnalysis object.`,
           allergens: [],
         },
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error recognizing food:', error);
-      throw new Error(`Food recognition failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Food recognition failed: ${errorMessage}`);
     }
   }
 
@@ -387,9 +391,10 @@ Return as JSON with foods array and nutritionAnalysis object.`,
           hrv: 50 + Math.random() * 20,
         },
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error analyzing vital signs:', error);
-      throw new Error(`Vital signs analysis failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Vital signs analysis failed: ${errorMessage}`);
     }
   }
 
@@ -451,9 +456,10 @@ Return as JSON with eyeHealthRisks object.`,
           glaucoma: 0,
         },
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error analyzing eye health:', error);
-      throw new Error(`Eye health analysis failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Eye health analysis failed: ${errorMessage}`);
     }
   }
 
@@ -462,7 +468,14 @@ Return as JSON with eyeHealthRisks object.`,
    */
   async analyzeMole(moleImageBase64: string, previousImageBase64?: string): Promise<MoleAnalysisResult> {
     try {
-      const messages: any[] = [
+      const messages: Array<{
+        role: string;
+        content: Array<{
+          type: string;
+          text?: string;
+          image_url?: { url: string };
+        }>;
+      }> = [
         {
           role: 'user',
           content: [
@@ -508,7 +521,7 @@ Return as JSON.`,
 
       const response = await openai.chat.completions.create({
         model: 'gpt-4-vision-preview',
-        messages,
+        messages: messages as any,
         max_tokens: 1000,
       });
 
@@ -535,9 +548,10 @@ Return as JSON.`,
         melanomaRisk: 5,
         riskLevel: 'low',
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error analyzing mole:', error);
-      throw new Error(`Mole analysis failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Mole analysis failed: ${errorMessage}`);
     }
   }
 
@@ -556,7 +570,7 @@ Return as JSON.`,
         fats: 0,
         fiber: 0,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error enriching food nutrition:', error);
       return null;
     }

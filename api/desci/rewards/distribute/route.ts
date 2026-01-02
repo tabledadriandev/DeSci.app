@@ -47,10 +47,11 @@ export async function POST(request: NextRequest) {
       dataPoints: calculation.dataPoints,
       reason: calculation.reason,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reward distribution error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to distribute reward';
     return NextResponse.json(
-      { error: error.message || 'Failed to distribute reward' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

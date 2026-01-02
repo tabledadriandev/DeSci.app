@@ -85,7 +85,7 @@ const nextConfig = {
   
   // TypeScript configuration
   typescript: {
-    ignoreBuildErrors: true, // Temporarily ignore to get build passing
+    ignoreBuildErrors: false,
   },
   
   // ESLint configuration - ignore during builds to allow deployment

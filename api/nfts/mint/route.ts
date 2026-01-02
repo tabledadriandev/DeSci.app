@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
           rewardAmount
         );
       } catch (error) {
-        console.warn('On-chain NFT reward processing failed, continuing with off-chain:', error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.warn('On-chain NFT reward processing failed, continuing with off-chain:', errorMessage);
         // Continue with off-chain NFT creation if on-chain fails
       }
 

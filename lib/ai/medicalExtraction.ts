@@ -73,8 +73,9 @@ export class MedicalExtractionClient {
         },
       });
       return text;
-    } catch (error: any) {
-      throw new Error(`OCR failed: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`OCR failed: ${errorMessage}`);
     }
   }
 

@@ -16,7 +16,7 @@ export interface SyncStatus {
 
 export interface WearableData {
   provider: string;
-  data: any;
+  data: Record<string, unknown>;
   syncedAt: Date;
 }
 

@@ -9,7 +9,7 @@ interface MetabolicSignatureNFTProps {
     id: string;
     tokenId?: string | null;
     mintTxHash?: string | null;
-    metadata: any;
+    metadata: Record<string, unknown>;
   };
 }
 
@@ -42,18 +42,18 @@ export default function MetabolicSignatureNFT({ badge }: MetabolicSignatureNFTPr
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-secondary">Biomarker:</span>
             <span className="text-text-primary font-medium">
-              {badge.metadata.biomarker}
+              {String(badge.metadata.biomarker || '')}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-secondary">Range:</span>
             <span className="text-text-primary font-medium">
-              {badge.metadata.range}
+              {String(badge.metadata.range || '')}
             </span>
           </div>
-          {badge.metadata.proofHash && (
+          {badge.metadata.proofHash !== undefined && badge.metadata.proofHash !== null && (
             <div className="text-xs text-text-tertiary font-mono break-all">
-              Proof: {badge.metadata.proofHash.slice(0, 32)}...
+              Proof: {String(badge.metadata.proofHash).slice(0, 32)}...
             </div>
           )}
         </div>

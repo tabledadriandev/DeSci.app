@@ -19,16 +19,83 @@ function getOpenAIClient(): OpenAI {
   return openai;
 }
 
+interface UserProfile {
+  healthGoals?: string[];
+  dietaryRestrictions?: string[];
+  [key: string]: unknown;
+}
+
+interface RiskScores {
+  cardiovascular?: number;
+  metabolic?: number;
+  [key: string]: unknown;
+}
+
+interface WellnessPlan {
+  nutrition?: unknown;
+  exercise?: unknown;
+  [key: string]: unknown;
+}
+
+interface MealData {
+  foods?: unknown[];
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  [key: string]: unknown;
+}
+
+interface SleepConditions {
+  temperature?: number;
+  light?: string;
+  sound?: string;
+  airQuality?: string;
+  [key: string]: unknown;
+}
+
+interface StressBiomarkers {
+  cortisol?: number | { morning?: number; evening?: number };
+  hrv?: number;
+  heartRate?: number;
+  sleepQuality?: number;
+  crp?: number;
+  [key: string]: unknown;
+}
+
+interface RiskFactors {
+  age?: number;
+  familyHistory?: boolean;
+  smoking?: boolean;
+  [key: string]: unknown;
+}
+
+interface Biomarkers {
+  glucose?: number;
+  hba1c?: number;
+  insulin?: number;
+  [key: string]: unknown;
+}
+
+interface LabResults {
+  [key: string]: {
+    value: number;
+    unit: string;
+    referenceRange?: string;
+    flag?: string;
+  } | unknown;
+}
+
 export interface UserHealthContext {
-  profile?: any;
-  healthData?: any[];
-  biomarkers?: any[];
+  profile?: UserProfile;
+  healthData?: unknown[];
+  biomarkers?: unknown[];
   healthScore?: number;
-  riskScores?: any;
-  mealLogs?: any[];
-  wellnessPlan?: any;
-  cameraAnalyses?: any[];
-  recentLabResults?: any[];
+  riskScores?: RiskScores;
+  mealLogs?: unknown[];
+  wellnessPlan?: WellnessPlan;
+  cameraAnalyses?: unknown[];
+  recentLabResults?: unknown[];
 }
 
 export interface CoachingResponse {
@@ -40,7 +107,7 @@ export interface CoachingResponse {
 
 export class NutritionOptimizationModule {
   async analyzeMeal(
-    mealData: any,
+    mealData: MealData,
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
     const systemPrompt = `You are a nutrition optimization specialist with expertise in:
@@ -141,9 +208,10 @@ Provide specific, actionable recommendations to increase polyphenol intake by ${
         max_tokens: 1500,
       });
       return completion.choices[0]?.message?.content || 'Unable to generate response.';
-    } catch (error: any) {
+    } catch (error) {
       console.error('OpenAI API error:', error);
-      throw new Error(`AI Coach error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Coach error: ${errorMessage}`);
     }
   }
 
@@ -265,8 +333,9 @@ Generate a ${daysPerWeek}-day workout plan that includes:
         max_tokens: 1500,
       });
       return completion.choices[0]?.message?.content || 'Unable to generate response.';
-    } catch (error: any) {
-      throw new Error(`AI Coach error: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Coach error: ${errorMessage}`);
     }
   }
 
@@ -300,8 +369,12 @@ export class SleepOptimizationModule {
   async designBedtimeRoutine(
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
+    const sleepBiomarker = userContext.biomarkers?.find((d: unknown) => {
+      const biomarker = d as { metric?: string; value?: unknown };
+      return biomarker.metric === 'sleep';
+    }) as { metric?: string; value?: unknown } | undefined;
     const systemPrompt = `You are a sleep optimization specialist. Design a personalized bedtime routine considering:
-- User's current sleep patterns: ${userContext.biomarkers?.find((d: any) => d.metric === 'sleep')?.value || 'Not tracked'}
+- User's current sleep patterns: ${sleepBiomarker?.value || 'Not tracked'}
 - Sleep goals: ${userContext.profile?.healthGoals?.includes('sleep') ? 'Optimize sleep' : 'General sleep improvement'}
 - Lifestyle factors
 
@@ -322,7 +395,7 @@ Include:
   }
 
   async optimizeSleepEnvironment(
-    currentConditions: any,
+    currentConditions: SleepConditions,
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
     const systemPrompt = `Optimize the sleep environment for ideal conditions:
@@ -381,8 +454,9 @@ Consider:
         max_tokens: 1500,
       });
       return completion.choices[0]?.message?.content || 'Unable to generate response.';
-    } catch (error: any) {
-      throw new Error(`AI Coach error: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Coach error: ${errorMessage}`);
     }
   }
 
@@ -459,7 +533,7 @@ Make it practical and actionable.`;
   }
 
   async interpretStressBiomarkers(
-    biomarkers: any,
+    biomarkers: StressBiomarkers,
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
     const systemPrompt = `Interpret stress-related biomarkers including:
@@ -499,8 +573,9 @@ Provide:
         max_tokens: 1500,
       });
       return completion.choices[0]?.message?.content || 'Unable to generate response.';
-    } catch (error: any) {
-      throw new Error(`AI Coach error: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Coach error: ${errorMessage}`);
     }
   }
 
@@ -609,8 +684,9 @@ You are a longevity specialist. Provide a comprehensive plan to reduce biologica
         max_tokens: 1500,
       });
       return completion.choices[0]?.message?.content || 'Unable to generate response.';
-    } catch (error: any) {
-      throw new Error(`AI Coach error: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Coach error: ${errorMessage}`);
     }
   }
 
@@ -642,7 +718,7 @@ You are a longevity specialist. Provide a comprehensive plan to reduce biologica
 
 export class DiseasePreventionModule {
   async optimizeCardiovascularHealth(
-    riskFactors: any,
+    riskFactors: RiskFactors,
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
     const systemPrompt = `You are a cardiovascular health optimization specialist. Based on risk factors, provide:
@@ -666,8 +742,8 @@ export class DiseasePreventionModule {
   }
 
   async preventDiabetes(
-    riskFactors: any,
-    biomarkers: any,
+    riskFactors: RiskFactors,
+    biomarkers: Biomarkers,
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
     const systemPrompt = `Create a diabetes prevention/reversal protocol based on:
@@ -694,7 +770,7 @@ Include:
   }
 
   async reduceCancerRisk(
-    riskFactors: any,
+    riskFactors: RiskFactors,
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
     const systemPrompt = `Provide evidence-based strategies to reduce cancer risk:
@@ -727,8 +803,9 @@ Include:
         max_tokens: 1500,
       });
       return completion.choices[0]?.message?.content || 'Unable to generate response.';
-    } catch (error: any) {
-      throw new Error(`AI Coach error: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Coach error: ${errorMessage}`);
     }
   }
 
@@ -760,7 +837,7 @@ Include:
 
 export class BiomarkerInterpretationModule {
   async interpretLabResults(
-    labResults: any,
+    labResults: LabResults,
     userContext: UserHealthContext
   ): Promise<CoachingResponse> {
     const systemPrompt = `You are a biomarker interpretation specialist. Explain lab results in plain language:
@@ -851,8 +928,9 @@ Use this format:
         max_tokens: 1500,
       });
       return completion.choices[0]?.message?.content || 'Unable to generate response.';
-    } catch (error: any) {
-      throw new Error(`AI Coach error: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Coach error: ${errorMessage}`);
     }
   }
 

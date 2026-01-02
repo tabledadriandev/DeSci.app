@@ -5,7 +5,9 @@
 
 import { prisma } from './prisma';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let Stripe: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let stripe: any = null;
 
 // Try to load Stripe (optional dependency)
@@ -16,11 +18,13 @@ try {
   if (!process.env.STRIPE_SECRET_KEY) {
     console.warn('STRIPE_SECRET_KEY not set - Stripe integration disabled');
   } else {
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      // Use a stable, supported Stripe API version for typed client
-      apiVersion: '2023-10-16',
-      typescript: true,
-    });
+    if (Stripe) {
+      stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        // Use a stable, supported Stripe API version for typed client
+        apiVersion: '2023-10-16',
+        typescript: true,
+      });
+    }
   }
 } catch {
   // Stripe not installed - Stripe operations will be disabled
@@ -62,6 +66,10 @@ export class StripeService {
       throw new Error('Stripe not initialized - STRIPE_SECRET_KEY required');
     }
 
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
+
     try {
       // TODO: PaymentMethod model not yet implemented
       // For now, always create a new Stripe customer (Stripe will handle duplicates)
@@ -94,6 +102,10 @@ export class StripeService {
     description: string,
     metadata?: Record<string, string>
   ): Promise<any> {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
+
     try {
       const customerId = await this.getOrCreateCustomer(userId);
 
@@ -112,9 +124,10 @@ export class StripeService {
       });
 
       return paymentIntent;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating payment intent:', error);
-      throw new Error(`Failed to create payment intent: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create payment intent: ${errorMessage}`);
     }
   }
 
@@ -191,9 +204,10 @@ export class StripeService {
 
         return subscription;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating subscription:', error);
-      throw new Error(`Failed to create subscription: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create subscription: ${errorMessage}`);
     }
   }
 
@@ -214,9 +228,10 @@ export class StripeService {
         const subscription = await stripe.subscriptions.cancel(subscriptionId);
         return subscription;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error canceling subscription:', error);
-      throw new Error(`Failed to cancel subscription: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to cancel subscription: ${errorMessage}`);
     }
   }
 
@@ -254,9 +269,10 @@ export class StripeService {
       }
 
       throw new Error('Price ID not found for new tier/billing cycle');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating subscription:', error);
-      throw new Error(`Failed to update subscription: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to update subscription: ${errorMessage}`);
     }
   }
 
@@ -276,9 +292,10 @@ export class StripeService {
       });
 
       return refund;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating refund:', error);
-      throw new Error(`Failed to create refund: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create refund: ${errorMessage}`);
     }
   }
 
@@ -289,9 +306,10 @@ export class StripeService {
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       return paymentIntent;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error retrieving payment intent:', error);
-      throw new Error(`Failed to retrieve payment intent: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to retrieve payment intent: ${errorMessage}`);
     }
   }
 
@@ -302,9 +320,10 @@ export class StripeService {
     try {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       return subscription;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error retrieving subscription:', error);
-      throw new Error(`Failed to retrieve subscription: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to retrieve subscription: ${errorMessage}`);
     }
   }
 
@@ -314,7 +333,7 @@ export class StripeService {
   verifyWebhookSignature(
     payload: string | Buffer,
     signature: string
-  ): any {
+  ): Record<string, unknown> | null {
     try {
       const event = stripe.webhooks.constructEvent(
         payload,
@@ -322,9 +341,10 @@ export class StripeService {
         stripeConfig.webhookSecret
       );
       return event;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Webhook signature verification failed:', error);
-      throw new Error(`Webhook signature verification failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Webhook signature verification failed: ${errorMessage}`);
     }
   }
 
@@ -335,7 +355,7 @@ export class StripeService {
     try {
       const invoice = await stripe.invoices.retrieve(invoiceId);
       return invoice.invoice_pdf || null;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error retrieving invoice PDF:', error);
       return null;
     }
@@ -351,9 +371,10 @@ export class StripeService {
         type: 'card',
       });
       return paymentMethods.data;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error listing payment methods:', error);
-      throw new Error(`Failed to list payment methods: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to list payment methods: ${errorMessage}`);
     }
   }
 
@@ -369,9 +390,10 @@ export class StripeService {
         customer: customerId,
       });
       return paymentMethod;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error attaching payment method:', error);
-      throw new Error(`Failed to attach payment method: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to attach payment method: ${errorMessage}`);
     }
   }
 
@@ -389,9 +411,10 @@ export class StripeService {
         },
       });
       return customer;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error setting default payment method:', error);
-      throw new Error(`Failed to set default payment method: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to set default payment method: ${errorMessage}`);
     }
   }
 }

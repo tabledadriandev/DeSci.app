@@ -20,7 +20,7 @@ export async function isAuthorizedDevice(
   devicePubKey: string
 ): Promise<boolean> {
   try {
-    const device = await (prisma as any).deviceAttestation.findFirst({
+    const device = await prisma.deviceAttestation.findFirst({
       where: {
         devicePubKey: devicePubKey.toLowerCase(),
       },
@@ -52,9 +52,10 @@ export async function registerDevice(
     // Store in a whitelist table (would need to add to schema)
     // For now, devices are implicitly registered on first attestation
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Register device error:', error);
-    return { success: false, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -67,9 +68,10 @@ export async function revokeDevice(
   try {
     // In production, mark device as inactive in whitelist
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Revoke device error:', error);
-    return { success: false, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: errorMessage };
   }
 }
 

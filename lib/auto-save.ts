@@ -77,7 +77,7 @@ class AutoSaveService {
   /**
    * Save immediately (not scheduled)
    */
-  async saveNow(userId: string, progress: any) {
+  async saveNow(userId: string, progress: Record<string, unknown>) {
     // Cache in Redis
     await redisCache.cacheUserProgress(userId, progress);
 

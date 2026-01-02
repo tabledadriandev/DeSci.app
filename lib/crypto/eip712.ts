@@ -84,7 +84,7 @@ export function hashTypedData(
   domain: TypedDataDomain,
   types: Record<string, TypedDataField[]>,
   primaryType: string,
-  message: any
+  message: Record<string, unknown>
 ): string {
   // This is a simplified version - in production, use viem's hashTypedData
   const domainSeparator = hashDomain(domain);
@@ -106,7 +106,7 @@ function hashDomain(domain: TypedDataDomain): string {
     { name: 'verifyingContract', type: 'address' },
   ];
 
-  return hashStruct('EIP712Domain', { EIP712Domain: domainType }, domain);
+  return hashStruct('EIP712Domain', { EIP712Domain: domainType }, domain as Record<string, unknown>);
 }
 
 /**
@@ -115,7 +115,7 @@ function hashDomain(domain: TypedDataDomain): string {
 function hashStruct(
   primaryType: string,
   types: Record<string, TypedDataField[]>,
-  data: any
+  data: Record<string, unknown>
 ): string {
   const encoded = encodeData(primaryType, types, data);
   return keccak256(encoded);
@@ -127,7 +127,7 @@ function hashStruct(
 function encodeData(
   primaryType: string,
   types: Record<string, TypedDataField[]>,
-  data: any
+  data: Record<string, unknown>
 ): Uint8Array {
   const encodedTypes: string[] = ['bytes32'];
   const encodedValues: (string | `0x${string}`)[] = [keccak256(stringToBytes(encodeType(primaryType, types)))];
@@ -150,20 +150,20 @@ function encodeField(
   types: Record<string, TypedDataField[]>,
   name: string,
   type: string,
-  value: any
+  value: unknown
 ): { type: string; value: string } {
   // Simplified implementation
   if (type === 'string') {
-    return { type: 'bytes32', value: keccak256(toBytes(value)) };
+    return { type: 'bytes32', value: keccak256(toBytes(String(value))) };
   }
   if (type === 'uint256') {
-    return { type: 'uint256', value: value.toString() };
+    return { type: 'uint256', value: String(value) };
   }
   if (type === 'bytes32') {
-    return { type: 'bytes32', value: value };
+    return { type: 'bytes32', value: String(value) };
   }
   if (type === 'address') {
-    return { type: 'address', value: getAddress(value) };
+    return { type: 'address', value: getAddress(String(value)) };
   }
   
   return { type: 'bytes32', value: '0x0' };
@@ -200,7 +200,7 @@ export async function recoverSigner(
     domain: TypedDataDomain;
     types: Record<string, TypedDataField[]>;
     primaryType: string;
-    message: any;
+    message: Record<string, unknown>;
   },
   signature: `0x${string}`
 ): Promise<string> {
@@ -213,8 +213,9 @@ export async function recoverSigner(
       signature,
     });
     return address;
-  } catch (error: any) {
-    throw new Error(`Failed to recover signer: ${error.message}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to recover signer: ${errorMessage}`);
   }
 }
 
@@ -245,7 +246,7 @@ export function hashBiomarkerData(
   metric: string,
   value: number,
   timestamp: number,
-  metadata?: any
+  metadata?: Record<string, unknown>
 ): string {
   const data = JSON.stringify({
     userId,

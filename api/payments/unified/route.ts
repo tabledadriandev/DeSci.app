@@ -60,7 +60,15 @@ export async function POST(request: NextRequest) {
 
       if (paymentMethod === 'crypto') {
         // Crypto subscription payment
-        const priceInTA = (PRICING_TIERS as unknown)[tier][billingCycle].crypto;
+        const pricingTiers = PRICING_TIERS as Record<string, Record<string, { crypto?: number; fiat?: number }>>;
+        const priceInTA = pricingTiers[tier]?.[billingCycle]?.crypto;
+        
+        if (!priceInTA) {
+          return NextResponse.json(
+            { error: 'Invalid tier or billing cycle' },
+            { status: 400 }
+          );
+        }
         
         if (!walletAddress) {
           return NextResponse.json(

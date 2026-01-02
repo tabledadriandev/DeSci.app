@@ -1,5 +1,7 @@
 import type { Config } from 'tailwindcss';
 import daisyui from 'daisyui';
+import { heroui } from '@heroui/react';
+import type { PluginCreator } from 'tailwindcss/types/config';
 
 const config: Config = {
   content: [
@@ -154,7 +156,8 @@ const config: Config = {
       },
     },
   },
-  plugins: [daisyui],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  plugins: [daisyui, heroui() as any],
   daisyui: {
     styled: true,           // Component styles applied
     themes: [
@@ -178,17 +181,17 @@ const config: Config = {
           "error": "#ef4444",
         },
         dark: {
-          "primary": "#0284c7",
-          "primary-content": "#f1f5f9",
+          "primary": "#a855f7",
+          "primary-content": "#f3f4f6",
           "secondary": "#16a34a",
           "secondary-content": "#f0fdf4",
-          "accent": "#d97706",
+          "accent": "#ec4899",
           "accent-content": "#fef3c7",
           "neutral": "#e5e7eb",
           "neutral-content": "#111827",
-          "base-100": "#1f2937",
-          "base-200": "#111827",
-          "base-300": "#0f172a",
+          "base-100": "#1a1a1a",
+          "base-200": "#0f0f0f",
+          "base-300": "#0a0a0a",
           "base-content": "#f3f4f6",
           "info": "#0284c7",
           "success": "#16a34a",

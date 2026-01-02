@@ -108,9 +108,9 @@ export async function POST(request: NextRequest) {
       } else if (reading.metric === 'sleep_efficiency') {
         sleep.efficiency = reading.value;
       } else if (reading.metadata && typeof reading.metadata === 'object') {
-        const meta = reading.metadata as any;
-        sleep.deepSleep = meta.deepSleep || 0;
-        sleep.remSleep = meta.remSleep || 0;
+        const meta = reading.metadata as Record<string, unknown>;
+        sleep.deepSleep = (meta.deepSleep as number) || 0;
+        sleep.remSleep = (meta.remSleep as number) || 0;
       }
     }
     const sleepData = Array.from(sleepByDate.values());

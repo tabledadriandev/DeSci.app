@@ -25,7 +25,7 @@ export function trackPageView(path: string) {
  */
 export function trackEvent(
   eventName: string,
-  properties?: Record<string, any>
+  properties?: Record<string, unknown>
 ) {
   if (typeof window === 'undefined') return;
 
@@ -52,6 +52,6 @@ export function trackPerformance(metricName: string, value: number) {
 // Extend Window interface for gtag
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (...args: unknown[]) => void;
   }
 }

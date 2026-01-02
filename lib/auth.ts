@@ -4,6 +4,7 @@
  */
 
 import { prisma } from './prisma';
+import { Prisma } from '@prisma/client';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -13,9 +14,16 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secre
 const REFRESH_TOKEN_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
 const ACCESS_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
+interface User {
+  id: string;
+  email?: string | null;
+  walletAddress?: string | null;
+  [key: string]: unknown;
+}
+
 export interface AuthResult {
   success: boolean;
-  user?: any;
+  user?: User;
   sessionToken?: string;
   refreshToken?: string;
   error?: string;
@@ -68,7 +76,7 @@ export class AuthService {
     email?: string | null;
     displayName?: string | null;
     avatarUrl?: string | null;
-    deviceInfo?: any;
+    deviceInfo?: Record<string, unknown>;
     ipAddress?: string;
     userAgent?: string;
   }): Promise<AuthResult> {
@@ -125,9 +133,10 @@ export class AuthService {
         sessionToken: session.sessionToken,
         refreshToken: session.refreshToken,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Social auth error:', error);
-      return { success: false, error: error.message || 'Social authentication failed' };
+      const errorMessage = error instanceof Error ? error.message : 'Social authentication failed';
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -137,7 +146,7 @@ export class AuthService {
   async authenticateWallet(
     walletAddress: string,
     signature?: string,
-    deviceInfo?: any,
+    deviceInfo?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<AuthResult> {
@@ -179,9 +188,10 @@ export class AuthService {
         sessionToken: session.sessionToken,
         refreshToken: session.refreshToken,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Wallet auth error:', error);
-      return { success: false, error: error.message };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -191,7 +201,7 @@ export class AuthService {
   async authenticateEmail(
     email: string,
     password: string,
-    deviceInfo?: any,
+    deviceInfo?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<AuthResult> {
@@ -278,9 +288,10 @@ export class AuthService {
         sessionToken: session.sessionToken,
         refreshToken: session.refreshToken,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Email auth error:', error);
-      return { success: false, error: error.message };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -290,7 +301,7 @@ export class AuthService {
   private async createSession(
     userId: string,
     walletAddress: string | null,
-    deviceInfo?: any,
+    deviceInfo?: Record<string, unknown>,
     ipAddress?: string,
     userAgent?: string
   ): Promise<{ sessionToken: string; refreshToken: string }> {
@@ -317,7 +328,7 @@ export class AuthService {
         refreshToken,
         walletAddress,
         expiryTimestamp: refreshExpiryDate, // Use refresh token expiry for session
-        deviceInfo: deviceInfo || {},
+        deviceInfo: (deviceInfo || {}) as Prisma.InputJsonValue,
         ipAddress: ipAddress || null,
         userAgent: userAgent || null,
         isActive: true,
@@ -332,7 +343,7 @@ export class AuthService {
    */
   async verifySession(sessionToken: string): Promise<any> {
     try {
-      const decoded = jwt.verify(sessionToken, JWT_SECRET) as any;
+      const decoded = jwt.verify(sessionToken, JWT_SECRET) as unknown;
       
       const session = await prisma.userSession.findUnique({
         where: { sessionToken },
@@ -360,7 +371,7 @@ export class AuthService {
    */
   async refreshToken(refreshToken: string): Promise<AuthResult> {
     try {
-      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as any;
+      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId?: string };
       
       const session = await prisma.userSession.findUnique({
         where: { refreshToken },
@@ -396,7 +407,7 @@ export class AuthService {
         sessionToken: newSessionToken,
         refreshToken: refreshToken,
       };
-    } catch (error: any) {
+    } catch (error) {
       return { success: false, error: 'Invalid refresh token' };
     }
   }
@@ -484,9 +495,10 @@ export class AuthService {
           // emailVerified: user.emailVerified, // TODO: Field not in User model
         },
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Registration error:', error);
-      return { success: false, error: error.message };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -562,9 +574,10 @@ export class AuthService {
       // await this.sendPasswordResetEmail(email, resetToken);
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Password reset token generation error:', error);
-      return { success: false, error: error.message };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -605,9 +618,10 @@ export class AuthService {
       });
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Password reset error:', error);
-      return { success: false, error: error.message };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: errorMessage };
     }
   }
 }
@@ -619,8 +633,8 @@ export const authService = new AuthService();
  * Extracts userId from request body (for POST) or headers (JWT)
  * Note: For POST requests, call this AFTER reading the body
  */
-export function getUserIdFromBody(body: any): string | null {
-  return body?.userId || null;
+export function getUserIdFromBody(body: unknown): string | null {
+  return (body as { userId?: string })?.userId || null;
 }
 
 /**
@@ -632,7 +646,7 @@ export function getUserIdFromHeader(request: Request): string | null {
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       try {
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId?: string; id?: string };
         return decoded.userId || decoded.id || null;
       } catch {
         // Invalid token
@@ -647,7 +661,7 @@ export function getUserIdFromHeader(request: Request): string | null {
 
 // Stub for next-auth compatibility (for routes that still reference it)
 export const authOptions = {};
-export async function getServerSession(options: any): Promise<{ user: { id: string } } | null> {
+export async function getServerSession(options: unknown): Promise<{ user: { id: string } } | null> {
   // This is a stub - routes should use getUserIdFromRequest instead
   return null;
 }

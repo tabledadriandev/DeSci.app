@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth';
-import { cameraAnalysisService } from '@/lib/camera-analysis';
+import { cameraAnalysisService, EyeHealthResult } from '@/lib/camera-analysis';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -8,22 +8,22 @@ export const dynamic = 'force-dynamic';
 /**
  * Generate recommendations based on eye health analysis
  */
-function generateEyeHealthRecommendations(result: any, needsReferral: boolean): string[] {
+function generateEyeHealthRecommendations(result: EyeHealthResult, needsReferral: boolean): string[] {
   const recommendations: string[] = [];
 
   if (needsReferral) {
     recommendations.push('Risk factors detected. Please consult an ophthalmologist for a comprehensive eye exam.');
   }
 
-  if (result.eyeHealthRisks?.diabeticRetinopathy > 30) {
+  if ((result.eyeHealthRisks?.diabeticRetinopathy || 0) > 30) {
     recommendations.push('Elevated risk for diabetic retinopathy. Ensure blood sugar is well-controlled and schedule regular eye exams.');
   }
 
-  if (result.eyeHealthRisks?.amd > 30) {
+  if ((result.eyeHealthRisks?.amd || 0) > 30) {
     recommendations.push('Elevated risk for age-related macular degeneration. Consider AREDS2 supplements (lutein, zeaxanthin).');
   }
 
-  if (result.eyeHealthRisks?.glaucoma > 30) {
+  if ((result.eyeHealthRisks?.glaucoma || 0) > 30) {
     recommendations.push('Elevated risk for glaucoma. Schedule regular eye pressure checks with an ophthalmologist.');
   }
 
@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
 
     // Determine if referral is needed
     const needsReferral = 
-      (analysisResult.eyeHealthRisks.diabeticRetinopathy || 0) > 50 ||
-      (analysisResult.eyeHealthRisks.amd || 0) > 50 ||
-      (analysisResult.eyeHealthRisks.glaucoma || 0) > 50;
+      (analysisResult.eyeHealthRisks?.diabeticRetinopathy || 0) > 50 ||
+      (analysisResult.eyeHealthRisks?.amd || 0) > 50 ||
+      (analysisResult.eyeHealthRisks?.glaucoma || 0) > 50;
 
     // Create camera analysis record
     const analysis = await prisma.cameraAnalysis.create({
@@ -86,9 +86,9 @@ export async function POST(request: NextRequest) {
         imageData: retinalImageBase64.substring(0, 1000),
         eyeAnalysis: {
           retinalScanUrl: retinalImageUrl,
-          diabeticRetinopathyRisk: analysisResult.eyeHealthRisks.diabeticRetinopathy,
-          amdRisk: analysisResult.eyeHealthRisks.amd,
-          glaucomaRisk: analysisResult.eyeHealthRisks.glaucoma,
+          diabeticRetinopathyRisk: analysisResult.eyeHealthRisks?.diabeticRetinopathy,
+          amdRisk: analysisResult.eyeHealthRisks?.amd,
+          glaucomaRisk: analysisResult.eyeHealthRisks?.glaucoma,
         },
         visualAcuityScore: visualAcuityScore || null,
         retinalImageUrl: retinalImageUrl,

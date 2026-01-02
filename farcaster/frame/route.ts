@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         ],
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Frame error:', error);
     return NextResponse.json(
       { error: 'Frame processing failed' },

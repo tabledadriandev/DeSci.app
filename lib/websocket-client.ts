@@ -81,7 +81,7 @@ export class WebSocketClient {
   /**
    * Sync health data
    */
-  syncHealthData(healthData: any[]) {
+  syncHealthData(healthData: unknown[]) {
     if (this.socket?.connected && this.userId) {
       this.socket.emit('sync:health', {
         userId: this.userId,
@@ -93,7 +93,7 @@ export class WebSocketClient {
   /**
    * Sync meal logs
    */
-  syncMealLogs(mealLogs: any[]) {
+  syncMealLogs(mealLogs: unknown[]) {
     if (this.socket?.connected && this.userId) {
       this.socket.emit('sync:meals', {
         userId: this.userId,
@@ -105,7 +105,7 @@ export class WebSocketClient {
   /**
    * Sync progress
    */
-  syncProgress(progress: any) {
+  syncProgress(progress: unknown) {
     if (this.socket?.connected && this.userId) {
       this.socket.emit('sync:progress', {
         userId: this.userId,
@@ -126,7 +126,7 @@ export class WebSocketClient {
   /**
    * Send collaboration update
    */
-  sendCollaborationUpdate(roomId: string, update: any) {
+  sendCollaborationUpdate(roomId: string, update: Record<string, unknown>) {
     if (this.socket?.connected) {
       this.socket.emit('collaborate:update', { roomId, update });
     }

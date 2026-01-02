@@ -63,13 +63,13 @@ export class WearableSyncManager {
           where: { id: connection.id },
           data: { lastSyncAt: new Date() },
         });
-      } catch (error: any) {
+      } catch (error) {
         console.error(`Sync failed for ${connection.provider}:`, error);
         results.push({
           provider: connection.provider,
           success: false,
           dataPoints: 0,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -109,7 +109,7 @@ export class WearableSyncManager {
     }
   }
 
-  private async syncOura(options: any): Promise<{ dataPoints: number }> {
+  private async syncOura(options: { accessToken: string; startDate: Date; endDate: Date }): Promise<{ dataPoints: number }> {
     const client = createOuraClient(options.accessToken);
     const sleep = await client.getSleepData(options.startDate, options.endDate);
     const hrv = await client.getHRVData(options.startDate, options.endDate);
@@ -119,7 +119,7 @@ export class WearableSyncManager {
     return { dataPoints: sleep.length + hrv.length + activity.length };
   }
 
-  private async syncGoogleFit(options: any): Promise<{ dataPoints: number }> {
+  private async syncGoogleFit(options: { accessToken: string; startDate: Date; endDate: Date }): Promise<{ dataPoints: number }> {
     const client = createGoogleFitClient(options.accessToken);
     const steps = await client.getSteps(options.startDate, options.endDate);
     const heartRate = await client.getHeartRate(options.startDate, options.endDate);
@@ -128,7 +128,7 @@ export class WearableSyncManager {
     return { dataPoints: (steps > 0 ? 1 : 0) + heartRate.length + sleep.length };
   }
 
-  private async syncWhoop(options: any): Promise<{ dataPoints: number }> {
+  private async syncWhoop(options: { accessToken: string; startDate: Date; endDate: Date }): Promise<{ dataPoints: number }> {
     const client = createWhoopClient(options.accessToken);
     const strain = await client.getStrain(options.startDate, options.endDate);
     const recovery = await client.getRecovery(options.startDate, options.endDate);
@@ -137,14 +137,14 @@ export class WearableSyncManager {
     return { dataPoints: strain.length + recovery.length + sleep.length };
   }
 
-  private async syncStrava(options: any): Promise<{ dataPoints: number }> {
+  private async syncStrava(options: { accessToken: string; startDate: Date; endDate: Date }): Promise<{ dataPoints: number }> {
     const client = createStravaClient(options.accessToken);
     const activities = await client.getActivities(options.endDate, options.startDate);
     
     return { dataPoints: activities.length };
   }
 
-  private async syncFitbit(options: any): Promise<{ dataPoints: number }> {
+  private async syncFitbit(options: { accessToken: string; userId: string; startDate: Date; endDate: Date }): Promise<{ dataPoints: number }> {
     // Use existing fitbit integration
     const data = await wearableIntegration.syncFitbit(options.accessToken, options.userId);
     

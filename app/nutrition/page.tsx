@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Camera, Upload, Utensils, TrendingUp, AlertCircle } from 'lucide-react';
+import MainLayout from '@/components/layout/MainLayout';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'];
 const COMMON_FOODS = [
@@ -170,7 +171,7 @@ export default function NutritionPage() {
   };
 
   return (
-    <div className="min-h-screen  p-8">
+    <MainLayout title="Nutrition Tracking">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-display text-accent-primary">
@@ -549,7 +550,7 @@ export default function NutritionPage() {
           )}
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
 

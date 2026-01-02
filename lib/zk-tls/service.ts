@@ -66,7 +66,7 @@ export class ZkTlsService {
     const { userId, dataType, dataId, publicFields = [], privateFields = [] } = params;
 
     // Fetch the health data from database
-    let healthData: any;
+    let healthData: unknown;
     
     switch (dataType) {
       case 'biomarker':
@@ -94,7 +94,8 @@ export class ZkTlsService {
     }
 
     // Verify ownership
-    if (healthData.userId !== userId) {
+    const healthDataTyped = healthData as { userId?: string };
+    if (healthDataTyped.userId !== userId) {
       throw new Error('Unauthorized: You do not own this health data');
     }
 

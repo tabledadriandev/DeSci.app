@@ -8,6 +8,7 @@ import { prisma } from './prisma';
 import { redisCache } from './redis';
 
 // Optional dependency - gracefully handles when socket.io is not installed
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let SocketIOServer: any = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -16,8 +17,22 @@ try {
   console.warn('socket.io not installed - WebSocket functionality disabled');
 }
 
+interface SocketIOServerInstance {
+  on: (event: string, callback: (socket: SocketInstance) => void) => void;
+  to: (socketId: string) => { emit: (event: string, data: unknown) => void };
+}
+
+interface SocketInstance {
+  id: string;
+  data: { userId?: string };
+  on: (event: string, callback: (data: unknown) => void | Promise<void>) => void;
+  emit: (event: string, data: unknown) => void;
+  join: (roomId: string) => void;
+  to: (roomId: string) => { emit: (event: string, data: unknown) => void };
+}
+
 export class WebSocketService {
-  private io: any = null;
+  private io: SocketIOServerInstance | null = null;
   private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds
 
   /**
@@ -36,32 +51,38 @@ export class WebSocketService {
       transports: ['websocket', 'polling'],
     });
 
-    this.io.on('connection', (socket: any) => {
+    if (!this.io) {
+      return;
+    }
+
+    this.io.on('connection', (socket: SocketInstance) => {
       console.log('Client connected:', socket.id);
 
       // Authenticate and register user
-      socket.on('authenticate', async (data: { userId: string; sessionToken: string }) => {
+      socket.on('authenticate', async (data: unknown) => {
+        const authData = data as { userId: string; sessionToken: string };
         // Verify session token
-        const isValid = await this.verifySession(data.sessionToken);
+        const isValid = await this.verifySession(authData.sessionToken);
         if (isValid) {
-          socket.data.userId = data.userId;
+          socket.data.userId = authData.userId;
           
           // Add to user's socket set
-          if (!this.userSockets.has(data.userId)) {
-            this.userSockets.set(data.userId, new Set());
+          if (!this.userSockets.has(authData.userId)) {
+            this.userSockets.set(authData.userId, new Set());
           }
-          this.userSockets.get(data.userId)!.add(socket.id);
+          this.userSockets.get(authData.userId)!.add(socket.id);
 
           socket.emit('authenticated', { success: true });
-          console.log(`User ${data.userId} authenticated on socket ${socket.id}`);
+          console.log(`User ${authData.userId} authenticated on socket ${socket.id}`);
         } else {
           socket.emit('authenticated', { success: false, error: 'Invalid session' });
         }
       });
 
       // Sync health data
-      socket.on('sync:health', async (data: { userId: string; healthData: any }) => {
-        if (socket.data.userId !== data.userId) {
+      socket.on('sync:health', async (data: unknown) => {
+        const syncData = data as { userId: string; healthData: unknown[] };
+        if (!socket.data.userId || socket.data.userId !== syncData.userId) {
           socket.emit('error', { message: 'Unauthorized' });
           return;
         }
@@ -69,25 +90,27 @@ export class WebSocketService {
         // Save to database
         try {
           await prisma.healthData.createMany({
-            data: data.healthData.map((item: any) => ({
-              userId: data.userId,
-              ...item,
-            })),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data: syncData.healthData.map((item: unknown) => ({
+              userId: syncData.userId,
+              ...(item as Record<string, unknown>),
+            })) as any,
             skipDuplicates: true,
           });
 
           // Broadcast to user's other devices
-          this.broadcastToUser(data.userId, 'health:updated', data.healthData, socket.id);
+          this.broadcastToUser(syncData.userId, 'health:updated', syncData.healthData, socket.id);
           
-          socket.emit('sync:health:success', { synced: data.healthData.length });
+          socket.emit('sync:health:success', { synced: syncData.healthData.length });
         } catch (error) {
           socket.emit('sync:health:error', { error: 'Sync failed' });
         }
       });
 
       // Sync meal logs
-      socket.on('sync:meals', async (data: { userId: string; mealLogs: any }) => {
-        if (socket.data.userId !== data.userId) {
+      socket.on('sync:meals', async (data: unknown) => {
+        const mealData = data as { userId: string; mealLogs: unknown[] };
+        if (!socket.data.userId || socket.data.userId !== mealData.userId) {
           socket.emit('error', { message: 'Unauthorized' });
           return;
         }
@@ -104,16 +127,17 @@ export class WebSocketService {
           //   });
           // }
 
-          this.broadcastToUser(data.userId, 'meals:updated', data.mealLogs, socket.id);
-          socket.emit('sync:meals:success', { synced: data.mealLogs.length });
+          this.broadcastToUser(mealData.userId, 'meals:updated', mealData.mealLogs, socket.id);
+          socket.emit('sync:meals:success', { synced: mealData.mealLogs.length });
         } catch (error) {
           socket.emit('sync:meals:error', { error: 'Sync failed' });
         }
       });
 
       // Sync progress
-      socket.on('sync:progress', async (data: { userId: string; progress: any }) => {
-        if (socket.data.userId !== data.userId) {
+      socket.on('sync:progress', async (data: unknown) => {
+        const progressData = data as { userId: string; progress: Record<string, unknown> };
+        if (!socket.data.userId || socket.data.userId !== progressData.userId) {
           socket.emit('error', { message: 'Unauthorized' });
           return;
         }
@@ -122,32 +146,34 @@ export class WebSocketService {
           // TODO: Add UserProgress model to Prisma schema
           // Update progress
           // await prisma.userProgress.upsert({
-          //   where: { userId: data.userId },
-          //   update: data.progress,
+          //   where: { userId: progressData.userId },
+          //   update: progressData.progress,
           //   create: {
-          //     userId: data.userId,
-          //     ...data.progress,
+          //     userId: progressData.userId,
+          //     ...progressData.progress,
           //   },
           // });
 
           // Cache in Redis
-          await redisCache.cacheUserProgress(data.userId, data.progress);
+          await redisCache.cacheUserProgress(progressData.userId, progressData.progress);
 
-          this.broadcastToUser(data.userId, 'progress:updated', data.progress, socket.id);
-          socket.emit('sync:progress:success');
+          this.broadcastToUser(progressData.userId, 'progress:updated', progressData.progress, socket.id);
+          socket.emit('sync:progress:success', {});
         } catch (error) {
           socket.emit('sync:progress:error', { error: 'Sync failed' });
         }
       });
 
       // Real-time collaboration (e.g., shared meal planning)
-      socket.on('collaborate:join', (data: { roomId: string }) => {
-        socket.join(data.roomId);
-        socket.emit('collaborate:joined', { roomId: data.roomId });
+      socket.on('collaborate:join', (data: unknown) => {
+        const joinData = data as { roomId: string };
+        socket.join(joinData.roomId);
+        socket.emit('collaborate:joined', { roomId: joinData.roomId });
       });
 
-      socket.on('collaborate:update', (data: { roomId: string; update: any }) => {
-        socket.to(data.roomId).emit('collaborate:update', data.update);
+      socket.on('collaborate:update', (data: unknown) => {
+        const updateData = data as { roomId: string; update: Record<string, unknown> };
+        socket.to(updateData.roomId).emit('collaborate:update', updateData.update);
       });
 
       // Disconnect
@@ -169,7 +195,7 @@ export class WebSocketService {
   /**
    * Broadcast to all of user's devices except sender
    */
-  private broadcastToUser(userId: string, event: string, data: any, excludeSocketId: string) {
+  private broadcastToUser(userId: string, event: string, data: unknown, excludeSocketId: string) {
     if (!this.io) return;
 
     const userSockets = this.userSockets.get(userId);
@@ -216,7 +242,7 @@ export class WebSocketService {
   /**
    * Get WebSocket server instance
    */
-  getIO(): any {
+  getIO(): SocketIOServerInstance | null {
     return this.io;
   }
 }

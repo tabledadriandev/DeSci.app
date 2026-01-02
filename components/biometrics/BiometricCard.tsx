@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
+import LineChart from '@/components/charts/LineChart';
 import { TrendingUp, TrendingDown, Minus, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { glassEntranceAnimation } from '@/lib/animations/glassEntrance';
@@ -49,96 +49,74 @@ export default function BiometricCard({
   };
 
   const config = statusConfig[status];
-  const StatusIcon = config.icon;
+  const Icon = config.icon;
+  const trendDirection = trend.length > 1 
+    ? trend[trend.length - 1] - trend[0] 
+    : 0;
+  const TrendIcon = trendDirection > 0 ? TrendingUp : trendDirection < 0 ? TrendingDown : Minus;
 
-  // Calculate trend direction
-  const trendDirection = trend.length >= 2 
-    ? (trend[trend.length - 1] > trend[0] ? 'up' : trend[trend.length - 1] < trend[0] ? 'down' : 'stable')
-    : 'stable';
-
-  const TrendIcon = trendDirection === 'up' ? TrendingUp : trendDirection === 'down' ? TrendingDown : Minus;
-  const trendColor = trendDirection === 'up' ? 'text-success' : trendDirection === 'down' ? 'text-error' : 'text-text-tertiary';
+  const chartData = trend.length > 0 ? {
+    labels: trend.map((_, i) => `Day ${i + 1}`),
+    datasets: [
+      {
+        label: metric,
+        data: trend,
+        borderColor: '#a855f7',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 2,
+        pointHoverRadius: 4,
+      },
+    ],
+  } : null;
 
   return (
     <motion.div
-      variants={glassEntranceAnimation}
-      initial="initial"
-      animate="animate"
-      className={cn('glass-card p-4 rounded-2xl', className)}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-text-primary" aria-label={`${metric} metric card`}>{metric}</h3>
-        <div className={cn('flex items-center gap-1 px-2 py-1 rounded-full text-xs', config.bg, config.border, 'border')}>
-          <StatusIcon className={cn('w-3 h-3', config.color)} />
-          <span className={cn('font-medium', config.color)}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-        </div>
-      </div>
-
-      {/* Value */}
-      <div className="mb-3" aria-live="polite" aria-atomic="true">
-        <p className="font-mono text-3xl font-bold text-primary-500" aria-label={`Current ${metric} value: ${value} ${unit}`}>
-          {value.toLocaleString()}
-          <span className="text-lg text-text-secondary ml-1">{unit}</span>
-        </p>
-      </div>
-
-      {/* 7-day Sparkline */}
-      {trend.length > 0 && (
-        <div className="mb-3 h-12">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trend.map((v, i) => ({ value: v, index: i }))}>
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke={status === 'good' ? '#2CB566' : status === 'caution' ? '#E6A347' : '#D94557'}
-                strokeWidth={2}
-                dot={false}
-                isAnimationActive={false}
-              />
-              <Tooltip content={() => null} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {...glassEntranceAnimation}
+      className={cn(
+        'card bg-base-100 shadow-md border',
+        config.border,
+        className
       )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-text-tertiary">
-        <div className="flex items-center gap-1">
-          <TrendIcon className={cn('w-3 h-3', trendColor)} />
-          <span className={trendColor}>
-            {trendDirection === 'up' ? '↑' : trendDirection === 'down' ? '↓' : '→'} 
-            {trend.length >= 2 && ` ${Math.abs(((trend[trend.length - 1] - trend[0]) / trend[0]) * 100).toFixed(1)}%`}
-          </span>
+    >
+      <div className="card-body">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="card-title text-base-content text-lg">{metric}</h3>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-3xl font-bold text-base-content">{value}</span>
+              <span className="text-sm text-base-content/70">{unit}</span>
+            </div>
+          </div>
+          <div className={cn('p-2 rounded-lg', config.bg)}>
+            <Icon className={cn('w-5 h-5', config.color)} />
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          {personalBest && (
-            <span className="text-text-secondary">
-              vs. best: {personalBest.toLocaleString()}{unit}
+
+        {trend.length > 0 && chartData && (
+          <div className="h-20 -mx-4 -mb-4">
+            <LineChart data={chartData} height={80} />
+          </div>
+        )}
+
+        {personalBest && (
+          <div className="mt-2 text-xs text-base-content/60">
+            Personal Best: {personalBest} {unit}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-1 text-xs">
+            <TrendIcon className="w-3 h-3" />
+            <span className="text-base-content/60">7-day trend</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs">
+            <Clock className="w-3 h-3" />
+            <span className="text-base-content/60">
+              {syncStatus === 'synced' ? 'Synced' : syncStatus === 'syncing' ? 'Syncing...' : 'Error'}
             </span>
-          )}
-          
-          {syncStatus === 'synced' && (
-            <div className="flex items-center gap-1 text-success">
-              <CheckCircle2 className="w-3 h-3" />
-              <span>Synced</span>
-            </div>
-          )}
-          {syncStatus === 'syncing' && (
-            <div className="flex items-center gap-1 text-warning">
-              <Clock className="w-3 h-3 animate-spin" />
-              <span>Syncing...</span>
-            </div>
-          )}
-          {syncStatus === 'error' && (
-            <div className="flex items-center gap-1 text-error">
-              <AlertCircle className="w-3 h-3" />
-              <span>Error</span>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </motion.div>

@@ -74,11 +74,12 @@ export async function GET() {
       },
       { status: allHealthy ? 200 : 503 }
     );
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       {
         status: 'unhealthy',
-        error: error.message,
+        error: errorMessage,
       },
       { status: 503 }
     );

@@ -2,11 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import LineChart from '@/components/charts/LineChart';
 import { Calendar, TrendingUp, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { glassEntranceAnimation } from '@/lib/animations/glassEntrance';
-import { glassChartConfig } from '@/lib/charts/glassChartStyles';
+import { format } from 'date-fns';
 
 export interface TimelineDataPoint {
   date: Date;
@@ -47,141 +47,99 @@ export default function TimelineView({
   }
 
   // Prepare chart data
-  const chartData = dataPoints.map(dp => ({
-    date: dp.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    value: dp.value,
-    adherence: dp.adherence || 0,
-  }));
-
-  // Calculate adherence heatmap
-  const getAdherenceColor = (adherence: number) => {
-    if (adherence >= 80) return '#2CB566'; // Green
-    if (adherence >= 50) return '#E6A347'; // Amber
-    return '#D94557'; // Red
+  const chartData = {
+    labels: dataPoints.map(dp => format(dp.date, 'MMM d')),
+    datasets: [
+      {
+        label: metricName,
+        data: dataPoints.map(dp => dp.value),
+        borderColor: '#a855f7',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+      ...(dataPoints.some(dp => dp.adherence !== undefined) ? [{
+        label: 'Adherence',
+        data: dataPoints.map(dp => dp.adherence || 0),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.4,
+        fill: true,
+        yAxisID: 'y1',
+      }] : []),
+    ],
   };
-
-  // Calculate improvement
-  const improvement = dataPoints.length >= 2
-    ? ((dataPoints[dataPoints.length - 1].value - dataPoints[0].value) / dataPoints[0].value) * 100
-    : 0;
 
   return (
     <motion.div
-      variants={glassEntranceAnimation}
-      initial="initial"
-      animate="animate"
-      className={cn('glass-card p-6 rounded-2xl', className)}
+      {...glassEntranceAnimation}
+      className={cn('card bg-base-100 shadow-md', className)}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-text-primary mb-1">30-Day Timeline</h3>
-          <p className="text-sm text-text-secondary">{metricName} Progress</p>
-        </div>
-        {improvement !== 0 && (
-          <div className={cn(
-            'flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium',
-            improvement > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
-          )}>
+      <div className="card-body">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="card-title text-base-content">
+            <Calendar className="w-5 h-5" />
+            Timeline View
+          </h3>
+          <div className="flex items-center gap-2 text-sm text-base-content/60">
             <TrendingUp className="w-4 h-4" />
-            <span>{improvement > 0 ? '+' : ''}{improvement.toFixed(1)}%</span>
+            <span>{dataPoints.length} data points</span>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <LineChart data={chartData} height={250} />
+        </div>
+
+        {selectedData && (
+          <div className="mt-4 p-4 bg-base-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="w-4 h-4" />
+              <span className="font-semibold text-base-content">
+                {format(selectedData.date, 'MMM d, yyyy')}
+              </span>
+            </div>
+            <p className="text-base-content/80">
+              Value: {selectedData.value}
+            </p>
+            {selectedData.adherence !== undefined && (
+              <p className="text-base-content/80">
+                Adherence: {selectedData.adherence}%
+              </p>
+            )}
+            {selectedData.notes && (
+              <p className="text-base-content/60 text-sm mt-2">
+                {selectedData.notes}
+              </p>
+            )}
           </div>
         )}
-      </div>
 
-      {/* Adherence Heatmap */}
-      <div className="mb-6">
-        <p className="text-xs font-medium text-text-secondary mb-2">Adherence</p>
-        <div className="grid grid-cols-30 gap-1">
-          {days.map((day, idx) => {
-            const dataPoint = dataPoints.find(d => d.date.toDateString() === day.toDateString());
-            const adherence = dataPoint?.adherence || 0;
+        <div className="grid grid-cols-7 gap-1 mt-4">
+          {days.map((day, index) => {
+            const hasData = dataPoints.some(dp => 
+              dp.date.toDateString() === day.toDateString()
+            );
+            const isSelected = selectedDate?.toDateString() === day.toDateString();
+            
             return (
-              <div
-                key={idx}
-                className={cn(
-                  'aspect-square rounded cursor-pointer transition-all hover:scale-110',
-                  adherence > 0 ? 'opacity-100' : 'opacity-20'
-                )}
-                style={{ backgroundColor: getAdherenceColor(adherence) }}
+              <button
+                key={index}
                 onClick={() => setSelectedDate(day)}
-                title={`${day.toLocaleDateString()}: ${adherence}%`}
-              />
+                className={cn(
+                  'aspect-square rounded text-xs p-1 transition-colors',
+                  hasData 
+                    ? 'bg-primary text-primary-content hover:bg-primary/80' 
+                    : 'bg-base-200 text-base-content/40 hover:bg-base-300',
+                  isSelected && 'ring-2 ring-primary ring-offset-2'
+                )}
+              >
+                {day.getDate()}
+              </button>
             );
           })}
         </div>
       </div>
-
-      {/* Metric Trend Line */}
-      {chartData.length > 0 && (
-        <div className="mb-6">
-          <p className="text-xs font-medium text-text-secondary mb-2">{metricName} Trend</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={chartData}>
-              <defs>
-                <linearGradient id="colorTeal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1A9B8E" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#1A9B8E" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="5 5" stroke="rgba(255, 255, 255, 0.1)" />
-              <XAxis 
-                dataKey="date" 
-                stroke="rgba(0, 0, 0, 0.3)"
-                tick={{ fill: 'rgba(0, 0, 0, 0.5)', fontSize: 10 }}
-              />
-              <YAxis 
-                stroke="rgba(0, 0, 0, 0.3)"
-                tick={{ fill: 'rgba(0, 0, 0, 0.5)', fontSize: 10 }}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#1A9B8E" 
-                strokeWidth={2}
-                dot={{ fill: '#1A9B8E', r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Selected Day Notes */}
-      {selectedData && selectedData.notes && (
-        <div className="mt-4 pt-4 border-t border-border-light">
-          <div className="flex items-start gap-2">
-            <FileText className="w-4 h-4 text-text-tertiary mt-0.5" />
-            <div>
-              <p className="text-xs font-medium text-text-secondary mb-1">
-                {selectedData.date.toLocaleDateString()}
-              </p>
-              <p className="text-xs text-text-primary">{selectedData.notes}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Analysis */}
-      {dataPoints.length >= 7 && (
-        <div className="mt-4 pt-4 border-t border-border-light">
-          <p className="text-xs text-text-secondary">
-            {improvement > 0 
-              ? `You improved ${improvement.toFixed(1)}% when consistent`
-              : improvement < 0
-              ? `Declined ${Math.abs(improvement).toFixed(1)}% - review protocol`
-              : 'Stable performance'}
-          </p>
-        </div>
-      )}
     </motion.div>
   );
 }

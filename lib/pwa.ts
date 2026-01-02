@@ -60,7 +60,8 @@ export class PWAService {
     }
     
     // Check if added to home screen on iOS
-    if ((window.navigator as any).standalone) {
+    const nav = window.navigator as { standalone?: boolean };
+    if (nav.standalone) {
       return true;
     }
 
@@ -72,11 +73,12 @@ export class PWAService {
    */
   static async showInstallPrompt(): Promise<boolean> {
     // Check if beforeinstallprompt event is available
-    const deferredPrompt = (window as any).deferredPrompt;
+    const win = window as { deferredPrompt?: { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> } };
+    const deferredPrompt = win.deferredPrompt;
     if (deferredPrompt) {
-      deferredPrompt.prompt();
+      await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      (window as any).deferredPrompt = null;
+      win.deferredPrompt = undefined;
       return outcome === 'accepted';
     }
     return false;
@@ -101,12 +103,15 @@ export class PWAService {
    * Sync data when back online
    */
   static async syncWhenOnline() {
-    if ('serviceWorker' in navigator && 'sync' in (self as any).registration) {
+    const selfTyped = self as { registration?: { sync?: { register: (tag: string) => Promise<void> } } };
+    if ('serviceWorker' in navigator && selfTyped.registration?.sync) {
       try {
-        await (navigator.serviceWorker.ready as any).then((registration: any) => {
-          registration.sync.register('sync-health-data');
-          registration.sync.register('sync-meal-logs');
-        });
+        const registration = await navigator.serviceWorker.ready;
+        const regTyped = registration as { sync?: { register: (tag: string) => Promise<void> } };
+        if (regTyped.sync) {
+          await regTyped.sync.register('sync-health-data');
+          await regTyped.sync.register('sync-meal-logs');
+        }
       } catch (error) {
         console.error('Background sync registration failed:', error);
       }

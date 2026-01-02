@@ -73,7 +73,7 @@ export class GutBrainAxisTracker {
     }
 
     // TODO: MicrobiomeResult model not yet implemented
-    const microbiomeResults: any[] = [];
+    const microbiomeResults: unknown[] = [];
     // const microbiomeResults = await prisma.microbiomeResult.findMany({
     //   where: {
     //     userId,
@@ -84,7 +84,7 @@ export class GutBrainAxisTracker {
 
     // Get mood/symptom data within timeframe
     // TODO: SymptomLog model not yet implemented
-    const symptomLogs: any[] = [];
+    const symptomLogs: unknown[] = [];
     // const symptomLogs = await prisma.symptomLog.findMany({
     //   where: {
     //     userId,
@@ -106,12 +106,13 @@ export class GutBrainAxisTracker {
     const moodData: MoodData[] = [];
     
     for (const log of symptomLogs) {
+      const logTyped = log as { date: Date | string; mood?: string; painIntensity?: number; digestiveIssues?: string[] };
       moodData.push({
-        date: log.date,
-        mood: this.mapMoodStringToNumber(log.mood || 'neutral'),
-        stress: log.painIntensity ? this.extractStressFromPain(log.painIntensity) : 5,
-        anxiety: log.digestiveIssues.length > 0 ? 6 : 5,
-        energy: log.energyLevel || 5,
+        date: logTyped.date instanceof Date ? logTyped.date : new Date(logTyped.date),
+        mood: this.mapMoodStringToNumber(logTyped.mood || 'neutral'),
+        stress: logTyped.painIntensity ? this.extractStressFromPain(logTyped.painIntensity) : 5,
+        anxiety: (logTyped.digestiveIssues?.length || 0) > 0 ? 6 : 5,
+        energy: (log as { energyLevel?: number }).energyLevel || 5,
       });
     }
 
@@ -135,7 +136,7 @@ export class GutBrainAxisTracker {
    * Calculate Pearson correlation coefficients
    */
   private calculateCorrelations(
-    microbiomeResults: any[],
+    microbiomeResults: unknown[],
     moodData: MoodData[]
   ): MicrobiomeMoodCorrelation {
     if (microbiomeResults.length < 2 || moodData.length < 2) {
@@ -162,15 +163,19 @@ export class GutBrainAxisTracker {
     }> = [];
 
     for (const micro of microbiomeResults) {
-      const nearestMood = this.findNearestMoodData(micro.testDate, moodData);
+      const microTyped = micro as { testDate: Date | string; shannonIndex?: number; [key: string]: unknown };
+      const nearestMood = this.findNearestMoodData(
+        microTyped.testDate instanceof Date ? microTyped.testDate : new Date(microTyped.testDate),
+        moodData
+      );
       if (nearestMood) {
         pairedData.push({
-          shannonIndex: micro.shannonIndex || 0,
-          akkermansia: micro.akkermansiaMuciniphila || undefined,
-          bifidobacterium: micro.bifidobacterium || undefined,
-          lactobacillus: micro.lactobacillus || undefined,
-          faecalibacterium: micro.faecalibacteriumPrausnitzii || undefined,
-          inflammationRisk: micro.inflammationRisk || undefined,
+          shannonIndex: microTyped.shannonIndex || 0,
+          akkermansia: (microTyped.akkermansiaMuciniphila as number | undefined) || undefined,
+          bifidobacterium: (microTyped.bifidobacterium as number | undefined) || undefined,
+          lactobacillus: (microTyped.lactobacillus as number | undefined) || undefined,
+          faecalibacterium: (microTyped.faecalibacteriumPrausnitzii as number | undefined) || undefined,
+          inflammationRisk: (microTyped.inflammationRisk as number | undefined) || undefined,
           mood: nearestMood.mood,
           stress: nearestMood.stress,
           anxiety: nearestMood.anxiety,
@@ -336,9 +341,12 @@ export class GutBrainAxisTracker {
   /**
    * Extract stress level from pain intensity
    */
-  private extractStressFromPain(painIntensity: any): number {
+  private extractStressFromPain(painIntensity: unknown): number {
     if (Array.isArray(painIntensity)) {
-      const avgIntensity = painIntensity.reduce((sum: number, p: any) => sum + (p.intensity || 0), 0) / painIntensity.length;
+      const avgIntensity = painIntensity.reduce((sum: number, p: unknown) => {
+        const pain = p as { intensity?: number };
+        return sum + (pain.intensity || 0);
+      }, 0) / painIntensity.length;
       return Math.max(1, Math.min(10, avgIntensity));
     }
     return 5;
@@ -410,14 +418,15 @@ export class GutBrainAxisTracker {
   /**
    * Analyze serotonin precursor availability
    */
-  analyzeSerotoninPrecursors(microbiomeResult: any): SerotoninPrecursorAnalysis {
+  analyzeSerotoninPrecursors(microbiomeResult: unknown): SerotoninPrecursorAnalysis {
     // Tryptophan is converted to serotonin by certain gut bacteria
     // Good indicators: High Bifidobacterium, Lactobacillus, low inflammation
     
-    const bifidobacterium = microbiomeResult.bifidobacterium || 0;
-    const lactobacillus = microbiomeResult.lactobacillus || 0;
-    const inflammationRisk = microbiomeResult.inflammationRisk || 5;
-    const shannonIndex = microbiomeResult.shannonIndex || 0;
+    const resultTyped = microbiomeResult as { bifidobacterium?: number; lactobacillus?: number; inflammationRisk?: number; shannonIndex?: number };
+    const bifidobacterium = resultTyped.bifidobacterium || 0;
+    const lactobacillus = resultTyped.lactobacillus || 0;
+    const inflammationRisk = resultTyped.inflammationRisk || 5;
+    const shannonIndex = resultTyped.shannonIndex || 0;
 
     let tryptophanAvailability: 'low' | 'medium' | 'high' = 'medium';
     let serotoninPotential = 50;
@@ -469,14 +478,15 @@ export class GutBrainAxisTracker {
   /**
    * Analyze dopamine precursor availability
    */
-  analyzeDopaminePrecursors(microbiomeResult: any): DopaminePrecursorAnalysis {
+  analyzeDopaminePrecursors(microbiomeResult: unknown): DopaminePrecursorAnalysis {
     // Tyrosine is converted to dopamine
     // Good indicators: Low inflammation, good diversity, healthy gut barrier
     
-    const inflammationRisk = microbiomeResult.inflammationRisk || 5;
-    const gutPermeabilityRisk = microbiomeResult.gutPermeabilityRisk || 5;
-    const shannonIndex = microbiomeResult.shannonIndex || 0;
-    const akkermansia = microbiomeResult.akkermansiaMuciniphila || 0;
+    const resultTyped = microbiomeResult as { inflammationRisk?: number; gutPermeabilityRisk?: number; shannonIndex?: number; akkermansiaMuciniphila?: number };
+    const inflammationRisk = resultTyped.inflammationRisk || 5;
+    const gutPermeabilityRisk = resultTyped.gutPermeabilityRisk || 5;
+    const shannonIndex = resultTyped.shannonIndex || 0;
+    const akkermansia = resultTyped.akkermansiaMuciniphila || 0;
 
     let tyrosineAvailability: 'low' | 'medium' | 'high' = 'medium';
     let dopaminePotential = 50;

@@ -48,7 +48,7 @@ User Health Context:`;
     
     // User preferences may contain profile-like data
     if (user?.preferences) {
-      const prefs = user.preferences as unknown;
+      const prefs = user.preferences as { healthGoals?: string[]; dietaryRestrictions?: string[]; activityLevel?: string };
       systemContext += `\n- Health Goals: ${prefs.healthGoals?.join(', ') || 'General wellness'}`;
       systemContext += `\n- Dietary Restrictions: ${prefs.dietaryRestrictions?.join(', ') || 'None'}`;
       systemContext += `\n- Activity Level: ${prefs.activityLevel || 'Not specified'}`;
@@ -64,9 +64,10 @@ User Health Context:`;
       if (healthContext.recentBiomarkers && healthContext.recentBiomarkers.length > 0) {
         systemContext += `\n- Recent Biomarkers:`;
         healthContext.recentBiomarkers.slice(0, 3).forEach((b: unknown) => {
-          if (b.bloodGlucose) systemContext += `\n  Blood Glucose: ${b.bloodGlucose} mg/dL`;
-          if (b.cholesterolTotal) systemContext += `\n  Total Cholesterol: ${b.cholesterolTotal} mg/dL`;
-          if (b.bloodPressureSystolic) systemContext += `\n  Blood Pressure: ${b.bloodPressureSystolic}/${b.bloodPressureDiastolic} mmHg`;
+          const biomarker = b as { bloodGlucose?: number; cholesterolTotal?: number; bloodPressureSystolic?: number; bloodPressureDiastolic?: number };
+          if (biomarker.bloodGlucose) systemContext += `\n  Blood Glucose: ${biomarker.bloodGlucose} mg/dL`;
+          if (biomarker.cholesterolTotal) systemContext += `\n  Total Cholesterol: ${biomarker.cholesterolTotal} mg/dL`;
+          if (biomarker.bloodPressureSystolic) systemContext += `\n  Blood Pressure: ${biomarker.bloodPressureSystolic}/${biomarker.bloodPressureDiastolic} mmHg`;
         });
       }
     }
@@ -74,7 +75,8 @@ User Health Context:`;
     if (user?.biomarkerReadings && user.biomarkerReadings.length > 0) {
       systemContext += `\n- Recent Biomarker Readings:`;
       user.biomarkerReadings.slice(0, 5).forEach((data: unknown) => {
-        systemContext += `\n  ${data.metric}: ${data.value} ${data.unit || ''}`;
+        const reading = data as { metric?: string; value?: number; unit?: string };
+        systemContext += `\n  ${reading.metric || 'Unknown'}: ${reading.value || 'N/A'} ${reading.unit || ''}`;
       });
     }
 
@@ -90,9 +92,12 @@ User Health Context:`;
 Provide personalized, evidence-based advice. Be encouraging, actionable, and specific. Reference the user's health data when relevant. When appropriate, suggest using specialized modules for deeper analysis.`;
 
     // Build conversation history
-    const messages: unknown[] = [
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       { role: 'system', content: systemContext },
-      ...(history || []).slice(-10), // Last 10 messages for context
+      ...(history || []).slice(-10).map((h: unknown) => {
+        const msg = h as { role?: string; content?: string };
+        return { role: (msg.role || 'user') as 'system' | 'user' | 'assistant', content: msg.content || '' };
+      }), // Last 10 messages for context
       { role: 'user', content: message },
     ];
 
@@ -100,7 +105,7 @@ Provide personalized, evidence-based advice. Be encouraging, actionable, and spe
     const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
-      messages,
+      messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
       temperature: 0.7,
       max_tokens: 1000, // Increased for more detailed responses
     });

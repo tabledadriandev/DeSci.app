@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { BiomarkerInterpretationModule } from '@/lib/ai-coach/modules';
 
 export const dynamic = 'force-dynamic';
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
         testType,
         testDate: processingCompletedAt ? new Date(processingCompletedAt) : new Date(),
         extractedData: resultsData,
-        biomarkers: biomarkerEntries ? (Array.isArray(biomarkerEntries) ? biomarkerEntries : {}) : {},
+        biomarkers: (biomarkerEntries ? (Array.isArray(biomarkerEntries) ? biomarkerEntries : {}) : {}) as Prisma.InputJsonValue,
         labName: provider || null,
         doctorNotes: `Test: ${testName || `${testType} test`}`,
       },
@@ -124,7 +125,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const where: unknown = {};
     const user = await prisma.user.findFirst({
       where: {
         OR: [{ walletAddress: userId }, { email: userId }],
@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    where.userId = user.id;
+    const where: { userId: string; testType?: string; orderId?: string } = { userId: user.id };
 
     if (testType) {
       where.testType = testType;
@@ -168,45 +168,71 @@ export async function GET(request: NextRequest) {
   }
 }
 
+interface TestResultsData {
+  bloodGlucose?: string | number;
+  cholesterolTotal?: string | number;
+  cholesterolLDL?: string | number;
+  cholesterolHDL?: string | number;
+  triglycerides?: string | number;
+  vitaminD?: string | number;
+  vitaminB12?: string | number;
+  testosterone?: string | number;
+  cortisol?: string | number;
+  [key: string]: unknown;
+}
+
+interface BiomarkerEntry {
+  bloodGlucose?: number;
+  cholesterolTotal?: number;
+  cholesterolLDL?: number | null;
+  cholesterolHDL?: number | null;
+  triglycerides?: number | null;
+  vitaminD?: number;
+  vitaminB12?: number;
+  testosterone?: number;
+  cortisol?: number;
+  [key: string]: unknown;
+}
+
 /**
  * Process test results and extract biomarker data
  */
-async function processTestResults(testType: string, resultsData: any): Promise<any[] | null> {
-  const biomarkerEntries: unknown[] = [];
+async function processTestResults(testType: string, resultsData: TestResultsData): Promise<BiomarkerEntry[] | null> {
+  const biomarkerEntries: BiomarkerEntry[] = [];
 
   if (testType === 'blood') {
     // Process blood test results
     if (resultsData.bloodGlucose) {
       biomarkerEntries.push({
-        bloodGlucose: parseFloat(resultsData.bloodGlucose),
+        bloodGlucose: parseFloat(String(resultsData.bloodGlucose)),
       });
     }
     if (resultsData.cholesterolTotal) {
       biomarkerEntries.push({
-        cholesterolTotal: parseFloat(resultsData.cholesterolTotal),
-        cholesterolLDL: resultsData.cholesterolLDL ? parseFloat(resultsData.cholesterolLDL) : null,
-        cholesterolHDL: resultsData.cholesterolHDL ? parseFloat(resultsData.cholesterolHDL) : null,
-        triglycerides: resultsData.triglycerides ? parseFloat(resultsData.triglycerides) : null,
+        cholesterolTotal: parseFloat(String(resultsData.cholesterolTotal)),
+        cholesterolLDL: resultsData.cholesterolLDL ? parseFloat(String(resultsData.cholesterolLDL)) : null,
+        cholesterolHDL: resultsData.cholesterolHDL ? parseFloat(String(resultsData.cholesterolHDL)) : null,
+        triglycerides: resultsData.triglycerides ? parseFloat(String(resultsData.triglycerides)) : null,
       });
     }
     if (resultsData.vitaminD) {
       biomarkerEntries.push({
-        vitaminD: parseFloat(resultsData.vitaminD),
+        vitaminD: parseFloat(String(resultsData.vitaminD)),
       });
     }
     if (resultsData.vitaminB12) {
       biomarkerEntries.push({
-        vitaminB12: parseFloat(resultsData.vitaminB12),
+        vitaminB12: parseFloat(String(resultsData.vitaminB12)),
       });
     }
     if (resultsData.testosterone) {
       biomarkerEntries.push({
-        testosterone: parseFloat(resultsData.testosterone),
+        testosterone: parseFloat(String(resultsData.testosterone)),
       });
     }
     if (resultsData.cortisol) {
       biomarkerEntries.push({
-        cortisol: parseFloat(resultsData.cortisol),
+        cortisol: parseFloat(String(resultsData.cortisol)),
       });
     }
     // Add more biomarker mappings as needed
@@ -220,8 +246,8 @@ async function processTestResults(testType: string, resultsData: any): Promise<a
  */
 async function generateRecommendations(
   testType: string,
-  resultsData: any,
-  biomarkerEntries: unknown[] | null
+  resultsData: TestResultsData,
+  biomarkerEntries: BiomarkerEntry[] | null
 ): Promise<string[]> {
   const recommendations: string[] = [];
 
@@ -229,8 +255,20 @@ async function generateRecommendations(
   if (biomarkerEntries && biomarkerEntries.length > 0) {
     try {
       const biomarkerModule = new BiomarkerInterpretationModule();
+      // Transform BiomarkerEntry[] to LabResults format
+      const labResults: { [key: string]: { value: number; unit: string; referenceRange?: string; flag?: string } | unknown } = {};
+      for (const entry of biomarkerEntries) {
+        for (const [key, value] of Object.entries(entry)) {
+          if (typeof value === 'number') {
+            labResults[key] = {
+              value,
+              unit: '', // Unit would need to be determined from context
+            };
+          }
+        }
+      }
       const interpretation = await biomarkerModule.interpretLabResults(
-        biomarkerEntries,
+        labResults,
         {} // User context would be passed here
       );
       

@@ -3,7 +3,15 @@
  * Provides caching for API responses and computed data
  */
 
-let Redis: any = null;
+type RedisClient = {
+  get: (key: string) => Promise<string | null>;
+  setex: (key: string, ttl: number, value: string) => Promise<string>;
+  del: (key: string) => Promise<number>;
+  ping: () => Promise<string>;
+  on: (event: string, handler: (err: unknown) => void) => void;
+};
+
+let Redis: (new (url: string, options?: { maxRetriesPerRequest?: number; retryStrategy?: (times: number) => number }) => RedisClient) | null = null;
 
 // Dynamically load ioredis (optional dependency)
 // Using require() for optional dependencies that may not be installed
@@ -11,13 +19,13 @@ let Redis: any = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ioredis = require('ioredis');
-  Redis = ioredis.default || ioredis;
+  Redis = (ioredis.default || ioredis) as typeof Redis;
 } catch {
   // ioredis is optional - app works without it
   console.warn('ioredis not installed - Redis caching disabled');
 }
 
-let redis: any = null;
+let redis: RedisClient | null = null;
 
 /**
  * Initialize Redis connection

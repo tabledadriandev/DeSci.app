@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, Ref } from 'react';
 
 interface FloatingInputProps extends Omit<InputHTMLAttributes<HTMLInputElement> & TextareaHTMLAttributes<HTMLTextAreaElement>, 'placeholder'> {
   label: string;
@@ -17,7 +17,7 @@ const FloatingInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Floatin
       <div className={`uiverse-input-container ${className}`}>
         {as === 'textarea' ? (
           <textarea
-            ref={ref as any}
+            ref={ref as Ref<HTMLTextAreaElement>}
             id={inputId}
             className="uiverse-input-field"
             placeholder=" "
@@ -25,7 +25,7 @@ const FloatingInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Floatin
           />
         ) : (
           <input
-            ref={ref as any}
+            ref={ref as Ref<HTMLInputElement>}
             id={inputId}
             className="uiverse-input-field"
             placeholder=" "

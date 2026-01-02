@@ -37,7 +37,7 @@ export interface MealLog {
   protein: number;
   carbs: number;
   fat: number;
-  micronutrients?: any;
+  micronutrients?: Record<string, unknown>;
 }
 
 export interface LongevityPlan {
@@ -169,9 +169,10 @@ export class LongevityPlanGenerator {
       const plan = JSON.parse(content.text);
 
       return plan;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Longevity plan generation error:', error);
-      throw new Error(`Failed to generate plan: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to generate plan: ${errorMessage}`);
     }
   }
 
@@ -259,7 +260,7 @@ Return as JSON matching this structure:
   /**
    * Generate nutrition plan only
    */
-  async generateNutritionPlan(biomarkers: any): Promise<NutritionPlan> {
+  async generateNutritionPlan(biomarkers: unknown): Promise<NutritionPlan> {
     // Simplified version - would use Claude API
     return {
       dailyMacros: {
@@ -296,7 +297,7 @@ Return as JSON matching this structure:
   /**
    * Generate supplement stack
    */
-  async generateSupplementStack(deficiencies: any[]): Promise<SupplementStack> {
+  async generateSupplementStack(deficiencies: unknown[]): Promise<SupplementStack> {
     return {
       supplements: [],
     };
@@ -305,7 +306,7 @@ Return as JSON matching this structure:
   /**
    * Generate sleep protocol
    */
-  async generateSleepProtocol(sleepData: any): Promise<SleepProtocol> {
+  async generateSleepProtocol(sleepData: unknown): Promise<SleepProtocol> {
     return {
       idealBedtime: '10:00 PM',
       idealWakeTime: '6:00 AM',

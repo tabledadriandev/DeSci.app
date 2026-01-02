@@ -11,7 +11,7 @@ export interface MicrobiomeTestData {
   testDate: Date;
   
   // Raw data from test provider
-  rawData: any;
+  rawData: Record<string, unknown>;
   
   // Parsed data (if available)
   shannonIndex?: number;
@@ -76,17 +76,18 @@ export class MicrobiomeAnalyzer {
   /**
    * Parse Viome test results
    */
-  private parseViomeData(rawData: any): ProcessedMicrobiomeResult {
+  private parseViomeData(rawData: unknown): ProcessedMicrobiomeResult {
     // Viome typically provides:
     // - Species composition with abundance
     // - Metabolic activity scores
     // - Pathogen detection
     
-    const species = rawData.species || rawData.bacteria || [];
+    const rawDataTyped = rawData as { species?: unknown[]; bacteria?: unknown[]; pathogens?: unknown[]; concerningBacteria?: unknown[] };
+    const species = (rawDataTyped.species || rawDataTyped.bacteria || []) as Array<{ species?: string; abundance: number; name?: string }>;
     const diversity = this.calculateDiversity(species);
     const phyla = this.calculatePhylaDistribution(species);
     const beneficial = this.identifyBeneficialBacteria(species);
-    const pathogens = this.identifyPathogens(rawData.pathogens || rawData.concerningBacteria || []);
+    const pathogens = this.identifyPathogens((rawDataTyped.pathogens || rawDataTyped.concerningBacteria || []) as Array<{ presence?: boolean; level?: string; name?: string }>);
     
     return {
       shannonIndex: diversity.shannon,
@@ -95,7 +96,7 @@ export class MicrobiomeAnalyzer {
       ...phyla,
       ...beneficial,
       pathogens,
-      inflammationRisk: this.calculateInflammationRisk(species, rawData.inflammationMarkers),
+      inflammationRisk: this.calculateInflammationRisk(species, (rawDataTyped as { inflammationMarkers?: Record<string, unknown> }).inflammationMarkers),
       gutPermeabilityRisk: this.calculateGutPermeabilityRisk(species),
       digestionScore: this.calculateDigestionScore(species),
     };
@@ -104,8 +105,9 @@ export class MicrobiomeAnalyzer {
   /**
    * Parse Ombre (formerly Thryve) test results
    */
-  private parseOmbreData(rawData: any): ProcessedMicrobiomeResult {
-    const species = rawData.bacteria || rawData.species || [];
+  private parseOmbreData(rawData: unknown): ProcessedMicrobiomeResult {
+    const rawDataTyped = rawData as { bacteria?: unknown[]; species?: unknown[] };
+    const species = (rawDataTyped.bacteria || rawDataTyped.species || []) as Array<{ species?: string; abundance: number; name?: string }>;
     const diversity = this.calculateDiversity(species);
     const phyla = this.calculatePhylaDistribution(species);
     const beneficial = this.identifyBeneficialBacteria(species);
@@ -123,8 +125,9 @@ export class MicrobiomeAnalyzer {
   /**
    * Parse Tiny Health test results
    */
-  private parseTinyHealthData(rawData: any): ProcessedMicrobiomeResult {
-    const species = rawData.composition || rawData.species || [];
+  private parseTinyHealthData(rawData: unknown): ProcessedMicrobiomeResult {
+    const rawDataTyped = rawData as { composition?: unknown[]; species?: unknown[] };
+    const species = (rawDataTyped.composition || rawDataTyped.species || []) as Array<{ species?: string; abundance: number; name?: string }>;
     const diversity = this.calculateDiversity(species);
     const phyla = this.calculatePhylaDistribution(species);
     const beneficial = this.identifyBeneficialBacteria(species);
@@ -142,12 +145,13 @@ export class MicrobiomeAnalyzer {
   /**
    * Parse Thorne test results
    */
-  private parseThorneData(rawData: any): ProcessedMicrobiomeResult {
-    const species = rawData.microbiome || rawData.bacteria || [];
+  private parseThorneData(rawData: unknown): ProcessedMicrobiomeResult {
+    const rawDataTyped = rawData as { microbiome?: unknown[]; bacteria?: unknown[] };
+    const species = (rawDataTyped.microbiome || rawDataTyped.bacteria || []) as Array<{ species?: string; abundance: number; name?: string }>;
     const diversity = this.calculateDiversity(species);
     const phyla = this.calculatePhylaDistribution(species);
     const beneficial = this.identifyBeneficialBacteria(species);
-    const pathogens = this.identifyPathogens(rawData.pathogens || []);
+    const pathogens = this.identifyPathogens(((rawDataTyped as { pathogens?: unknown[] }).pathogens || []) as Array<{ presence?: boolean; level?: string; name?: string }>);
     
     return {
       shannonIndex: diversity.shannon,
@@ -163,26 +167,39 @@ export class MicrobiomeAnalyzer {
   /**
    * Parse manually entered data
    */
-  private parseManualData(rawData: any): ProcessedMicrobiomeResult {
+  private parseManualData(rawData: unknown): ProcessedMicrobiomeResult {
     // Manual entry should have already formatted data
+    const rawDataTyped = rawData as { 
+      shannonIndex?: number; simpsonIndex?: number; speciesRichness?: number; 
+      firmicutesPercentage?: number; bacteroidetesPercentage?: number; 
+      actinobacteriaPercentage?: number; proteobacteriaPercentage?: number; 
+      verrucomicrobiaPercentage?: number; otherPercentage?: number;
+      akkermansiaMuciniphila?: number; bifidobacterium?: number; lactobacillus?: number;
+      faecalibacteriumPrausnitzii?: number; pathogens?: unknown[]; 
+      inflammationRisk?: number; gutPermeabilityRisk?: number; digestionScore?: number;
+    };
     return {
-      shannonIndex: rawData.shannonIndex || 0,
-      simpsonIndex: rawData.simpsonIndex,
-      speciesRichness: rawData.speciesRichness,
-      firmicutesPercentage: rawData.firmicutesPercentage || 0,
-      bacteroidetesPercentage: rawData.bacteroidetesPercentage || 0,
-      actinobacteriaPercentage: rawData.actinobacteriaPercentage || 0,
-      proteobacteriaPercentage: rawData.proteobacteriaPercentage || 0,
-      verrucomicrobiaPercentage: rawData.verrucomicrobiaPercentage || 0,
-      otherPercentage: rawData.otherPercentage || 0,
-      akkermansiaMuciniphila: rawData.akkermansiaMuciniphila,
-      bifidobacterium: rawData.bifidobacterium,
-      lactobacillus: rawData.lactobacillus,
-      faecalibacteriumPrausnitzii: rawData.faecalibacteriumPrausnitzii,
-      pathogens: rawData.pathogens,
-      inflammationRisk: rawData.inflammationRisk,
-      gutPermeabilityRisk: rawData.gutPermeabilityRisk,
-      digestionScore: rawData.digestionScore,
+      shannonIndex: rawDataTyped.shannonIndex || 0,
+      simpsonIndex: rawDataTyped.simpsonIndex,
+      speciesRichness: rawDataTyped.speciesRichness,
+      firmicutesPercentage: rawDataTyped.firmicutesPercentage || 0,
+      bacteroidetesPercentage: rawDataTyped.bacteroidetesPercentage || 0,
+      actinobacteriaPercentage: rawDataTyped.actinobacteriaPercentage || 0,
+      proteobacteriaPercentage: rawDataTyped.proteobacteriaPercentage || 0,
+      verrucomicrobiaPercentage: rawDataTyped.verrucomicrobiaPercentage || 0,
+      otherPercentage: rawDataTyped.otherPercentage || 0,
+      akkermansiaMuciniphila: rawDataTyped.akkermansiaMuciniphila,
+      bifidobacterium: rawDataTyped.bifidobacterium,
+      lactobacillus: rawDataTyped.lactobacillus,
+      faecalibacteriumPrausnitzii: rawDataTyped.faecalibacteriumPrausnitzii,
+      pathogens: rawDataTyped.pathogens ? (rawDataTyped.pathogens as Array<{ presence?: boolean; level?: string; name?: string }>).map(p => ({
+        name: p.name || '',
+        presence: p.presence || false,
+        level: (p.level === 'high' || p.level === 'medium' || p.level === 'low' ? p.level : 'low') as 'high' | 'medium' | 'low'
+      })) : undefined,
+      inflammationRisk: rawDataTyped.inflammationRisk,
+      gutPermeabilityRisk: rawDataTyped.gutPermeabilityRisk,
+      digestionScore: rawDataTyped.digestionScore,
     };
   }
 
@@ -297,7 +314,7 @@ export class MicrobiomeAnalyzer {
       }
     }
 
-    return beneficial as any;
+    return beneficial as { akkermansiaMuciniphila?: number; bifidobacterium?: number; lactobacillus?: number; faecalibacteriumPrausnitzii?: number };
   }
 
   /**
@@ -318,7 +335,7 @@ export class MicrobiomeAnalyzer {
    */
   private calculateInflammationRisk(
     species: Array<{ species?: string; abundance: number }>,
-    inflammationMarkers?: any
+    inflammationMarkers?: Record<string, unknown>
   ): number {
     // Higher Proteobacteria and lower beneficial bacteria = higher inflammation risk
     const proteobacteriaAbundance = species

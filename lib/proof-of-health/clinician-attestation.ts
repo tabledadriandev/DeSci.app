@@ -100,9 +100,10 @@ export async function mintClinicianAttestedBadge(
     // In production, call the smart contract to mint the badge
     // For now, return success
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Mint clinician attested badge error:', error);
-    return { success: false, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: errorMessage };
   }
 }
 

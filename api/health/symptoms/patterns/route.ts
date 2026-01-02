@@ -29,7 +29,17 @@ export async function GET(request: NextRequest) {
     }
 
     // TODO: SymptomLog model not yet implemented
-    const symptoms: unknown[] = [];
+    const symptoms: Array<{
+      energyLevel?: number;
+      sleepHours?: number;
+      date: string | Date;
+      mood?: string;
+      headaches?: boolean;
+      migraine?: boolean;
+      digestiveIssues?: string[];
+      painLocations?: string[];
+      [key: string]: unknown;
+    }> = [];
 
     if (symptoms.length < 5) {
       return NextResponse.json({
@@ -51,12 +61,22 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function identifyPatterns(symptoms: unknown[]): unknown[] {
+function identifyPatterns(symptoms: Array<{
+  energyLevel?: number;
+  sleepHours?: number;
+  date: string | Date;
+  mood?: string;
+  headaches?: boolean;
+  migraine?: boolean;
+  digestiveIssues?: string[];
+  painLocations?: string[];
+  [key: string]: unknown;
+}>): unknown[] {
   const correlations: unknown[] = [];
 
   // Analyze sleep vs energy correlation
-  const lowEnergyDays = symptoms.filter(s => s.energyLevel < 5);
-  const lowSleepDays = symptoms.filter(s => s.sleepHours && s.sleepHours < 7);
+  const lowEnergyDays = symptoms.filter(s => s.energyLevel !== undefined && s.energyLevel < 5);
+  const lowSleepDays = symptoms.filter(s => s.sleepHours !== undefined && s.sleepHours < 7);
   const overlap = lowEnergyDays.filter(s => 
     lowSleepDays.some(ls => 
       new Date(s.date).toDateString() === new Date(ls.date).toDateString()

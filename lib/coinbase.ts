@@ -45,8 +45,8 @@ export class CoinbaseClient {
   private async makeRequest(
     method: string,
     endpoint: string,
-    body?: any
-  ): Promise<any> {
+    body?: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const path = `/v2${endpoint}`;
     const bodyString = body ? JSON.stringify(body) : '';

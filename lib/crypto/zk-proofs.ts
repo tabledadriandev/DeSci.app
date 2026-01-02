@@ -55,9 +55,10 @@ export async function generateRangeProof(
     };
 
     return { proof: mockProof };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Generate range proof error:', error);
-    return { proof: {} as ZkProof, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { proof: {} as ZkProof, error: errorMessage };
   }
 }
 

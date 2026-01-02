@@ -949,4 +949,48 @@
     border-color: rgba(139, 117, 20, 0.5);
     box-shadow: 0 8px 32px rgba(139, 117, 20, 0.2);
   }
+
+  /* ==========================================
+     DARK THEME BASE STYLES
+     ========================================== */
+  body {
+    @apply bg-[#0f0f0f] text-white;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-[#1a1a1a];
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
+
+  /* Chart.js dark theme styles */
+  .chart-container {
+    @apply bg-[#1a1a1a] rounded-lg p-4;
+  }
+
+  /* Animation utilities */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
 }

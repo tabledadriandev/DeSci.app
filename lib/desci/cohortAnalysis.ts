@@ -48,7 +48,7 @@ export class CohortAnalysisService {
     cohortSize: number;
   }> {
     // Build query filters
-    const userFilters: any = {};
+    const userFilters: unknown = {};
     
     if (filters?.ageRange) {
       // Calculate birth year range from age range

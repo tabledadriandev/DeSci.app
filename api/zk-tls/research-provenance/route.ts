@@ -65,10 +65,11 @@ export async function POST(req: NextRequest) {
         });
       } catch (error) {
         console.error('zkTLS research provenance error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
           {
             error: 'Research provenance proof failed',
-            message: error.message || 'Unknown error',
+            message: errorMessage,
           },
           { status: 500 }
         );

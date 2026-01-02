@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Utensils, Dumbbell, Pill, Moon, Heart, Calendar } from 'lucide-react';
 import { glassEntranceAnimation } from '@/lib/animations/glassEntrance';
 import { cn } from '@/lib/utils/cn';
+import MainLayout from '@/components/layout/MainLayout';
 
 export default function LongevityPlanPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -42,21 +43,14 @@ export default function LongevityPlanPage() {
   const plan = data?.plan;
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-bg-primary">
+    <MainLayout title="Your Longevity Plan" subtitle="AI-generated personalized protocol based on your data">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
         <motion.div
           variants={glassEntranceAnimation}
           initial="initial"
           animate="animate"
-          className="flex items-center justify-between"
+          className="flex items-center justify-end mb-4"
         >
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2">Your Longevity Plan</h1>
-            <p className="text-text-secondary">
-              AI-generated personalized protocol based on your data
-            </p>
-          </div>
           <button
             onClick={() => generateMutation.mutate()}
             disabled={generateMutation.isPending}
@@ -322,6 +316,6 @@ export default function LongevityPlanPage() {
           </motion.div>
         )}
       </div>
-    </div>
+    </MainLayout>
   );
 }

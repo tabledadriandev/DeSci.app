@@ -139,8 +139,8 @@ async function main() {
     console.log('   3. Update ZkProofVerifier.sol to use the deployed verifier');
     console.log('   4. Update lib/crypto/zk-proofs.ts to use the proving key\n');
 
-  } catch (error: any) {
-    console.error('\n❌ Error generating circuit:', error.message);
+  } catch (error: unknown) {
+    console.error('\n❌ Error generating circuit:', error instanceof Error ? error.message : 'Unknown error');
     console.error('\n💡 Make sure you have installed:');
     console.error('   - circom: npm install -g circom');
     console.error('   - snarkjs: npm install -g snarkjs');

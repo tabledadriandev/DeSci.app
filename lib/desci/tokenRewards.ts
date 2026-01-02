@@ -18,7 +18,7 @@ export interface RewardAction {
     | 'achievement'
     | 'referral';
   userId: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RewardCalculation {
@@ -53,7 +53,7 @@ export class TokenRewardsService {
 
       case 'food_logging':
         // Food logging (3+ meals): +0.5 $TA/day
-        const mealCount = action.metadata?.mealCount || 0;
+        const mealCount = (action.metadata as { mealCount?: number })?.mealCount || 0;
         if (mealCount >= 3) {
           dataPoints = 3;
           tokenReward = 0.5;
@@ -97,7 +97,7 @@ export class TokenRewardsService {
           longevity_leader: 5.0,
           data_contributor: 5.0,
         };
-        tokenReward = achievementRewards[achievementType] || 0.5;
+        tokenReward = achievementRewards[achievementType as string] || 0.5;
         dataPoints = Math.floor(tokenReward * 10);
         reason = `Achievement unlocked: ${achievementType}`;
         break;
@@ -275,7 +275,7 @@ export class TokenRewardsService {
         const { contributionId } = await this.distributeReward(
           userId,
           calculation,
-          action.metadata?.researchStudy
+          (action.metadata as { researchStudy?: string })?.researchStudy
         );
         results.push({ action, contributionId });
       } catch (error) {

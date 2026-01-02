@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth';
-import { cameraAnalysisService } from '@/lib/camera-analysis';
+import { cameraAnalysisService, BodyCompositionResult } from '@/lib/camera-analysis';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
+interface BodyCompositionProgress {
+  bodyFatChange: number | null;
+  muscleMassChange: number | null;
+  postureImprovement: 'improved' | 'maintained';
+}
+
 /**
  * Calculate progress compared to previous analysis
  */
-function calculateProgress(previous: any, current: any): any {
+function calculateProgress(previous: { bodyFatEstimate?: number | null; leanMuscleMass?: number | null; postureAnalysis?: { spinalAlignment?: string } }, current: BodyCompositionResult): BodyCompositionProgress {
   return {
     bodyFatChange: previous.bodyFatEstimate && current.bodyFatEstimate
       ? current.bodyFatEstimate - previous.bodyFatEstimate
@@ -25,7 +31,7 @@ function calculateProgress(previous: any, current: any): any {
 /**
  * Generate recommendations based on body composition analysis
  */
-function generateBodyCompositionRecommendations(result: any): string[] {
+function generateBodyCompositionRecommendations(result: BodyCompositionResult): string[] {
   const recommendations: string[] = [];
 
   if (result.bodyFatEstimate > 25) {
@@ -116,10 +122,14 @@ export async function POST(request: NextRequest) {
         bodyFatEstimate: analysisResult.bodyFatEstimate,
         leanMuscleMass: analysisResult.leanMuscleMass,
         muscleSymmetry: analysisResult.muscleSymmetry,
-        postureAnalysis: analysisResult.postureAnalysis,
-        bodyModel3D: analysisResult.postureAnalysis, // Store 3D model data if available
+        postureAnalysis: JSON.parse(JSON.stringify(analysisResult.postureAnalysis)),
+        bodyModel3D: JSON.parse(JSON.stringify(analysisResult.postureAnalysis)), // Store 3D model data if available
         comparisonId: previousAnalysis?.id || null,
-        progress: previousAnalysis ? calculateProgress(previousAnalysis, analysisResult) : null,
+        progress: previousAnalysis ? JSON.parse(JSON.stringify(calculateProgress({
+          bodyFatEstimate: previousAnalysis.bodyFatEstimate,
+          leanMuscleMass: previousAnalysis.leanMuscleMass,
+          postureAnalysis: (previousAnalysis.postureAnalysis as { spinalAlignment?: string } | null) || undefined,
+        }, analysisResult))) : null,
         recommendations: generateBodyCompositionRecommendations(analysisResult),
       },
     });

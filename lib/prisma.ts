@@ -13,8 +13,8 @@ const createMockModel = () => ({
   findUnique: async () => null,
   findFirst: async () => null,
   findMany: async () => [],
-  create: async (args?: any) => ({ id: 'mock', createdAt: new Date(), ...args?.data }),
-  update: async (args?: any) => ({ id: 'mock', ...args?.data }),
+  create: async (args?: { data?: Record<string, unknown> }) => ({ id: 'mock', createdAt: new Date(), ...args?.data }),
+  update: async (args?: { data?: Record<string, unknown> }) => ({ id: 'mock', ...args?.data }),
   updateMany: async () => ({ count: 0 }),
   delete: async () => null,
   deleteMany: async () => ({ count: 0 }),
@@ -63,7 +63,7 @@ export const prisma: PrismaClient = (() => {
       dividendPayment: createMockModel(),
       $connect: async () => {},
       $disconnect: async () => {},
-      $transaction: async (fn: any) => fn({}),
+      $transaction: async (fn: unknown) => (typeof fn === 'function' ? fn({}) : Promise.resolve({})),
       $queryRaw: async () => [],
       $queryRawUnsafe: async () => [],
       $executeRaw: async () => 0,
@@ -87,7 +87,7 @@ export const prisma: PrismaClient = (() => {
     return client
   } catch (error) {
     console.warn('Prisma initialization failed, using mock client:', error)
-    return {} as any as PrismaClient
+    return {} as unknown as PrismaClient
   }
 })()
 

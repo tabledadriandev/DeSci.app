@@ -13,7 +13,7 @@ declare module 'snarkjs' {
 
   export interface Groth16 {
     fullProve(
-      input: Record<string, any>,
+      input: Record<string, unknown>,
       wasmPath: string,
       zkeyPath: string
     ): Promise<{

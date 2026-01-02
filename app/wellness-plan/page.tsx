@@ -12,6 +12,7 @@ import ProgressBar from '@/components/ui/ProgressBar';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/ToastProvider';
+import MainLayout from '@/components/layout/MainLayout';
 
 export default function WellnessPlanPage() {
   const { address } = useAccount();
@@ -149,34 +150,32 @@ export default function WellnessPlanPage() {
 
   if (loading) {
     return (
-      <PageTransition>
-        <div className="min-h-screen  flex items-center justify-center">
+      <MainLayout title="Wellness Plan">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner size="lg" text="Loading wellness plan..." />
         </div>
-      </PageTransition>
+      </MainLayout>
     );
   }
 
   if (!plan) {
     return (
-      <PageTransition>
-        <div className="min-h-screen  p-4 md:p-8">
-          <div className="max-w-4xl mx-auto">
-            <AnimatedCard>
-              <EmptyState
-                icon={Target}
-                title="No Wellness Plan Yet"
-                description="Generate your personalized wellness plan based on your health assessment, biomarkers, and goals. Get a week-by-week roadmap to optimal health."
-                action={{
-                  label: generating ? 'Generating...' : 'Generate Wellness Plan',
-                  onClick: generatePlan,
-                  variant: 'primary',
-                }}
-              />
-            </AnimatedCard>
-          </div>
+      <MainLayout title="Wellness Plan">
+        <div className="max-w-4xl mx-auto">
+          <AnimatedCard>
+            <EmptyState
+              icon={Target}
+              title="No Wellness Plan Yet"
+              description="Generate your personalized wellness plan based on your health assessment, biomarkers, and goals. Get a week-by-week roadmap to optimal health."
+              action={{
+                label: generating ? 'Generating...' : 'Generate Wellness Plan',
+                onClick: generatePlan,
+                variant: 'primary',
+              }}
+            />
+          </AnimatedCard>
         </div>
-      </PageTransition>
+      </MainLayout>
     );
   }
 
@@ -193,30 +192,20 @@ export default function WellnessPlanPage() {
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
-    <PageTransition>
-      <div className="min-h-screen  p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <motion.div
-              initial="initial"
-              animate="animate"
-              variants={fadeInUp}
-            >
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div>
-                  <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-2">
-                    Your Wellness Plan
-                  </h1>
-                  <p className="text-text-secondary text-lg">
-                    Personalized roadmap to optimal health
-                  </p>
-                </div>
-                <AnimatedButton onClick={generatePlan} variant="secondary" disabled={generating}>
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Adjust Plan
-                </AnimatedButton>
-              </div>
+    <MainLayout title="Your Wellness Plan" subtitle="Personalized roadmap to optimal health">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <motion.div
+            initial="initial"
+            animate="animate"
+            variants={fadeInUp}
+          >
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <AnimatedButton onClick={generatePlan} variant="secondary" disabled={generating}>
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Adjust Plan
+              </AnimatedButton>
+            </div>
 
               {/* Progress Summary */}
               <AnimatedCard className="mb-6">
@@ -305,7 +294,6 @@ export default function WellnessPlanPage() {
             </motion.div>
           </div>
         </div>
-      </div>
-    </PageTransition>
+      </MainLayout>
   );
 }

@@ -22,7 +22,7 @@ async function getUserContext(userId: string) {
   });
 
   return {
-    profile: null, // TODO: UserProfile model not yet implemented
+    profile: undefined, // TODO: UserProfile model not yet implemented
     healthData: [], // TODO: HealthData model not yet implemented
     biomarkers: user?.biomarkerReadings || [],
     mealLogs: user?.mealLogs || [],
@@ -52,8 +52,23 @@ export async function POST(request: NextRequest) {
             { status: 404 }
           );
         }
+        // Transform lastMeal to MealData format
+        const mealData: {
+          foods?: unknown[];
+          calories?: number;
+          protein?: number;
+          carbs?: number;
+          fat?: number;
+          [key: string]: unknown;
+        } = {
+          foods: Array.isArray(lastMeal.foods) ? lastMeal.foods : undefined,
+          calories: typeof lastMeal.calories === 'number' ? lastMeal.calories : undefined,
+          protein: typeof lastMeal.protein === 'number' ? lastMeal.protein : undefined,
+          carbs: typeof lastMeal.carbs === 'number' ? lastMeal.carbs : undefined,
+          fat: typeof lastMeal.fat === 'number' ? lastMeal.fat : undefined,
+        };
         const nutritionModule = new NutritionOptimizationModule();
-        response = await nutritionModule.analyzeMeal(lastMeal, userContext);
+        response = await nutritionModule.analyzeMeal(mealData, userContext);
         break;
 
       case 'generate_workout_today':
@@ -80,8 +95,25 @@ export async function POST(request: NextRequest) {
             { status: 404 }
           );
         }
+        // Transform latestLabs array to LabResults object format
+        const labResults: {
+          [key: string]: {
+            value: number;
+            unit: string;
+            referenceRange?: string;
+            flag?: string;
+          } | unknown;
+        } = {};
+        latestLabs.forEach((lab) => {
+          if (lab.metric && typeof lab.value === 'number') {
+            labResults[lab.metric] = {
+              value: lab.value,
+              unit: lab.unit || 'unknown',
+            };
+          }
+        });
         const biomarkerModule = new BiomarkerInterpretationModule();
-        response = await biomarkerModule.interpretLabResults(latestLabs, userContext);
+        response = await biomarkerModule.interpretLabResults(labResults, userContext);
         break;
 
       case 'design_7_day_meal_plan':

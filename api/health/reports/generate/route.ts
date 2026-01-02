@@ -162,7 +162,34 @@ function generateReportData(user: unknown, assessment: unknown, healthScore: { s
   };
 }
 
-async function generatePDF(reportData: unknown): Promise<string> {
+async function generatePDF(reportData: {
+  executiveSummary: {
+    overallHealth: string;
+    primaryConcerns: string[];
+    nextSteps: string[];
+    assessmentDate: string;
+  };
+  healthScore: number;
+  keyFindings: string[];
+  biomarkers: {
+    recent: Array<{ metric: string; value: number }>;
+    summary: string;
+  };
+  riskAssessment: {
+    heartDisease: number;
+    diabetes: number;
+    hypertension: number;
+    stroke: number;
+    metabolicSyndrome: number;
+    overall: number;
+  };
+  recommendations: string[];
+  progressComparison: {
+    summary: string;
+    improvements: string[];
+    areasToWatch: string[];
+  };
+}): Promise<string> {
   const doc = new jsPDF();
   let yPos = 20;
 

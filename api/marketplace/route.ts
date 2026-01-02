@@ -9,7 +9,11 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type'); // product, service, subscription, treatment
     const category = searchParams.get('category'); // supplements, devices, etc.
 
-    const where: unknown = { isActive: true };
+    const where: {
+      isActive: boolean;
+      type?: string;
+      category?: string;
+    } = { isActive: true };
     if (type) where.type = type;
     if (category) where.category = category;
 

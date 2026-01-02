@@ -9,7 +9,7 @@ export interface MerkleNode {
   hash: string;
   left?: MerkleNode;
   right?: MerkleNode;
-  data?: any;
+  data?: string | Buffer;
 }
 
 export interface MerkleProof {
@@ -34,7 +34,7 @@ export function hashBiomarkerLog(
   metric: string,
   value: number,
   date: Date,
-  metadata?: any
+  metadata?: Record<string, unknown>
 ): string {
   const data = JSON.stringify({
     userId,
@@ -196,7 +196,7 @@ export interface BiomarkerLogEntry {
   metric: string;
   value: number;
   date: Date;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export function generateWeeklyMerkleRoot(

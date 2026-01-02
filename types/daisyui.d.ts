@@ -1,5 +1,5 @@
 declare module 'daisyui' {
-  const daisyui: any;
+  const daisyui: unknown;
   export default daisyui;
 }
 

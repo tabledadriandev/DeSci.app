@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const where: unknown = {};
+    const where: { type?: string; category?: string; currency?: string } = {};
     if (type) where.type = type;
     if (category) where.category = category;
     if (currency) where.currency = currency;

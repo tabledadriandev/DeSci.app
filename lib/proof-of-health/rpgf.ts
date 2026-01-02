@@ -25,7 +25,7 @@ export async function calculateDataDonorScore(
   const quarterEnd = new Date(quarterStart);
   quarterEnd.setMonth(quarterEnd.getMonth() + 3);
 
-  const proofs = await (prisma as any).proofOfHealth.findMany({
+  const proofs = await prisma.proofOfHealth.findMany({
     where: {
       userId,
       createdAt: {
@@ -38,9 +38,16 @@ export async function calculateDataDonorScore(
   // Calculate data completeness (frequency × metric diversity)
   const uniqueMetrics = new Set(
     proofs
-      .map((p: any) => p.metadata?.metric || p.metadata?.logs?.map((l: any) => l.metric))
+      .map((p: unknown) => {
+        const proof = p as { metadata?: { metric?: string; logs?: Array<{ metric?: string }> } };
+        if (proof.metadata?.metric) return proof.metadata.metric;
+        if (proof.metadata?.logs) {
+          return proof.metadata.logs.map((l) => l.metric).filter(Boolean);
+        }
+        return null;
+      })
       .flat()
-      .filter(Boolean)
+      .filter(Boolean) as string[]
   );
   const dataCompleteness = Math.min(
     (proofs.length / 90) * 100 + uniqueMetrics.size * 10,
@@ -48,7 +55,7 @@ export async function calculateDataDonorScore(
   );
 
   // Calculate privacy score (higher for zk-proofs, lower for raw hashes)
-  const zkProofs = proofs.filter((p: any) => p.proofType === 'zk_range').length;
+  const zkProofs = proofs.filter((p: unknown) => (p as { proofType?: string }).proofType === 'zk_range').length;
   const privacyScore = Math.min((zkProofs / proofs.length) * 100, 100);
 
   // Calculate research impact (would be based on actual study citations)
@@ -86,7 +93,7 @@ export async function allocateRPGF(
   const quarterEnd = new Date(quarterStart);
   quarterEnd.setMonth(quarterEnd.getMonth() + 3);
 
-  const users = await (prisma as any).proofOfHealth.findMany({
+  const users = await prisma.proofOfHealth.findMany({
     where: {
       createdAt: {
         gte: quarterStart,
@@ -101,7 +108,7 @@ export async function allocateRPGF(
 
   // Calculate scores for all users
   const scores = await Promise.all(
-    users.map((u: any) => calculateDataDonorScore(u.userId, quarter))
+    users.map((u: unknown) => calculateDataDonorScore((u as { userId: string }).userId, quarter))
   );
 
   // Sort by total score
@@ -152,7 +159,7 @@ export async function distributeRewards(
       });
 
       // Record RPGF contribution
-      await (prisma as any).desciContribution.create({
+      await prisma.deSciContribution.create({
         data: {
           userId: allocation.userId,
           dataPoints: 0, // RPGF doesn't count data points

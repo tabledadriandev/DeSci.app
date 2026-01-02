@@ -8,6 +8,7 @@ import AnimatedCard from '@/components/ui/AnimatedCard';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations/variants';
 import { Watch, Activity, Moon, HeartPulse, CheckCircle2 } from 'lucide-react';
+import MainLayout from '@/components/layout/MainLayout';
 
 type Device = 'apple' | 'fitbit' | 'oura';
 
@@ -76,25 +77,8 @@ export default function WearablesPage() {
   ];
 
   return (
-    <PageTransition>
-      <div className="min-h-screen  p-4 md:p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Header */}
-          <motion.div initial="initial" animate="animate" variants={fadeInUp}>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                <Watch className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold gradient-text">
-                  Wearables & Devices
-                </h1>
-                <p className="text-sm md:text-base text-text-secondary">
-                  Link Apple Health, Fitbit, or Oura to keep your wellness data in sync.
-                </p>
-              </div>
-            </div>
-          </motion.div>
+    <MainLayout title="Wearables & Devices" subtitle="Link Apple Health, Fitbit, or Oura to keep your wellness data in sync">
+      <div className="max-w-6xl mx-auto space-y-8">
 
           {/* Overview cards */}
           <motion.div
@@ -253,8 +237,7 @@ export default function WearablesPage() {
             </AnimatedCard>
           </motion.div>
         </div>
-      </div>
-    </PageTransition>
+      </MainLayout>
   );
 }
 

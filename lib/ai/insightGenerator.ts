@@ -77,7 +77,13 @@ export class InsightGenerator {
       const insightsData = JSON.parse(content.text);
       
       // Transform to Insight objects
-      const insights: Insight[] = insightsData.insights.map((insight: any, idx: number) => ({
+      interface InsightData {
+        type?: string;
+        headline: string;
+        emoji?: string;
+        [key: string]: unknown;
+      }
+      const insights: Insight[] = insightsData.insights.map((insight: InsightData, idx: number) => ({
         id: `insight-${Date.now()}-${idx}`,
         type: insight.type || 'general',
         headline: insight.headline,
@@ -91,7 +97,7 @@ export class InsightGenerator {
       }));
 
       return insights;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Insight generation error:', error);
       // Return fallback insights
       return this.getFallbackInsights();
@@ -142,7 +148,7 @@ export class InsightGenerator {
     return {
       userId,
       biologicalAge: user?.biologicalAge || undefined,
-      goals: (user?.preferences as any)?.goals || [],
+      goals: ((user?.preferences as unknown) as { goals?: string[] })?.goals || [],
       biomarkers: latestReadings.map((r) => ({
         metric: r.metric,
         value: r.value,
@@ -173,7 +179,19 @@ export class InsightGenerator {
   /**
    * Build prompt for Claude
    */
-  private buildPrompt(userData: any): string {
+  private buildPrompt(userData: {
+    biologicalAge?: number;
+    goals?: string[];
+    biomarkers?: Array<{ metric: string; value: number; date: Date }>;
+    advancedMetrics?: {
+      hrvCoherence?: number;
+      sleepDebt?: number;
+      parasympatheticTone?: number;
+      longevityScore?: number;
+    };
+    recentMeals?: Array<{ calories: number; protein: number; carbs: number; fat: number; date: Date }>;
+    activeProtocols?: Array<{ name: string; adherence: number }>;
+  }): string {
     return `You are a longevity and wellness AI coach. Analyze the following user data and generate 3-5 personalized insights with actionable recommendations.
 
 USER DATA:
@@ -181,7 +199,7 @@ USER DATA:
 - Goals: ${userData.goals?.join(', ') || 'Not specified'}
 
 LATEST BIOMARKERS:
-${userData.biomarkerReadings?.map((r: any) => `- ${r.metric}: ${r.value}`).join('\n') || 'No recent data'}
+${userData.biomarkers?.map((r) => `- ${r.metric}: ${r.value}`).join('\n') || 'No recent data'}
 
 ADVANCED METRICS:
 ${userData.advancedMetrics ? `
@@ -192,13 +210,17 @@ ${userData.advancedMetrics ? `
 ` : 'No advanced metrics available'}
 
 RECENT NUTRITION (Last 7 days):
-${userData.recentMeals?.length > 0 ? `
-- Average Calories: ${userData.recentMeals.reduce((sum: number, m: any) => sum + m.calories, 0) / userData.recentMeals.length}
-- Average Protein: ${userData.recentMeals.reduce((sum: number, m: any) => sum + m.protein, 0) / userData.recentMeals.length}g
+${userData.recentMeals && userData.recentMeals.length > 0 ? `
+- Average Calories: ${userData.recentMeals.reduce((sum: number, m) => {
+        return sum + (m.calories || 0);
+      }, 0) / userData.recentMeals.length}
+- Average Protein: ${userData.recentMeals.reduce((sum: number, m) => {
+        return sum + (m.protein || 0);
+      }, 0) / userData.recentMeals.length}g
 ` : 'No meal logs'}
 
 ACTIVE PROTOCOLS:
-${userData.activeProtocols?.map((p: any) => `- ${p.name} (${p.adherence}% adherence)`).join('\n') || 'No active protocols'}
+${userData.activeProtocols?.map((p) => `- ${p.name} (${p.adherence}% adherence)`).join('\n') || 'No active protocols'}
 
 Generate 3-5 insights with:
 1. Type: sleep, recovery, nutrition, exercise, stress, or general

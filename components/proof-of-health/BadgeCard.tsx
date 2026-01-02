@@ -10,13 +10,15 @@ interface BadgeCardProps {
     badgeType: string;
     tokenId?: string | null;
     mintTxHash?: string | null;
-    metadata: any;
+    metadata: Record<string, unknown>;
     issuedAt: string;
     expiresAt?: string | null;
   };
 }
 
-const BADGE_INFO: Record<string, { name: string; color: string; icon: any }> = {
+import { LucideIcon } from 'lucide-react';
+
+const BADGE_INFO: Record<string, { name: string; color: string; icon: LucideIcon }> = {
   '30_day_adherence': {
     name: '30-Day Protocol Adherence',
     color: 'text-blue-500',
@@ -84,14 +86,14 @@ export default function BadgeCard({ badge }: BadgeCardProps) {
 
       {badge.metadata && (
         <div className="space-y-2 mb-4 text-sm text-text-secondary">
-          {badge.metadata.streakLength && (
-            <p>Streak: {badge.metadata.streakLength} days</p>
+          {badge.metadata.streakLength !== undefined && badge.metadata.streakLength !== null && (
+            <p>Streak: {String(badge.metadata.streakLength)} days</p>
           )}
-          {badge.metadata.protocolID && (
-            <p>Protocol: {badge.metadata.protocolID}</p>
+          {badge.metadata.protocolID !== undefined && badge.metadata.protocolID !== null && (
+            <p>Protocol: {String(badge.metadata.protocolID)}</p>
           )}
-          {badge.metadata.testType && (
-            <p>Test: {badge.metadata.testType}</p>
+          {badge.metadata.testType !== undefined && badge.metadata.testType !== null && (
+            <p>Test: {String(badge.metadata.testType)}</p>
           )}
         </div>
       )}

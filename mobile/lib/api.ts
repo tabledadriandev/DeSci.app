@@ -33,7 +33,7 @@ export async function getRecentHealth(address: string) {
   return apiGet('/api/health', { address });
 }
 
-export async function saveDailyHabits(userId: string, habits: Record<string, any>) {
+export async function saveDailyHabits(userId: string, habits: Record<string, unknown>) {
   const res = await fetch(`${API_URL}/api/health/habits`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -46,7 +46,7 @@ export async function saveDailyHabits(userId: string, habits: Record<string, any
   return res.json();
 }
 
-export async function sendCoachMessage(userId: string, message: string, history: any[] = []) {
+export async function sendCoachMessage(userId: string, message: string, history: unknown[] = []) {
   const res = await fetch(`${API_URL}/api/coach/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

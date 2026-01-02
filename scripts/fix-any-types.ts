@@ -4,10 +4,10 @@
  * Script to identify and fix common 'any' type patterns in TypeScript files
  * 
  * Common patterns fixed:
- * 1. catch (error: any) -> catch (error) with proper error handling
- * 2. (prisma as any) -> proper Prisma types
+ * 1. catch (error) -> catch (error) with proper error handling
+ * 2. prisma -> proper Prisma types
  * 3. any[] -> proper typed arrays
- * 4. Record<string, any> -> proper typed records
+ * 4. Record<string, unknown> -> proper typed records
  * 5. Function parameters with any -> proper types
  * 6. Variables with any type -> proper types
  */
@@ -35,7 +35,7 @@ interface Pattern {
 }
 
 const patterns: Pattern[] = [
-  // Pattern 1: catch (error: any)
+  // Pattern 1: catch (error)
   {
     name: 'catch-error-any',
     regex: /catch\s*\(\s*(\w+)\s*:\s*any\s*\)/g,
@@ -43,17 +43,17 @@ const patterns: Pattern[] = [
       const varName = match[1];
       return line.replace(match[0], `catch (${varName})`);
     },
-    description: 'Replace catch (error: any) with catch (error)',
+    description: 'Replace catch (error) with catch (error)',
   },
   
-  // Pattern 2: (prisma as any)
+  // Pattern 2: prisma
   {
     name: 'prisma-as-any',
     regex: /\(prisma\s+as\s+any\)/g,
     fix: (match, line) => {
       return line.replace(match[0], 'prisma');
     },
-    description: 'Replace (prisma as any) with prisma',
+    description: 'Replace prisma with prisma',
   },
   
   // Pattern 3: error: any in catch blocks (alternative format)
@@ -64,10 +64,10 @@ const patterns: Pattern[] = [
       const varName = match[1];
       return line.replace(match[0], `} catch (${varName})`);
     },
-    description: 'Replace catch (error: any) with catch (error)',
+    description: 'Replace catch (error) with catch (error)',
   },
   
-  // Pattern 4: : any[] arrays
+  // Pattern 4: : unknown[] arrays
   {
     name: 'any-array',
     regex: /:\s*any\[\]/g,
@@ -78,17 +78,17 @@ const patterns: Pattern[] = [
       }
       return line.replace(match[0], ': unknown[]');
     },
-    description: 'Replace : any[] with : unknown[]',
+    description: 'Replace : unknown[] with : unknown[]',
   },
   
-  // Pattern 5: Record<string, any>
+  // Pattern 5: Record<string, unknown>
   {
     name: 'record-string-any',
     regex: /Record<string,\s*any>/g,
     fix: (match, line) => {
       return line.replace(match[0], 'Record<string, unknown>');
     },
-    description: 'Replace Record<string, any> with Record<string, unknown>',
+    description: 'Replace Record<string, unknown> with Record<string, unknown>',
   },
   
   // Pattern 6: Variable declarations with : any
@@ -123,12 +123,12 @@ const patterns: Pattern[] = [
     description: 'Replace function parameter: any with parameter: unknown',
   },
   
-  // Pattern 8: as any type assertions
+  // Pattern 8: as unknown type assertions
   {
     name: 'as-any-assertion',
     regex: /\s+as\s+any\b/g,
     fix: (match, line) => {
-      // Don't fix (prisma as any) - already handled
+      // Don't fix prisma - already handled
       if (line.includes('prisma')) {
         return null;
       }
@@ -138,7 +138,7 @@ const patterns: Pattern[] = [
       }
       return line.replace(match[0], ' as unknown');
     },
-    description: 'Replace as any with as unknown',
+    description: 'Replace as unknown with as unknown',
   },
 ];
 

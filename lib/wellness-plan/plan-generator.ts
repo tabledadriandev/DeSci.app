@@ -5,9 +5,9 @@
 // with Prisma output types and keep this usable from API routes.
 
 export interface WellnessPlanContext {
-  assessment: any;
-  healthScore?: any;
-  profile?: any;
+  assessment: Record<string, unknown>;
+  healthScore?: Record<string, unknown>;
+  profile?: Record<string, unknown>;
   biomarkerTrend?: {
     weightTrend?: 'up' | 'down' | 'stable';
     avgSleepHours?: number | null;
@@ -28,27 +28,32 @@ export function buildWellnessPlan(context: WellnessPlanContext) {
   const recommendations: string[] = [];
 
   // Determine goals based on assessment + trends
-  if (assessment?.overallRiskScore && assessment.overallRiskScore > 50) {
+  const riskScore = (assessment as { overallRiskScore?: number })?.overallRiskScore;
+  if (riskScore && riskScore > 50) {
     goals.push('Reduce cardiometabolic risk');
     recommendations.push('Focus on lifestyle modifications and regular biomarker tracking.');
   }
 
-  if (assessment?.exerciseFrequency === 'rarely' || assessment?.exerciseFrequency === 'never') {
+  const exerciseFreq = (assessment as { exerciseFrequency?: string })?.exerciseFrequency;
+  if (exerciseFreq === 'rarely' || exerciseFreq === 'never') {
     goals.push('Increase structured physical activity');
     recommendations.push('Start with 30 minutes of moderate exercise 3x per week.');
   }
 
-  if (assessment?.sleepHours && assessment.sleepHours < 7) {
+  const sleepHours = (assessment as { sleepHours?: number })?.sleepHours;
+  if (sleepHours && sleepHours < 7) {
     goals.push('Improve sleep quality and duration');
     recommendations.push('Aim for 7-9 hours of quality sleep per night.');
   }
 
-  if (assessment?.stressLevel && assessment.stressLevel > 7) {
+  const stressLevel = (assessment as { stressLevel?: number })?.stressLevel;
+  if (stressLevel && stressLevel > 7) {
     goals.push('Reduce chronic stress load');
     recommendations.push('Implement daily stress management techniques.');
   }
 
-  if (assessment?.foodGroups && assessment.foodGroups.length < 4) {
+  const foodGroups = (assessment as { foodGroups?: string[] })?.foodGroups;
+  if (foodGroups && foodGroups.length < 4) {
     goals.push('Diversify nutrient intake');
     recommendations.push('Include more whole foods and varied food groups in your diet.');
   }
@@ -84,14 +89,14 @@ export function buildWellnessPlan(context: WellnessPlanContext) {
   // Exercise plan
   const exercisePlan = {
     frequency:
-      assessment?.exerciseFrequency === 'rarely' || assessment?.exerciseFrequency === 'never'
+      exerciseFreq === 'rarely' || exerciseFreq === 'never'
         ? '3x per week'
-        : assessment?.exerciseFrequency === 'weekly'
+        : exerciseFreq === 'weekly'
         ? '4-5x per week'
         : 'Daily',
     type:
-      assessment?.exerciseType && assessment.exerciseType.length > 0
-        ? assessment.exerciseType
+      (assessment as { exerciseType?: string[] })?.exerciseType && (assessment as { exerciseType?: string[] }).exerciseType!.length > 0
+        ? (assessment as { exerciseType?: string[] }).exerciseType!
         : ['Walking', 'Strength Training'],
     duration: 30,
   };
@@ -100,9 +105,9 @@ export function buildWellnessPlan(context: WellnessPlanContext) {
   const sleepTarget =
     biomarkerTrend?.avgSleepHours && biomarkerTrend.avgSleepHours < 7
       ? 8
-      : assessment?.sleepHours && assessment.sleepHours < 7
+      : sleepHours && sleepHours < 7
       ? 8
-      : assessment?.sleepHours || 8;
+      : sleepHours || 8;
 
   // Stress management
   const stressManagement = [
@@ -152,23 +157,23 @@ export function buildWellnessPlan(context: WellnessPlanContext) {
 
 function generateWeeklyTasks(
   goals: string[],
-  exercisePlan: any,
+  exercisePlan: Record<string, unknown>,
   sleepTarget: number,
   habitsSummary?: WellnessPlanContext['habitsSummary'],
 ) {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   return days.map((day, index) => {
-    const tasks: any[] = [];
+    const tasks: unknown[] = [];
 
     // Exercise tasks
     if (
-      exercisePlan.frequency.includes('Daily') ||
-      (exercisePlan.frequency.includes('3x') && [0, 2, 4].includes(index)) ||
-      (exercisePlan.frequency.includes('4-5x') && index < 5)
+      (exercisePlan.frequency as string).includes('Daily') ||
+      ((exercisePlan.frequency as string).includes('3x') && [0, 2, 4].includes(index)) ||
+      ((exercisePlan.frequency as string).includes('4-5x') && index < 5)
     ) {
       tasks.push({
-        title: `Exercise: ${exercisePlan.type[0] || 'Walking'}`,
+        title: `Exercise: ${((exercisePlan.type as string[])[0] || 'Walking')}`,
         description: `${exercisePlan.duration} minutes`,
         completed: false,
       });
@@ -214,8 +219,8 @@ function generateWeeklyTasks(
   });
 }
 
-function generateMealSuggestions(assessment: any) {
-  const suggestions: any[] = [];
+function generateMealSuggestions(assessment: unknown) {
+  const suggestions: unknown[] = [];
 
   // Breakfast suggestions
   suggestions.push({
@@ -277,18 +282,19 @@ function generateMealSuggestions(assessment: any) {
   return suggestions;
 }
 
-function generateSupplementSuggestions(assessment: any): string[] {
+function generateSupplementSuggestions(assessment: unknown): string[] {
   const suggestions: string[] = [];
 
-  if (assessment?.foodGroups && !assessment.foodGroups.includes('Dairy')) {
+  const assessmentTyped = assessment as { foodGroups?: string[]; stressLevel?: number };
+  if (assessmentTyped.foodGroups && !assessmentTyped.foodGroups.includes('Dairy')) {
     suggestions.push('Consider Vitamin D and Calcium supplementation (discuss with your doctor).');
   }
 
-  if (assessment?.foodGroups && !assessment.foodGroups.includes('Nuts & Seeds')) {
+  if (assessmentTyped.foodGroups && !assessmentTyped.foodGroups.includes('Nuts & Seeds')) {
     suggestions.push('Omega-3 fatty acids (from fish oil or algae) may be beneficial.');
   }
 
-  if (assessment?.stressLevel && assessment.stressLevel > 7) {
+  if (assessmentTyped.stressLevel && assessmentTyped.stressLevel > 7) {
     suggestions.push('Magnesium glycinate may support stress management and sleep.');
   }
 

@@ -12,6 +12,22 @@ export interface PDFReportOptions {
   format?: 'detailed' | 'summary';
 }
 
+interface UserData {
+  name?: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
+interface TestResult {
+  testName?: string;
+  testType?: string;
+  processingCompletedAt?: Date | string;
+  provider?: string;
+  resultsData?: Record<string, unknown>;
+  recommendations?: string[];
+  [key: string]: unknown;
+}
+
 export class LabResultsPDFGenerator {
   /**
    * Generate PDF report for test results
@@ -41,7 +57,7 @@ export class LabResultsPDFGenerator {
     });
 
     // Get historical biomarkers for trends if requested
-    let trends: any[] = [];
+    let trends: unknown[] = [];
     if (options.includeTrends) {
       const biomarkers = await prisma.biomarkerReading.findMany({
         where: { userId },
@@ -51,7 +67,18 @@ export class LabResultsPDFGenerator {
     }
 
     // Generate PDF content
-    const pdfContent = this.buildPDFContent(testResults, user, trends, options);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const userData: UserData = {
+      name: user.name || undefined,
+      email: user.email || undefined,
+      username: user.username || undefined,
+      walletAddress: user.walletAddress || undefined,
+      avatar: user.avatar || undefined,
+      biologicalAge: user.biologicalAge || undefined,
+    };
+    const pdfContent = this.buildPDFContent(testResults, userData, trends, options);
 
     // For now, return base64 encoded HTML (will be converted to PDF)
     // In production, use a PDF library like jsPDF or pdfkit
@@ -62,9 +89,9 @@ export class LabResultsPDFGenerator {
    * Build PDF content structure
    */
   private buildPDFContent(
-    testResults: any[],
-    user: any,
-    trends: any[],
+    testResults: unknown[],
+    user: UserData,
+    trends: unknown[],
     options: PDFReportOptions
   ): string {
     const html = `
@@ -140,12 +167,12 @@ export class LabResultsPDFGenerator {
           
           <div class="patient-info">
             <h3>Patient Information</h3>
-            <p><strong>Name:</strong> ${user?.profile?.firstName || ''} ${user?.profile?.lastName || 'N/A'}</p>
+            <p><strong>Name:</strong> ${user?.name || 'N/A'}</p>
             <p><strong>Report Date:</strong> ${new Date().toLocaleDateString()}</p>
-            ${user?.profile?.age ? `<p><strong>Age:</strong> ${user.profile.age}</p>` : ''}
+            ${user?.email ? `<p><strong>Email:</strong> ${user.email}</p>` : ''}
           </div>
           
-          ${testResults.map(result => this.buildTestResultSection(result, options)).join('')}
+          ${testResults.map((result: unknown) => this.buildTestResultSection(result as TestResult, options)).join('')}
           
           ${options.includeRecommendations && trends.length > 0 ? this.buildTrendsSection(trends) : ''}
           
@@ -163,7 +190,7 @@ export class LabResultsPDFGenerator {
   /**
    * Build test result section
    */
-  private buildTestResultSection(result: any, options: PDFReportOptions): string {
+  private buildTestResultSection(result: TestResult, options: PDFReportOptions): string {
     const resultsData = result.resultsData || {};
     const recommendations = result.recommendations || [];
 
@@ -202,7 +229,7 @@ export class LabResultsPDFGenerator {
   /**
    * Build results table rows
    */
-  private buildResultsTableRows(resultsData: any, options: PDFReportOptions): string {
+  private buildResultsTableRows(resultsData: Record<string, unknown>, options: PDFReportOptions): string {
     const rows: string[] = [];
     const referenceRanges: Record<string, { min: number; max: number; unit: string }> = {
       bloodGlucose: { min: 70, max: 100, unit: 'mg/dL' },
@@ -235,7 +262,7 @@ export class LabResultsPDFGenerator {
   /**
    * Build trends section
    */
-  private buildTrendsSection(trends: any[]): string {
+  private buildTrendsSection(trends: unknown[]): string {
     return `
       <div class="test-result">
         <h2>Biomarker Trends</h2>

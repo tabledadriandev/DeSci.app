@@ -9,8 +9,10 @@ import AnimatedCard from '@/components/ui/AnimatedCard';
 import AnimatedButton from '@/components/ui/AnimatedButton';
 import PageTransition from '@/components/ui/PageTransition';
 import Skeleton from '@/components/ui/Skeleton';
-import { Vote, TrendingUp, FileText, CheckCircle, XCircle, Zap, Users, BarChart3, PieChart } from 'lucide-react';
-import { PieChart as RechartsPieChart, Pie, Cell, BarChart, Bar, ResponsiveContainer, Legend, Tooltip, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Vote, TrendingUp, FileText, CheckCircle, XCircle, Zap, Users, BarChart3, PieChart as PieChartIcon } from 'lucide-react';
+import PieChart from '@/components/charts/PieChart';
+import BarChart from '@/components/charts/BarChart';
+import MainLayout from '@/components/layout/MainLayout';
 
 const TA_CONTRACT = '0xee47670a6ed7501aeeb9733efd0bf7d93ed3cb07' as `0x${string}`;
 
@@ -105,8 +107,8 @@ export default function GovernancePage() {
 
   if (!isConnected) {
     return (
-      <PageTransition>
-        <div className="min-h-screen  flex items-center justify-center p-4">
+      <MainLayout title="DAO Governance">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <AnimatedCard className="max-w-md w-full text-center">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -124,7 +126,7 @@ export default function GovernancePage() {
             </motion.div>
           </AnimatedCard>
         </div>
-      </PageTransition>
+      </MainLayout>
     );
   }
 
@@ -132,25 +134,8 @@ export default function GovernancePage() {
   const totalVotingPower = votingPower?.totalWeightedPower || tokenBalance;
 
   return (
-    <PageTransition>
-      <div className="min-h-screen  p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <motion.div
-              initial="initial"
-              animate="animate"
-              variants={fadeInUp}
-            >
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-2">
-                DAO Governance
-              </h1>
-              <p className="text-text-secondary text-lg">
-                Vote on proposals with your $tabledadrian holdings
-              </p>
-            </div>
-            </motion.div>
+    <MainLayout title="DAO Governance" subtitle="Vote on proposals with your $tabledadrian holdings">
+      <div className="max-w-6xl mx-auto">
             <AnimatedCard delay={0.1} className="text-center md:text-right min-w-[200px]">
               <div className="flex items-center justify-center md:justify-end gap-2 mb-2">
                 <Zap className="w-5 h-5 text-accent-primary" />
@@ -172,7 +157,6 @@ export default function GovernancePage() {
                 View Treasury →
               </a>
             </AnimatedCard>
-          </div>
 
           {/* Create Proposal */}
           {tokenBalance >= 100 && (
@@ -361,31 +345,23 @@ export default function GovernancePage() {
                                 {/* Vote Distribution Pie Chart */}
                                 <div className="bg-gray-50 rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-4">
-                                    <PieChart className="w-5 h-5 text-accent-primary" />
+                                    <PieChartIcon className="w-5 h-5 text-accent-primary" />
                                     <h4 className="font-semibold text-text-primary">Vote Distribution</h4>
                                   </div>
                                   <div className="h-64">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                      <RechartsPieChart>
-                                        <Pie
-                                          data={[
-                                            { name: 'For', value: proposal.votesFor || 0, color: '#10B981' },
-                                            { name: 'Against', value: proposal.votesAgainst || 0, color: '#EF4444' },
-                                          ]}
-                                          cx="50%"
-                                          cy="50%"
-                                          labelLine={false}
-                                          label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(1) : 0}%`}
-                                          outerRadius={80}
-                                          fill="#8884d8"
-                                          dataKey="value"
-                                        >
-                                          <Cell fill="#10B981" />
-                                          <Cell fill="#EF4444" />
-                                        </Pie>
-                                        <Tooltip />
-                                      </RechartsPieChart>
-                                    </ResponsiveContainer>
+                                    <PieChart
+                                      data={{
+                                        labels: ['For', 'Against'],
+                                        datasets: [
+                                          {
+                                            data: [proposal.votesFor || 0, proposal.votesAgainst || 0],
+                                            backgroundColor: ['#10B981', '#EF4444'],
+                                            borderColor: ['#10B981', '#EF4444'],
+                                          },
+                                        ],
+                                      }}
+                                      height={256}
+                                    />
                                   </div>
                                 </div>
 
@@ -444,44 +420,25 @@ export default function GovernancePage() {
                                       <h4 className="font-semibold text-text-primary">Voting Power Breakdown</h4>
                                     </div>
                                     <div className="h-48">
-                                      <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart
-                                          data={[
+                                      <BarChart
+                                        data={{
+                                          labels: ['0-100', '100-500', '500-1000', '1000+'],
+                                          datasets: [
                                             {
-                                              range: '0-100',
-                                              count: proposal.votes.filter((v: any) => v.weight <= 100).length,
+                                              label: 'Voters',
+                                              data: [
+                                                proposal.votes.filter((v: any) => v.weight <= 100).length,
+                                                proposal.votes.filter((v: any) => v.weight > 100 && v.weight <= 500).length,
+                                                proposal.votes.filter((v: any) => v.weight > 500 && v.weight <= 1000).length,
+                                                proposal.votes.filter((v: any) => v.weight > 1000).length,
+                                              ],
+                                              backgroundColor: '#0F4C81',
+                                              borderColor: '#0F4C81',
                                             },
-                                            {
-                                              range: '100-500',
-                                              count: proposal.votes.filter(
-                                                (v: any) => v.weight > 100 && v.weight <= 500
-                                              ).length,
-                                            },
-                                            {
-                                              range: '500-1000',
-                                              count: proposal.votes.filter(
-                                                (v: any) => v.weight > 500 && v.weight <= 1000
-                                              ).length,
-                                            },
-                                            {
-                                              range: '1000+',
-                                              count: proposal.votes.filter((v: any) => v.weight > 1000).length,
-                                            },
-                                          ]}
-                                        >
-                                          <CartesianGrid strokeDasharray="3 3" stroke="#E8E3DC" />
-                                          <XAxis dataKey="range" stroke="#6B6560" fontSize={12} />
-                                          <YAxis stroke="#6B6560" fontSize={12} />
-                                          <Tooltip
-                                            contentStyle={{
-                                              backgroundColor: '#FFFFFF',
-                                              border: '1px solid #E8E3DC',
-                                              borderRadius: '8px',
-                                            }}
-                                          />
-                                          <Bar dataKey="count" fill="#0F4C81" radius={[8, 8, 0, 0]} />
-                                        </BarChart>
-                                      </ResponsiveContainer>
+                                          ],
+                                        }}
+                                        height={192}
+                                      />
                                     </div>
                                   </div>
                                 )}
@@ -527,7 +484,6 @@ export default function GovernancePage() {
             </div>
           )}
         </div>
-      </div>
-    </PageTransition>
+      </MainLayout>
   );
 }

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const where: unknown = { userId: user.id };
+    const where: { userId: string; status?: string } = { userId: user.id };
     if (status) {
       where.status = status;
     }

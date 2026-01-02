@@ -35,15 +35,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const recommendations = plan.recommendations as any;
+    const recommendations = plan.recommendations as Record<string, unknown> | null;
 
     return NextResponse.json({
       plan: {
         nutrition: plan.mealPlan,
         exercise: plan.exercisePlan,
         supplements: plan.supplementStack,
-        sleep: recommendations?.sleep,
-        stress: recommendations?.stress,
+        sleep: recommendations?.sleep as unknown,
+        stress: recommendations?.stress as unknown,
         expectedResults: plan.expectedResults,
       },
     });

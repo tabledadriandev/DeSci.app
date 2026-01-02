@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || '10');
 
-    const where: unknown = { userId: user.id };
+    const where: { userId: string; type?: string } = { userId: user.id };
     if (type) {
       where.type = type;
     }

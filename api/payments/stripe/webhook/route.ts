@@ -36,52 +36,53 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle different event types
-    switch (event.type) {
+    const stripeEvent = event as { type: string; data: { object: unknown } };
+    switch (stripeEvent.type) {
       case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as unknown; // Stripe.PaymentIntent
+        const paymentIntent = stripeEvent.data.object as unknown; // Stripe.PaymentIntent
         await handlePaymentIntentSucceeded(paymentIntent);
         break;
       }
 
       case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as unknown; // Stripe.PaymentIntent
+        const paymentIntent = stripeEvent.data.object as unknown; // Stripe.PaymentIntent
         await handlePaymentIntentFailed(paymentIntent);
         break;
       }
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as unknown; // Stripe.Subscription
+        const subscription = stripeEvent.data.object as unknown; // Stripe.Subscription
         await handleSubscriptionUpdate(subscription);
         break;
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as unknown; // Stripe.Subscription
+        const subscription = stripeEvent.data.object as unknown; // Stripe.Subscription
         await handleSubscriptionDeleted(subscription);
         break;
       }
 
       case 'invoice.paid': {
-        const invoice = event.data.object as unknown; // Stripe.Invoice
+        const invoice = stripeEvent.data.object as unknown; // Stripe.Invoice
         await handleInvoicePaid(invoice);
         break;
       }
 
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as unknown; // Stripe.Invoice
+        const invoice = stripeEvent.data.object as unknown; // Stripe.Invoice
         await handleInvoicePaymentFailed(invoice);
         break;
       }
 
       case 'charge.refunded': {
-        const charge = event.data.object as unknown; // Stripe.Charge
+        const charge = stripeEvent.data.object as unknown; // Stripe.Charge
         await handleChargeRefunded(charge);
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`Unhandled event type: ${stripeEvent.type}`);
     }
 
     return NextResponse.json({ received: true });
@@ -96,7 +97,14 @@ export async function POST(request: NextRequest) {
 
 async function handlePaymentIntentSucceeded(paymentIntent: unknown) { // Stripe.PaymentIntent
   try {
-    const userId = paymentIntent.metadata?.userId;
+    const intent = paymentIntent as { 
+      id: string;
+      metadata?: { userId?: string };
+      latest_charge?: string | { id?: string };
+      amount: number;
+      description?: string;
+    };
+    const userId = intent.metadata?.userId;
     if (!userId) {
       console.error('No userId in payment intent metadata');
       return;
@@ -109,16 +117,16 @@ async function handlePaymentIntentSucceeded(paymentIntent: unknown) { // Stripe.
       where: {
         metadata: {
           path: ['stripePaymentIntentId'],
-          equals: paymentIntent.id,
+          equals: intent.id,
         },
       },
       data: {
         status: 'completed',
         metadata: {
-          stripePaymentIntentId: paymentIntent.id,
-          stripeChargeId: typeof paymentIntent.latest_charge === 'string' 
-            ? paymentIntent.latest_charge 
-            : paymentIntent.latest_charge?.id || null,
+          stripePaymentIntentId: intent.id,
+          stripeChargeId: typeof intent.latest_charge === 'string' 
+            ? intent.latest_charge 
+            : intent.latest_charge?.id || null,
           paidAt: new Date().toISOString(),
         },
       },
@@ -129,13 +137,13 @@ async function handlePaymentIntentSucceeded(paymentIntent: unknown) { // Stripe.
       data: {
         userId,
         type: 'payment',
-        amount: paymentIntent.amount / 100, // Convert from cents
-        description: paymentIntent.description || 'Payment',
+        amount: intent.amount / 100, // Convert from cents
+        description: intent.description || 'Payment',
         status: 'completed',
       },
     });
 
-    console.log(`Payment intent succeeded: ${paymentIntent.id}`);
+    console.log(`Payment intent succeeded: ${intent.id}`);
   } catch (error: unknown) {
     console.error('Error handling payment intent succeeded:', error);
   }
@@ -143,7 +151,12 @@ async function handlePaymentIntentSucceeded(paymentIntent: unknown) { // Stripe.
 
 async function handlePaymentIntentFailed(paymentIntent: unknown) { // Stripe.PaymentIntent
   try {
-    const userId = paymentIntent.metadata?.userId;
+    const intent = paymentIntent as {
+      id: string;
+      metadata?: { userId?: string };
+      last_payment_error?: { message?: string };
+    };
+    const userId = intent.metadata?.userId;
     if (!userId) return;
 
     // TODO: Payment model not yet implemented, use Transaction instead
@@ -151,19 +164,19 @@ async function handlePaymentIntentFailed(paymentIntent: unknown) { // Stripe.Pay
       where: {
         metadata: {
           path: ['stripePaymentIntentId'],
-          equals: paymentIntent.id,
+          equals: intent.id,
         },
       },
       data: {
         status: 'failed',
         metadata: {
-          stripePaymentIntentId: paymentIntent.id,
-          failureReason: paymentIntent.last_payment_error?.message || 'Payment failed',
+          stripePaymentIntentId: intent.id,
+          failureReason: intent.last_payment_error?.message || 'Payment failed',
         },
       },
     });
 
-    console.log(`Payment intent failed: ${paymentIntent.id}`);
+    console.log(`Payment intent failed: ${intent.id}`);
   } catch (error: unknown) {
     console.error('Error handling payment intent failed:', error);
   }
@@ -171,19 +184,23 @@ async function handlePaymentIntentFailed(paymentIntent: unknown) { // Stripe.Pay
 
 async function handleSubscriptionUpdate(subscription: unknown) { // Stripe.Subscription
   try {
-    const userId = subscription.metadata?.userId;
+    const sub = subscription as {
+      id: string;
+      metadata?: { userId?: string; tier?: string; billingCycle?: string };
+    };
+    const userId = sub.metadata?.userId;
     if (!userId) {
       console.error('No userId in subscription metadata');
       return;
     }
 
-    const tier = subscription.metadata?.tier || 'basic';
-    const billingCycle = subscription.metadata?.billingCycle || 'monthly';
+    const tier = sub.metadata?.tier || 'basic';
+    const billingCycle = sub.metadata?.billingCycle || 'monthly';
 
     // TODO: Subscription model not yet implemented
     // Subscription functionality disabled until model is implemented
 
-    console.log(`Subscription updated: ${subscription.id}`);
+    console.log(`Subscription updated: ${sub.id}`);
   } catch (error: unknown) {
     console.error('Error handling subscription update:', error);
   }
@@ -191,10 +208,11 @@ async function handleSubscriptionUpdate(subscription: unknown) { // Stripe.Subsc
 
 async function handleSubscriptionDeleted(subscription: unknown) { // Stripe.Subscription
   try {
+    const sub = subscription as { id: string };
     // TODO: Subscription model not yet implemented
     // Subscription functionality disabled until model is implemented
 
-    console.log(`Subscription deleted: ${subscription.id}`);
+    console.log(`Subscription deleted: ${sub.id}`);
   } catch (error: unknown) {
     console.error('Error handling subscription deleted:', error);
   }
@@ -202,9 +220,16 @@ async function handleSubscriptionDeleted(subscription: unknown) { // Stripe.Subs
 
 async function handleInvoicePaid(invoice: unknown) { // Stripe.Invoice
   try {
-    const subscriptionId = typeof invoice.subscription === 'string' 
-      ? invoice.subscription 
-      : invoice.subscription?.id || null;
+    const inv = invoice as {
+      id: string;
+      subscription?: string | { id?: string };
+      invoice_pdf?: string;
+      number?: string;
+      customer?: string | { id?: string };
+    };
+    const subscriptionId = typeof inv.subscription === 'string' 
+      ? inv.subscription 
+      : inv.subscription?.id || null;
 
     if (subscriptionId) {
       // Update payment record if exists
@@ -213,16 +238,16 @@ async function handleInvoicePaid(invoice: unknown) { // Stripe.Invoice
         where: {
           metadata: {
             path: ['stripeInvoiceId'],
-            equals: invoice.id,
+            equals: inv.id,
           },
         },
         data: {
           status: 'completed',
           metadata: {
-            stripeInvoiceId: invoice.id,
+            stripeInvoiceId: inv.id,
             paidAt: new Date().toISOString(),
-            invoiceUrl: invoice.invoice_pdf || null,
-            invoiceNumber: invoice.number || null,
+            invoiceUrl: inv.invoice_pdf || null,
+            invoiceNumber: inv.number || null,
           },
         },
       });
@@ -233,15 +258,15 @@ async function handleInvoicePaid(invoice: unknown) { // Stripe.Invoice
         where: {
           metadata: {
             path: ['stripeInvoiceId'],
-            equals: invoice.id,
+            equals: inv.id,
           },
         },
       });
 
-      if (!existingPayment && invoice.customer) {
-        const customerId = typeof invoice.customer === 'string' 
-          ? invoice.customer 
-          : invoice.customer?.id || null;
+      if (!existingPayment && inv.customer) {
+        const customerId = typeof inv.customer === 'string' 
+          ? inv.customer 
+          : inv.customer?.id || null;
 
         if (customerId) {
           // TODO: PaymentMethod model not yet implemented
@@ -255,7 +280,7 @@ async function handleInvoicePaid(invoice: unknown) { // Stripe.Invoice
       }
     }
 
-    console.log(`Invoice paid: ${invoice.id}`);
+    console.log(`Invoice paid: ${inv.id}`);
   } catch (error: unknown) {
     console.error('Error handling invoice paid:', error);
   }
@@ -263,34 +288,38 @@ async function handleInvoicePaid(invoice: unknown) { // Stripe.Invoice
 
 async function handleInvoicePaymentFailed(invoice: unknown) { // Stripe.Invoice
   try {
+    const inv = invoice as {
+      id: string;
+      subscription?: string | { id?: string };
+    };
     // TODO: Payment model not yet implemented, use Transaction instead
     await prisma.transaction.updateMany({
       where: {
         metadata: {
           path: ['stripeInvoiceId'],
-          equals: invoice.id,
+          equals: inv.id,
         },
       },
       data: {
         status: 'failed',
         metadata: {
-          stripeInvoiceId: invoice.id,
+          stripeInvoiceId: inv.id,
           failureReason: 'Invoice payment failed',
         },
       },
     });
 
     // Update subscription status to past_due
-    const subscriptionId = typeof invoice.subscription === 'string' 
-      ? invoice.subscription 
-      : invoice.subscription?.id || null;
+    const subscriptionId = typeof inv.subscription === 'string' 
+      ? inv.subscription 
+      : inv.subscription?.id || null;
 
     if (subscriptionId) {
       // TODO: Subscription model not yet implemented
       // Subscription status update disabled until model is implemented
     }
 
-    console.log(`Invoice payment failed: ${invoice.id}`);
+    console.log(`Invoice payment failed: ${inv.id}`);
   } catch (error: unknown) {
     console.error('Error handling invoice payment failed:', error);
   }
@@ -298,18 +327,22 @@ async function handleInvoicePaymentFailed(invoice: unknown) { // Stripe.Invoice
 
 async function handleChargeRefunded(charge: unknown) { // Stripe.Charge
   try {
+    const ch = charge as {
+      id: string;
+      amount_refunded: number;
+    };
     // TODO: Payment model not yet implemented
     const payment = await prisma.transaction.findFirst({
       where: {
         metadata: {
           path: ['stripeChargeId'],
-          equals: charge.id,
+          equals: ch.id,
         },
       },
     });
 
     if (payment) {
-      const refundAmount = charge.amount_refunded / 100; // Convert from cents
+      const refundAmount = ch.amount_refunded / 100; // Convert from cents
       const paymentMetadata = payment.metadata as Record<string, unknown> | null;
 
       // TODO: Payment model not yet implemented
@@ -337,7 +370,7 @@ async function handleChargeRefunded(charge: unknown) { // Stripe.Charge
       });
     }
 
-    console.log(`Charge refunded: ${charge.id}`);
+    console.log(`Charge refunded: ${ch.id}`);
   } catch (error: unknown) {
     console.error('Error handling charge refunded:', error);
   }

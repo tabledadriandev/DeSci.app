@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth';
-import { cameraAnalysisService } from '@/lib/camera-analysis';
+import { cameraAnalysisService, FacialAnalysisResult } from '@/lib/camera-analysis';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 /**
  * Generate recommendations based on facial analysis
  */
-function generateFacialRecommendations(result: any): string[] {
+function generateFacialRecommendations(result: FacialAnalysisResult, actualAge?: number | null): string[] {
   const recommendations: string[] = [];
 
   if (result.skinHealth?.hydration < 40) {
@@ -23,7 +23,7 @@ function generateFacialRecommendations(result: any): string[] {
     recommendations.push('Consider stress management techniques like meditation or breathwork');
   }
 
-  if (result.estimatedAge && result.actualAge && result.estimatedAge > result.actualAge + 5) {
+  if (result.estimatedAge && actualAge && result.estimatedAge > actualAge + 5) {
     recommendations.push('Your biological age appears higher than chronological age. Focus on sleep, nutrition, and exercise to reduce biological age');
   }
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         heartRateEstimate: analysisResult.heartRateEstimate,
         respiratoryRate: analysisResult.respiratoryRate,
         bloodOxygenEstimate: analysisResult.bloodOxygenEstimate,
-        recommendations: generateFacialRecommendations(analysisResult),
+        recommendations: generateFacialRecommendations(analysisResult, actualAge),
       },
     });
 

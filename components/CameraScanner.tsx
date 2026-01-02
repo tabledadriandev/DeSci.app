@@ -54,7 +54,7 @@ export default function CameraScanner({
         streamRef.current = stream;
         setIsStreaming(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error accessing camera:', error);
       alert('Could not access camera. Please check permissions.');
     }

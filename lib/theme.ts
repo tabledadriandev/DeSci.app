@@ -1,34 +1,64 @@
 /**
- * Custom Theme Configuration for Table d'Adrian
- * 
- * This file exports theme configuration that can be used
- * across the application for consistent theming.
+ * Theme Configuration
+ * Centralized theme constants and component style presets
  */
 
-export const customTheme = {
-  light: {
-    primary: '#0ea5e9',           // Science blue
-    secondary: '#22c55e',          // Growth green
-    accent: '#f59e0b',             // Caution amber
-    error: '#ef4444',              // Alert red
-    warning: '#f59e0b',            // Warning amber
-    success: '#22c55e',            // Success green
-    info: '#0ea5e9',               // Info blue
-    'base-100': '#ffffff',         // Base white
-    'base-200': '#f9fafb',         // Light gray
-    'base-300': '#f3f4f6',         // Gray
+export const theme = {
+  colors: {
+    dark: {
+      background: '#0f0f0f',
+      surface: '#1a1a1a',
+      surfaceElevated: '#252525',
+      border: '#2a2a2a',
+      text: {
+        primary: '#ffffff',
+        secondary: '#a0a0a0',
+        tertiary: '#6b6b6b',
+      },
+      accent: {
+        purple: '#a855f7',
+        pink: '#ec4899',
+        blue: '#3b82f6',
+      },
+    },
   },
-  dark: {
-    primary: '#0284c7',
-    secondary: '#16a34a',
-    accent: '#d97706',
-    error: '#dc2626',
-    warning: '#d97706',
-    success: '#16a34a',
-    info: '#0284c7',
-    'base-100': '#1f2937',         // Dark gray
-    'base-200': '#111827',         // Darker gray
-    'base-300': '#0f172a',         // Very dark
-  }
+  typography: {
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      display: ['Unbounded', 'Clash Display', 'Inter', 'system-ui', 'sans-serif'],
+      mono: ['IBM Plex Mono', 'JetBrains Mono', 'monospace'],
+    },
+    sizes: {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+    },
+  },
+  spacing: {
+    xs: '0.5rem',
+    sm: '0.75rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem',
+    '2xl': '3rem',
+  },
+  borderRadius: {
+    sm: '0.375rem',
+    md: '0.5rem',
+    lg: '0.75rem',
+    xl: '1rem',
+  },
+  shadows: {
+    sm: '0 1px 2px rgba(0, 0, 0, 0.1)',
+    md: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    lg: '0 10px 15px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px rgba(0, 0, 0, 0.15)',
+  },
 } as const;
 
+export type Theme = typeof theme;

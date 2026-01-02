@@ -234,7 +234,7 @@ export function validateQuery<T>(
 ): { success: true; data: T } | { success: false; error: z.ZodError } {
   try {
     // Convert query params to object
-    const params: Record<string, any> = {};
+    const params: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(query)) {
       params[key] = Array.isArray(value) ? value[0] : value;
     }

@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from 'recharts';
+import LineChart from '@/components/charts/LineChart';
 
 interface BiomarkerHistoryPoint {
   date: string;
@@ -24,98 +15,74 @@ interface BiomarkerChartProps {
 }
 
 export function BiomarkerChart({ name, unit, history, normalRange }: BiomarkerChartProps) {
-  const data = history.map((entry) => ({
-    ...entry,
-    target: (normalRange.low + normalRange.high) / 2,
-    low: normalRange.low,
-    high: normalRange.high,
-  }));
-
   const latest = history[history.length - 1];
   const change = history.length > 1 ? latest.value - history[0].value : 0;
   const trend = change > 0 ? '↑' : change < 0 ? '↓' : '→';
+
+  const chartData = {
+    labels: history.map((entry) => entry.date),
+    datasets: [
+      {
+        label: `${name} (${unit})`,
+        data: history.map((entry) => entry.value),
+        borderColor: '#a855f7',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+      tension: 0.4,
+      fill: true,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: '#a855f7',
+      pointBorderColor: '#ffffff',
+      pointBorderWidth: 2,
+      pointHoverBackgroundColor: '#ec4899',
+      pointHoverBorderColor: '#ffffff',
+      pointHoverBorderWidth: 2,
+    },
+    {
+      label: 'Target',
+      data: history.map(() => (normalRange.low + normalRange.high) / 2),
+      borderColor: '#10b981',
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      borderDash: [5, 5],
+      pointRadius: 0,
+      fill: false,
+    },
+    {
+      label: 'Low Range',
+      data: history.map(() => normalRange.low),
+      borderColor: '#f59e0b',
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      borderDash: [3, 3],
+      pointRadius: 0,
+      fill: false,
+    },
+    {
+      label: 'High Range',
+      data: history.map(() => normalRange.high),
+      borderColor: '#f59e0b',
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      borderDash: [3, 3],
+      pointRadius: 0,
+      fill: false,
+    },
+  ],
+  };
 
   return (
     <div className="card bg-base-100 shadow-md">
       <div className="card-body">
         <h3 className="card-title text-base-content">{name} Trend</h3>
-
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis
-              dataKey="date"
-              stroke="#94a3b8"
-              style={{ fontSize: '12px' }}
-              tick={{ fill: '#64748b' }}
-            />
-            <YAxis
-              stroke="#94a3b8"
-              style={{ fontSize: '12px' }}
-              tick={{ fill: '#64748b' }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#f1f5f9',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-              }}
-              labelStyle={{ color: '#1e293b' }}
-              formatter={(value: number) => `${value.toFixed(2)} ${unit}`}
-            />
-
-            {/* Normal range reference lines */}
-            <ReferenceLine
-              y={normalRange.high}
-              stroke="#22c55e"
-              strokeDasharray="5 5"
-              label={{ value: 'High', position: 'right' }}
-            />
-            <ReferenceLine
-              y={normalRange.low}
-              stroke="#22c55e"
-              strokeDasharray="5 5"
-              label={{ value: 'Low', position: 'right' }}
-            />
-
-            {/* Target line */}
-            <Line
-              type="monotone"
-              dataKey="target"
-              stroke="#22c55e"
-              strokeDasharray="5 5"
-              dot={false}
-              name="Target"
-              strokeWidth={2}
-            />
-
-            {/* Actual data */}
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="#0ea5e9"
-              strokeWidth={3}
-              dot={{ fill: '#0ea5e9', r: 5 }}
-              activeDot={{ r: 7 }}
-              name={name}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-
-        <div className="text-sm text-base-content/70 mt-4 space-y-1">
-          <p>
-            <strong>Latest value:</strong> {latest?.value.toFixed(2)} {unit}
-          </p>
-          <p>
-            <strong>Change:</strong> {change > 0 ? '+' : ''}
-            {change.toFixed(2)} {unit} {trend}
-          </p>
-          <p>
-            <strong>Normal range:</strong> {normalRange.low} - {normalRange.high} {unit}
-          </p>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-2xl font-bold text-base-content">{latest.value} {unit}</span>
+          <span className="text-lg">{trend}</span>
+          {change !== 0 && (
+            <span className={`text-sm ${change > 0 ? 'text-success' : 'text-error'}`}>
+              {change > 0 ? '+' : ''}{change.toFixed(1)} {unit}
+            </span>
+          )}
         </div>
+        <LineChart data={chartData} height={300} />
       </div>
     </div>
   );
 }
-

@@ -134,9 +134,10 @@ Return as JSON array of foods with structure:
         micronutrients,
         suggestions,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Food identification error:', error);
-      throw new Error(`Failed to identify food: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to identify food: ${errorMessage}`);
     }
   }
 
@@ -169,7 +170,7 @@ Return as JSON array of foods with structure:
       if (!content) return { amount: 0, unit: 'g', confidence: 0 };
 
       return JSON.parse(content);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Portion estimation error:', error);
       return { amount: 0, unit: 'g', confidence: 0 };
     }

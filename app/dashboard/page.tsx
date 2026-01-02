@@ -1,236 +1,183 @@
 'use client';
 
-import { Navbar } from '@/components/navbar/Navbar';
-import { DashboardCard } from '@/components/dashboard/DashboardCard';
-import { BiomarkerTable } from '@/components/tables/BiomarkerTable';
-import { BiomarkerModal } from '@/components/modal/BiomarkerModal';
-import { StatCard } from '@/components/stats/StatCard';
-import {
-  LineChart,
-  Line,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from 'recharts';
-import { Heart, TrendingUp, Shield, Brain, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import MainLayout from '@/components/layout/MainLayout';
+import KPICard from '@/components/dashboard/KPICard';
+import ChartCard from '@/components/dashboard/ChartCard';
+import DataTable from '@/components/dashboard/DataTable';
+import TopPerformers from '@/components/dashboard/TopPerformers';
+import LineChart from '@/components/charts/LineChart';
+import { DollarSign, Users, TrendingUp, UserCheck } from 'lucide-react';
+import { ColumnDef } from '@tanstack/react-table';
+import { Badge } from '@heroui/react';
+
+interface Lead {
+  name: string;
+  type: string;
+  email: string;
+  followUp: string;
+  status: 'closed' | 'lost';
+  website: string;
+}
 
 export default function DashboardPage() {
-  const [biomarkers, setBiomarkers] = useState<any[]>([]);
+  const [leadsData, setLeadsData] = useState<Lead[]>([]);
 
   useEffect(() => {
-    // Load biomarkers data
-    const loadBiomarkers = async () => {
-      try {
-        // In production, fetch from API
-        const sampleData = [
-          {
-            name: 'Cystatin C',
-            value: 0.95,
-            unit: 'mg/L',
-            normalRange: { min: 0.6, max: 1.2 },
-            status: 'optimal',
-            percentile: 75,
-            explanation:
-              'Cystatin C is a kidney function marker. Your value is optimal, indicating excellent kidney filtration.',
-            actions: [
-              'Maintain current sodium intake',
-              'Continue regular exercise',
-              'Stay hydrated',
-            ],
-            researchLinks: [
-              {
-                title: 'Cystatin C as a Biomarker of Kidney Decline',
-                doi: '10.1053/j.ackd.2012.09.010',
-                year: 2013,
-              },
-            ],
-          },
-          {
-            name: 'Glucose',
-            value: 92,
-            unit: 'mg/dL',
-            normalRange: { min: 70, max: 100 },
-            status: 'normal',
-            percentile: 50,
-            explanation:
-              'Fasting glucose level is within normal range. This indicates good metabolic health.',
-            actions: [
-              'Maintain balanced diet',
-              'Continue regular exercise',
-              'Monitor quarterly',
-            ],
-            researchLinks: [
-              {
-                title: 'Fasting Glucose and Metabolic Health',
-                doi: '10.2337/dc14-2441',
-                year: 2015,
-              },
-            ],
-          },
-        ];
-        setBiomarkers(sampleData);
-      } catch (error) {
-        console.error('Error loading biomarkers:', error);
-      }
-    };
-
-    loadBiomarkers();
+    // Sample data - in production, fetch from API
+    setLeadsData([
+      { name: 'Sarah', type: 'Cold', email: 'sarah@brightwave.co', followUp: 'In 1 day', status: 'closed', website: 'brightwave.co' },
+      { name: 'James', type: 'Warm', email: 'james@gmail.com', followUp: 'In 1 day', status: 'lost', website: '-' },
+      { name: 'Daniela', type: 'Cold', email: 'daniela@avella.io', followUp: 'In 2 days', status: 'lost', website: 'avella.io' },
+      { name: 'Lucas', type: 'Cold', email: 'lucas@yahoo.com', followUp: 'In 3 days', status: 'lost', website: '-' },
+      { name: 'Emily', type: 'Warm', email: 'emily@zencloud.com', followUp: 'In 1 week', status: 'closed', website: 'zencloud.com' },
+      { name: 'Priya', type: 'Warm', email: 'priya@auroratech.io', followUp: 'In 1 week', status: 'lost', website: 'auroratech.io' },
+    ]);
   }, []);
 
-  const ageData = [
-    { month: 'Jan', biological: 48, chronological: 45 },
-    { month: 'Feb', biological: 48, chronological: 45 },
-    { month: 'Mar', biological: 47.5, chronological: 45 },
-    { month: 'Apr', biological: 47.2, chronological: 45 },
-    { month: 'May', biological: 47, chronological: 45 },
+  const leadsColumns: ColumnDef<Lead>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: (info) => <span className="text-white font-medium">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: 'type',
+      header: 'Type',
+      cell: (info) => (
+        <Badge
+          color={info.getValue() === 'Warm' ? 'warning' : 'default'}
+          variant="flat"
+        >
+          {info.getValue() as string}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      cell: (info) => <span className="text-gray-400">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: 'followUp',
+      header: 'Follow-up',
+      cell: (info) => <span className="text-gray-400">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: (info) => (
+        <Badge
+          color={info.getValue() === 'closed' ? 'success' : 'danger'}
+          variant="flat"
+        >
+          {info.getValue() === 'closed' ? '✓' : '✗'} {info.getValue() as string}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'website',
+      header: 'Website',
+      cell: (info) => <span className="text-gray-400">{info.getValue() as string}</span>,
+    },
+  ];
+
+  const chartData = {
+    labels: Array.from({ length: 30 }, (_, i) => `Jan ${i + 1}`),
+    datasets: [
+      {
+        label: 'Leads',
+        data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 1000)),
+        borderColor: '#ec4899',
+        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+      },
+      {
+        label: 'Conversions',
+        data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 800)),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      },
+      {
+        label: 'Revenue',
+        data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 600)),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      },
+      {
+        label: 'Engagement',
+        data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 500)),
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      },
+    ],
+  };
+
+  const performers = [
+    { id: '1', name: 'Alex', score: 120, color: '#ec4899' },
+    { id: '2', name: 'Jordan', score: 60, color: '#3b82f6' },
+    { id: '3', name: 'Sam', score: 21, color: '#10b981' },
+    { id: '4', name: 'Taylor', score: 3, color: '#f59e0b' },
   ];
 
   return (
-    <>
-      <Navbar />
-
-      <main className="p-4 md:p-8 bg-base-200 min-h-screen">
-        {/* Header */}
+    <MainLayout title="Dashboard">
+      <div className="space-y-6">
+        {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-base-content mb-2">
-            Your Health Dashboard
-          </h1>
-          <p className="text-base-content/60">Welcome back! Here's your longevity snapshot.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back Augustas!</h1>
+          <p className="text-gray-400">Let's tackle down some work.</p>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <DashboardCard
-            title="Biological Age"
-            value="47.0"
-            subtitle="years"
-            icon={<Heart className="w-6 h-6" />}
-            status="success"
-            trend={{ direction: 'down', percentage: 1.8 }}
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <KPICard
+            title="Generated Revenue"
+            value="$67,024"
+            trend={{ value: 12, isPositive: true }}
+            icon={DollarSign}
           />
-          <DashboardCard
-            title="Health Score"
-            value="847"
-            subtitle="/ 850"
-            icon={<TrendingUp className="w-6 h-6" />}
-            status="success"
-            trend={{ direction: 'up', percentage: 3.2 }}
+          <KPICard
+            title="Signed Clients"
+            value="227"
+            trend={{ value: 23, isPositive: false }}
+            icon={Users}
           />
-          <DashboardCard
-            title="Credentials"
-            value="3"
-            subtitle="Verified"
-            icon={<Shield className="w-6 h-6" />}
-            status="info"
+          <KPICard
+            title="Total Leads"
+            value="3,867"
+            trend={{ value: 17, isPositive: true }}
+            icon={TrendingUp}
           />
-          <DashboardCard
-            title="Percentile"
-            value="87th"
-            subtitle="Among peers"
-            icon={<Brain className="w-6 h-6" />}
-            status="success"
+          <KPICard
+            title="Team Members"
+            value="38"
+            subtitle="6 Active"
+            icon={UserCheck}
           />
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Biological Age Trend */}
-          <div className="card bg-base-100 shadow-md">
-            <div className="card-body">
-              <h2 className="card-title text-base-content">Biological Age Trend</h2>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={ageData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="biological"
-                    stroke="#0ea5e9"
-                    strokeWidth={2}
-                    name="Biological Age"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="chronological"
-                    stroke="#94a3b8"
-                    strokeDasharray="5 5"
-                    name="Chronological Age"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+        {/* Charts and Top Performers */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ChartCard title="Leads Gathered">
+              <LineChart data={chartData} height={300} />
+            </ChartCard>
           </div>
-
-          {/* Stats */}
-          <div className="space-y-4">
-            <StatCard
-              title="Recent Tests"
-              value="5"
-              description="In the last 6 months"
-              icon={<Heart className="w-8 h-8" />}
-              variant="primary"
-            />
-            <StatCard
-              title="Research Papers"
-              value="12"
-              description="You've contributed to"
-              icon={<Brain className="w-8 h-8" />}
-              variant="success"
-            />
-            <StatCard
-              title="Community Rank"
-              value="#1,247"
-              description="Global health leaderboard"
-              icon={<Users className="w-8 h-8" />}
-              variant="secondary"
-            />
+          <div>
+            <TopPerformers performers={performers} />
           </div>
         </div>
 
-        {/* Biomarker Results */}
-        <div className="card bg-base-100 shadow-md mb-8">
-          <div className="card-body">
-            <h2 className="card-title text-base-content mb-4">Latest Biomarker Results</h2>
-            <BiomarkerTable data={biomarkers} />
-          </div>
-        </div>
-
-        {/* Modals for biomarkers */}
-        {biomarkers.map((biomarker, idx) => (
-          <BiomarkerModal
-            key={idx}
-            modalId={`biomarker_modal_${idx}`}
-            biomarkerName={biomarker.name}
-            value={biomarker.value}
-            unit={biomarker.unit}
-            explanation={biomarker.explanation}
-            actions={biomarker.actions}
-            researchLinks={biomarker.researchLinks}
+        {/* Lead Management Table */}
+        <div>
+          <h2 className="text-xl font-semibold text-white mb-4">Lead Management</h2>
+          <DataTable
+            data={leadsData}
+            columns={leadsColumns}
+            searchPlaceholder="Search leads..."
           />
-        ))}
-
-        {/* Call to Action */}
-        <div className="card bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/30">
-          <div className="card-body">
-            <h2 className="card-title text-base-content">Ready for your next assessment?</h2>
-            <p className="text-base-content/70">
-              Update your biomarkers to track your biological age progress.
-            </p>
-            <div className="card-actions">
-              <button className="btn btn-primary">Start New Assessment</button>
-              <button className="btn btn-outline">View Results</button>
-            </div>
-          </div>
         </div>
-      </main>
-    </>
+      </div>
+    </MainLayout>
   );
 }
-

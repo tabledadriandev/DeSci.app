@@ -9,8 +9,10 @@ import AnimatedButton from '@/components/ui/AnimatedButton';
 import PageTransition from '@/components/ui/PageTransition';
 import { TrendingUp, TrendingDown, Target, Award, Heart, Zap, Brain, Activity, Apple, Moon, BarChart3, TrendingUp as TrendingUpIcon } from 'lucide-react';
 import Link from 'next/link';
-import { LineChart, Line, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import LineChart from '@/components/charts/LineChart';
+import RadarChart from '@/components/charts/RadarChart';
 import ProgressBar from '@/components/ui/ProgressBar';
+import MainLayout from '@/components/layout/MainLayout';
 
 export default function HealthScorePage() {
   const { address } = useAccount();
@@ -39,43 +41,39 @@ export default function HealthScorePage() {
 
   if (loading) {
     return (
-      <PageTransition>
-        <div className="min-h-screen  p-4 md:p-8">
-          <div className="max-w-6xl mx-auto space-y-6">
-            <div className="h-10 w-48 skeleton rounded-lg" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="skeleton h-40 rounded-2xl" />
-              <div className="skeleton h-40 rounded-2xl" />
-              <div className="skeleton h-40 rounded-2xl" />
-            </div>
+      <MainLayout title="Health Score">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="h-10 w-48 skeleton rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="skeleton h-40 rounded-2xl" />
+            <div className="skeleton h-40 rounded-2xl" />
+            <div className="skeleton h-40 rounded-2xl" />
           </div>
         </div>
-      </PageTransition>
+      </MainLayout>
     );
   }
 
   if (!healthScore) {
     return (
-      <PageTransition>
-        <div className="min-h-screen  p-4 md:p-8">
-          <div className="max-w-4xl mx-auto">
-            <AnimatedCard className="text-center py-12">
-              <Target className="w-16 h-16 text-accent-primary mx-auto mb-4" />
-              <h1 className="text-4xl font-bold gradient-text mb-4">
-                Health Score
-              </h1>
-              <p className="text-text-secondary mb-8 text-lg">
-                Complete a health assessment to get your personalized health score.
-              </p>
-              <Link href="/health-assessment">
-                <AnimatedButton variant="primary" size="lg">
-                  Start Assessment
-                </AnimatedButton>
-              </Link>
-            </AnimatedCard>
-          </div>
+      <MainLayout title="Health Score">
+        <div className="max-w-4xl mx-auto">
+          <AnimatedCard className="text-center py-12">
+            <Target className="w-16 h-16 text-accent-primary mx-auto mb-4" />
+            <h1 className="text-4xl font-bold gradient-text mb-4">
+              Health Score
+            </h1>
+            <p className="text-text-secondary mb-8 text-lg">
+              Complete a health assessment to get your personalized health score.
+            </p>
+            <Link href="/health-assessment">
+              <AnimatedButton variant="primary" size="lg">
+                Start Assessment
+              </AnimatedButton>
+            </Link>
+          </AnimatedCard>
         </div>
-      </PageTransition>
+      </MainLayout>
     );
   }
 
@@ -97,24 +95,8 @@ export default function HealthScorePage() {
   const overallScore = healthScore.overallScore || 0;
 
   return (
-    <PageTransition>
-      <div className="min-h-screen  p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <motion.div
-              initial="initial"
-              animate="animate"
-              variants={fadeInUp}
-            >
-            <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-2">
-              Health Score
-            </h1>
-            <p className="text-text-secondary text-lg">
-              Your comprehensive wellness assessment
-            </p>
-            </motion.div>
-          </div>
+    <MainLayout title="Health Score" subtitle="Your comprehensive wellness assessment">
+      <div className="max-w-6xl mx-auto">
 
           {/* Overall Score */}
           <div className="mb-8">
@@ -239,56 +221,24 @@ export default function HealthScorePage() {
                     )}
                   </div>
                   <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={[...scores].reverse().map((s) => ({
-                          date: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                          score: s.overallScore,
-                          cardiovascular: s.cardiovascularScore || 0,
-                          metabolic: s.metabolicScore || 0,
-                          mental: s.mentalWellnessScore || 0,
-                          fitness: s.physicalFitnessScore || 0,
-                          nutrition: s.nutritionScore || 0,
-                          sleep: s.sleepScore || 0,
-                        }))}
-                      >
-                        <defs>
-                          <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#0F4C81" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#0F4C81" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E8E3DC" />
-                        <XAxis
-                          dataKey="date"
-                          stroke="#6B6560"
-                          fontSize={12}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          domain={[0, 100]}
-                          stroke="#6B6560"
-                          fontSize={12}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#FFFFFF',
-                            border: '1px solid #E8E3DC',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                          }}
-                          labelStyle={{ color: '#1A1A1A', fontWeight: '600', marginBottom: '4px' }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="score"
-                          stroke="#0F4C81"
-                          strokeWidth={2}
-                          fill="url(#scoreGradient)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <LineChart
+                      data={{
+                        labels: [...scores].reverse().map((s) => 
+                          new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        ),
+                        datasets: [
+                          {
+                            label: 'Overall Score',
+                            data: [...scores].reverse().map((s) => s.overallScore),
+                            borderColor: '#0F4C81',
+                            backgroundColor: 'rgba(15, 76, 129, 0.3)',
+                            tension: 0.4,
+                            fill: true,
+                          },
+                        ],
+                      }}
+                      height={256}
+                    />
                   </div>
                 </AnimatedCard>
               </motion.div>
@@ -306,69 +256,27 @@ export default function HealthScorePage() {
                     <h2 className="text-2xl font-bold text-text-primary">Category Breakdown</h2>
                   </div>
                   <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart
-                        data={[
+                    <RadarChart
+                      data={{
+                        labels: ['Cardiovascular', 'Metabolic', 'Mental', 'Fitness', 'Nutrition', 'Sleep'],
+                        datasets: [
                           {
-                            category: 'Cardiovascular',
-                            score: healthScore.cardiovascularScore || 0,
-                            fullMark: 100,
+                            label: 'Your Score',
+                            data: [
+                              healthScore.cardiovascularScore || 0,
+                              healthScore.metabolicScore || 0,
+                              healthScore.mentalWellnessScore || 0,
+                              healthScore.physicalFitnessScore || 0,
+                              healthScore.nutritionScore || 0,
+                              healthScore.sleepScore || 0,
+                            ],
+                            backgroundColor: 'rgba(15, 76, 129, 0.3)',
+                            borderColor: '#0F4C81',
                           },
-                          {
-                            category: 'Metabolic',
-                            score: healthScore.metabolicScore || 0,
-                            fullMark: 100,
-                          },
-                          {
-                            category: 'Mental',
-                            score: healthScore.mentalWellnessScore || 0,
-                            fullMark: 100,
-                          },
-                          {
-                            category: 'Fitness',
-                            score: healthScore.physicalFitnessScore || 0,
-                            fullMark: 100,
-                          },
-                          {
-                            category: 'Nutrition',
-                            score: healthScore.nutritionScore || 0,
-                            fullMark: 100,
-                          },
-                          {
-                            category: 'Sleep',
-                            score: healthScore.sleepScore || 0,
-                            fullMark: 100,
-                          },
-                        ]}
-                      >
-                        <PolarGrid stroke="#E8E3DC" />
-                        <PolarAngleAxis
-                          dataKey="category"
-                          tick={{ fill: '#6B6560', fontSize: 12 }}
-                        />
-                        <PolarRadiusAxis
-                          angle={90}
-                          domain={[0, 100]}
-                          tick={{ fill: '#8B8580', fontSize: 10 }}
-                        />
-                        <Radar
-                          name="Your Score"
-                          dataKey="score"
-                          stroke="#0F4C81"
-                          fill="#0F4C81"
-                          fillOpacity={0.3}
-                          strokeWidth={2}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#FFFFFF',
-                            border: '1px solid #E8E3DC',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                          }}
-                        />
-                      </RadarChart>
-                    </ResponsiveContainer>
+                        ],
+                      }}
+                      height={320}
+                    />
                   </div>
                 </AnimatedCard>
               </motion.div>
@@ -383,87 +291,58 @@ export default function HealthScorePage() {
                 <AnimatedCard>
                   <h2 className="text-2xl font-bold text-text-primary mb-6">Category Trends</h2>
                   <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={[...scores].reverse().map((s) => ({
-                          date: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                          Cardiovascular: s.cardiovascularScore || 0,
-                          Metabolic: s.metabolicScore || 0,
-                          Mental: s.mentalWellnessScore || 0,
-                          Fitness: s.physicalFitnessScore || 0,
-                          Nutrition: s.nutritionScore || 0,
-                          Sleep: s.sleepScore || 0,
-                        }))}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E8E3DC" />
-                        <XAxis
-                          dataKey="date"
-                          stroke="#6B6560"
-                          fontSize={12}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          domain={[0, 100]}
-                          stroke="#6B6560"
-                          fontSize={12}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#FFFFFF',
-                            border: '1px solid #E8E3DC',
-                            borderRadius: '8px',
-                            padding: '8px 12px',
-                          }}
-                        />
-                        <Legend
-                          wrapperStyle={{ fontSize: '12px', paddingTop: '16px' }}
-                          iconType="line"
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="Cardiovascular"
-                          stroke="#EF4444"
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="Metabolic"
-                          stroke="#F59E0B"
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="Mental"
-                          stroke="#8B5CF6"
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="Fitness"
-                          stroke="#3B82F6"
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="Nutrition"
-                          stroke="#10B981"
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="Sleep"
-                          stroke="#6366F1"
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <LineChart
+                      data={{
+                        labels: [...scores].reverse().map((s) => 
+                          new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        ),
+                        datasets: [
+                          {
+                            label: 'Cardiovascular',
+                            data: [...scores].reverse().map((s) => s.cardiovascularScore || 0),
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                          },
+                          {
+                            label: 'Metabolic',
+                            data: [...scores].reverse().map((s) => s.metabolicScore || 0),
+                            borderColor: '#F59E0B',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                          },
+                          {
+                            label: 'Mental',
+                            data: [...scores].reverse().map((s) => s.mentalWellnessScore || 0),
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                          },
+                          {
+                            label: 'Fitness',
+                            data: [...scores].reverse().map((s) => s.physicalFitnessScore || 0),
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                          },
+                          {
+                            label: 'Nutrition',
+                            data: [...scores].reverse().map((s) => s.nutritionScore || 0),
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                          },
+                          {
+                            label: 'Sleep',
+                            data: [...scores].reverse().map((s) => s.sleepScore || 0),
+                            borderColor: '#6366F1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4,
+                          },
+                        ],
+                      }}
+                      height={256}
+                    />
                   </div>
                 </AnimatedCard>
               </motion.div>
@@ -504,7 +383,6 @@ export default function HealthScorePage() {
             </div>
           )}
         </div>
-      </div>
-    </PageTransition>
+      </MainLayout>
   );
 }

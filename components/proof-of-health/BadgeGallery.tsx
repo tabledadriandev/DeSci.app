@@ -11,7 +11,7 @@ interface Badge {
   badgeType: string;
   tokenId?: string | null;
   mintTxHash?: string | null;
-  metadata: any;
+  metadata: Record<string, unknown>;
   issuedAt: string;
   expiresAt?: string | null;
 }

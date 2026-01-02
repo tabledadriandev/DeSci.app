@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { buildWellnessPlan } from '@/lib/wellness-plan/plan-generator';
 
@@ -41,8 +42,8 @@ export async function POST(request: NextRequest) {
     });
 
     // TODO: HealthAssessment model not yet implemented
-    const assessment = null;
-    const profile = null;
+    const assessment: Record<string, unknown> = {};
+    const profile: Record<string, unknown> | undefined = undefined;
 
     if (!healthScore) {
       return NextResponse.json(
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         planType: 'combined',
-        recommendations: planData,
+        recommendations: planData as Prisma.InputJsonValue,
         startDate: new Date(),
         status: 'active',
       },

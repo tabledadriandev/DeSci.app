@@ -37,21 +37,21 @@ export async function getTodayTaskSummary(userId: string): Promise<DailyTaskSumm
 
   // LongevityPlan uses JSON fields (recommendations, mealPlan, exercisePlan)
   // Extract tasks from recommendations or return null if structure doesn't match
-  const recommendations = plan.recommendations as any;
+  const recommendations = plan.recommendations as { weeklyTasks?: unknown[] } | undefined;
   const weeklyTasks = recommendations?.weeklyTasks;
   
   if (!Array.isArray(weeklyTasks)) return null;
 
   const todayIndex = new Date().getDay(); // 0-6, Sunday-Saturday
   const normalizedIndex = todayIndex === 0 ? 6 : todayIndex - 1; // Shift so Monday=0
-  const today = weeklyTasks[normalizedIndex];
+  const today = weeklyTasks[normalizedIndex] as { tasks?: Array<{ completed?: boolean }> } | undefined;
 
   if (!today || !Array.isArray(today.tasks)) {
     return null;
   }
 
   const totalCount = today.tasks.length;
-  const completedCount = today.tasks.filter((t: any) => t.completed).length;
+  const completedCount = today.tasks.filter((t) => t.completed).length;
   const completionRate = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   return {

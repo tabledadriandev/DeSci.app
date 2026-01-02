@@ -45,8 +45,8 @@ function calculateTrends(results: unknown[]): {
     };
   }
 
-  const first = results[0];
-  const latest = results[results.length - 1];
+  const first = results[0] as { shannonIndex?: number; inflammationRisk?: number };
+  const latest = results[results.length - 1] as { shannonIndex?: number; inflammationRisk?: number };
 
   const shannonChange = ((latest.shannonIndex || 0) - (first.shannonIndex || 0)) / (first.shannonIndex || 1);
   const inflammationChange = ((latest.inflammationRisk || 0) - (first.inflammationRisk || 0));
@@ -58,7 +58,20 @@ function calculateTrends(results: unknown[]): {
   };
 }
 
-function generateInsights(result: any, trends: any): string[] {
+interface MicrobiomeResult {
+  shannonIndex?: number;
+  akkermansiaMuciniphila?: number;
+  [key: string]: unknown;
+}
+
+interface MicrobiomeTrends {
+  shannonIndexTrend?: string;
+  diversityTrend?: string;
+  inflammationTrend?: string;
+  [key: string]: unknown;
+}
+
+function generateInsights(result: MicrobiomeResult, trends: MicrobiomeTrends): string[] {
   const insights: string[] = [];
 
   // Diversity insights
@@ -77,24 +90,32 @@ function generateInsights(result: any, trends: any): string[] {
     insights.push('Consider adding polyphenol-rich foods (berries, pomegranate) to support Akkermansia muciniphila.');
   }
 
-  if (result.bifidobacterium && result.bifidobacterium < 0.01) {
+  const bifidobacterium = result.bifidobacterium as number | undefined;
+  if (bifidobacterium !== undefined && bifidobacterium < 0.01) {
     insights.push('Low Bifidobacterium detected. Consider prebiotics (onions, garlic, bananas) or probiotics.');
   }
 
   // Inflammation insights
-  if (result.inflammationRisk) {
-    if (result.inflammationRisk > 7) {
+  const inflammationRisk = result.inflammationRisk as number | undefined;
+  if (inflammationRisk !== undefined) {
+    if (inflammationRisk > 7) {
       insights.push('High inflammation risk detected. Focus on anti-inflammatory foods and reducing processed foods.');
-    } else if (result.inflammationRisk < 3) {
+    } else if (inflammationRisk < 3) {
       insights.push('Low inflammation risk - excellent gut health marker!');
     }
   }
 
   // Pathogen insights
   if (result.pathogens && Array.isArray(result.pathogens)) {
-    const highRiskPathogens = result.pathogens.filter((p: unknown) => p.presence && p.level === 'high');
+    const highRiskPathogens = result.pathogens.filter((p: unknown) => {
+      const pathogen = p as { presence?: boolean; level?: string; name?: string };
+      return pathogen.presence && pathogen.level === 'high';
+    });
     if (highRiskPathogens.length > 0) {
-      insights.push(`High-risk pathogens detected: ${highRiskPathogens.map((p: unknown) => p.name).join(', ')}. Consider consulting a healthcare provider.`);
+      insights.push(`High-risk pathogens detected: ${highRiskPathogens.map((p: unknown) => {
+        const pathogen = p as { name?: string };
+        return pathogen.name || 'Unknown';
+      }).join(', ')}. Consider consulting a healthcare provider.`);
     }
   }
 
