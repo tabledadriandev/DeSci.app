@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const existing = await prisma.achievement.findMany({
       where: { userId: user.id },
     });
-    const existingTypes = new Set(existing.map((a) => a.type));
+    const existingTypes = new Set(existing.map((a: { type: string }) => a.type));
 
     const unlocked: Array<{ id: string; type: string; unlockedAt: Date }> = [];
 
