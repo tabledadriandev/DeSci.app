@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const userIds = optedInUsers.map((opt) => opt.userId);
+    const userIds = optedInUsers.map((opt: { userId: string }) => opt.userId);
     const aggregates: AggregatesResponse = {
       totalUsers: userIds.length,
       dataType,
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      Object.keys(metricGroups).forEach((metric) => {
+      Object.keys(metricGroups).forEach((metric: string) => {
         const values = metricGroups[metric];
         if (values.length > 0) {
           biomarkerStats.push({
