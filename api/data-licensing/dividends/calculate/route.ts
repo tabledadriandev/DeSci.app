@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter out zero dividends
-    const nonZeroDividends = dividends.filter((d) => d.dividendAmount > 0.01);
+    const nonZeroDividends = dividends.filter((d: { dividendAmount: number }) => d.dividendAmount > 0.01);
 
     return NextResponse.json({
       totalRevenue,
