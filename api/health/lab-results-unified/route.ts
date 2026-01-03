@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 
     // Combine and format all results
     const allResults = [
-      ...biomarkers.map((b) => ({
+      ...biomarkers.map((b: { date: Date | null; createdAt: Date | null; [key: string]: unknown }) => ({
         ...b,
         source: 'manual_entry',
         date: b.date || b.createdAt,
