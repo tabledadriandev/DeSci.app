@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     });
 
     const totals = meals.reduce(
-      (acc, meal) => ({
+      (acc: { calories: number; protein: number; carbs: number; fats: number; fiber: number }, meal: { calories?: number | null; protein?: number | null; carbs?: number | null; fat?: number | null; fats?: number | null; fiber?: number | null }) => ({
         calories: acc.calories + (meal.calories || 0),
         protein: acc.protein + (meal.protein || 0),
         carbs: acc.carbs + (meal.carbs || 0),
