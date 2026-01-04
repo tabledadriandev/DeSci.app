@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         take: 5,
         select: { id: true },
       });
-      resultIds = recentResults.map((r) => r.id);
+      resultIds = recentResults.map((r: { id: string }) => r.id);
     }
 
     if (resultIds.length === 0) {
